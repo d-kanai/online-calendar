@@ -1,0 +1,18 @@
+{
+  "name": "online-calendar",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "front:dev": "yarn workspace frontend dev",
+    "front:build": "yarn workspace frontend build",
+    "front:start": "yarn workspace frontend start",
+    "front:lint": "yarn workspace frontend lint"
+  },
+  "devDependencies": {
+    "yarn": "^1.22.19"
+  },
+  "packageManager": "yarn@1.22.19"
+}
