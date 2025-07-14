@@ -1,38 +1,42 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+このファイルは、Claude Code (claude.ai/code) がこのリポジトリでコードを扱う際のガイダンスを提供します。
 
-## Project Overview
+## プロジェクト概要
 
-This is a BDD specification repository for an OnlineCalendar application. The repository contains Gherkin feature files written in Japanese that define the behavior and requirements for an online calendar system.
+これはOnlineCalendarアプリケーションのBDD仕様リポジトリです。オンラインカレンダーシステムの動作と要件を定義する日本語のGherkinフィーチャーファイルが含まれています。
 
-## Architecture
+## アーキテクチャ
 
-The project uses Behavior-Driven Development (BDD) methodology with feature files written in Japanese Gherkin syntax. The main features include:
+このプロジェクトは日本語のGherkin構文で書かれたフィーチャーファイルを使用したBDD（振る舞い駆動開発）手法を採用しています。主な機能は以下の通りです：
 
-- **Meeting Creation**: Basic meeting creation with owner, start/end times, and title
-- **Participant Management**: 50-person participant limit enforcement
-- **Meeting Rescheduling**: Ability to change future meeting times with automatic notifications
-- **Reminder System**: Intelligent reminder generation (15 minutes for normal meetings, 60 minutes for important meetings)
-- **Notification Delivery**: Multi-channel notification system supporting email
+- **会議作成**: オーナー、開始/終了時刻、タイトルを含む基本的な会議作成機能
+- **参加者管理**: 50名の参加者上限の実装
+- **会議リスケジュール**: 未来の会議の時間変更と自動通知機能
+- **リマインダーシステム**: インテリジェントなリマインダー生成（通常会議は15分前、重要会議は60分前）
+- **通知配信**: メールをサポートするマルチチャネル通知システム
 
-## Feature Files Structure
+## フィーチャーファイル構成
 
-All feature files are located in the `features/` directory:
-- `meeting_creation.feature` - Core meeting creation functionality
-- `participant_limit.feature` - Participant count validation (max 50)
-- `reschedule_meeting.feature` - Meeting time modification with notifications
-- `reminder_generation.feature` - Smart reminder timing based on meeting importance
-- `notification_sending.feature` - Notification delivery mechanisms
+すべてのフィーチャーファイルは `features/` ディレクトリに配置されています：
+- `meeting_creation.feature` - 会議作成のコア機能
+- `participant_limit.feature` - 参加者数の検証（最大50名）
+- `reschedule_meeting.feature` - 通知付きの会議時間変更
+- `reminder_generation.feature` - 会議の重要度に基づくスマートリマインダー
+- `notification_sending.feature` - 通知配信メカニズム
 
-## Key Business Rules
+## 主要なビジネスルール
 
-- Maximum 50 participants per meeting
-- Normal meetings: 15-minute reminder
-- Important meetings: 60-minute reminder
-- Rescheduling triggers "MeetingRescheduled" notifications to all participants
-- Only future meetings can be rescheduled
+- 会議あたりの参加者上限は50名
+- 通常会議：15分前リマインダー
+- 重要会議：60分前リマインダー
+- リスケジュールは全参加者に「MeetingRescheduled」通知をトリガー
+- 未来の会議のみリスケジュール可能
 
-## Development Notes
+## 開発ノート
 
-This repository contains only BDD specifications. The feature files are designed to be executed with BDD tools like Cucumber-JVM. When implementing the actual system, these scenarios should drive the development of the calendar application's core functionality.
+このリポジトリにはBDD仕様のみが含まれています。フィーチャーファイルはCucumber-JVMなどのBDDツールで実行するように設計されています。実際のシステムを実装する際は、これらのシナリオがカレンダーアプリケーションのコア機能の開発を駆動する必要があります。
+
+## 文書化ルール
+
+- CLAUDE.mdファイルは日本語で記述すること
