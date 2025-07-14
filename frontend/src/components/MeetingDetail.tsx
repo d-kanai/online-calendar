@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../lib/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../lib/ui/sheet';
 import { Button } from '../lib/ui/button';
 import { Badge } from '../lib/ui/badge';
 import { Separator } from '../lib/ui/separator';
@@ -55,8 +55,8 @@ export function MeetingDetail({
   
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader>
+      <SheetContent className="w-full sm:max-w-lg overflow-y-auto px-8 py-8">
+        <SheetHeader className="pb-6">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <SheetTitle className="flex items-center gap-2">
@@ -65,7 +65,10 @@ export function MeetingDetail({
                   <Star className="h-4 w-4 text-yellow-500 fill-current" />
                 )}
               </SheetTitle>
-              <div className="flex items-center gap-2 mt-2">
+              <SheetDescription>
+                会議の詳細情報と参加者管理
+              </SheetDescription>
+              <div className="flex items-center gap-2 mt-3">
                 {getStatusBadge()}
                 {meeting.isImportant && (
                   <Badge variant="outline">重要</Badge>
@@ -90,7 +93,7 @@ export function MeetingDetail({
           </div>
         </SheetHeader>
         
-        <div className="space-y-6 mt-6">
+        <div className="space-y-8">
           {/* 基本情報 */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
