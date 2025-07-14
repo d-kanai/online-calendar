@@ -130,6 +130,7 @@ export default function Home() {
 
   // 会議作成ボタン
   const handleCreateMeeting = () => {
+    console.log('会議作成ボタンがクリックされました');
     setSelectedDate(new Date());
     setEditingMeeting(undefined);
     setShowMeetingForm(true);

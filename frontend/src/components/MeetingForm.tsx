@@ -28,6 +28,7 @@ export function MeetingForm({
   existingMeetings,
   currentUser 
 }: MeetingFormProps) {
+  console.log('MeetingForm rendered:', { open, selectedDate });
   const [formData, setFormData] = useState({
     title: '',
     startTime: '',
