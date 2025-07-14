@@ -42,6 +42,11 @@
 - Featureファイルのキーワードは英語を使用すること（Feature, Scenario, Given, When, Then, And, Rule）
 - 説明文や手順は日本語で記述すること
 
+## Git運用ルール
+
+- Commitコメントは日本語で箇条書きスタイルで記述すること
+- 変更の理由（why）をできる限り含めること
+
 ## 文書化ルール
 
 - CLAUDE.mdファイルは日本語で記述すること
