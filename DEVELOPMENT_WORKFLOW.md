@@ -56,3 +56,80 @@
 - 統合テストでエンドツーエンドの動作を検証
 
 このワークフローにより、ビジネス要件の明確化からUI実装まで一貫性のある開発プロセスを実現できる。
+
+## Git運用ルール
+
+- Commitコメントは日本語で箇条書きスタイルで記述すること
+- 変更の理由（why）をできる限り含めること
+- git pushは自動実行（確認なし）で行うこと
+
+## Figma Make Code統合ルール
+
+### プロジェクト構造
+Figma Make Codeから出力されたコードをNext.jsプロジェクトに統合する際は以下の構造を使用すること：
+
+```
+frontend/src/
+├── types/              # 型定義ファイル（meeting.ts等）
+├── lib/ui/            # UIコンポーネントライブラリ（shadcn/ui互換）
+├── components/        # 機能コンポーネント（CalendarView等）
+└── app/
+    ├── globals.css    # Tailwind設定とCSS変数
+    └── page.tsx       # メインページ
+```
+
+### 統合手順
+
+#### 1. ファイル配置
+- 型定義: `figma-make-code/types/` → `src/types/`
+- UIライブラリ: `figma-make-code/components/ui/` → `src/lib/ui/`
+- 機能コンポーネント: `figma-make-code/components/` → `src/components/`
+- メインアプリ: `App.tsx` → `src/app/page.tsx`
+
+#### 2. importパス修正
+- `./ui/` → `../lib/ui/`
+- `../types/` → `../types/`
+- バージョン指定削除: `@radix-ui/react-dialog@1.1.6` → `@radix-ui/react-dialog`
+
+#### 3. Next.js対応
+- `'use client';`ディレクティブ追加（Client Componentの場合）
+- App Router形式への変換
+- React Server Components対応
+
+#### 4. 依存関係管理
+必須パッケージのインストール:
+```bash
+# 基本パッケージ
+npm install lucide-react sonner
+
+# Radix UI基盤
+npm install @radix-ui/react-slot class-variance-authority clsx tailwind-merge
+
+# 必要なRadix UIコンポーネント
+npm install @radix-ui/react-dialog @radix-ui/react-switch @radix-ui/react-label @radix-ui/react-separator
+```
+
+#### 5. Tailwind CSS設定
+`globals.css`にshadcn/ui互換のCSS変数を追加:
+- カラーパレット変数（primary, secondary, muted等）
+- ライト/ダークテーマ対応
+- Tailwind CSS v4の@theme構文使用
+
+#### 6. 自動修正コマンド
+```bash
+# バージョン指定削除
+find src/lib/ui -name "*.tsx" -exec sed -i '' 's/@[0-9][^"]*//g' {} \;
+```
+
+### 検証手順
+1. `npm run dev`で開発サーバー起動確認
+2. 依存関係エラーの解決
+3. CSSスタイル適用確認
+4. 全機能の動作テスト
+
+### トラブルシューティング
+- **CSSが当たらない**: CSS変数の不足、@theme構文エラー
+- **import文エラー**: パス間違い、バージョン指定残存
+- **依存関係エラー**: 必須パッケージの未インストール
+
+この手順に従うことで、Figma Make Codeから出力されたコードを効率的にNext.jsプロジェクトに統合できる。
