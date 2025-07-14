@@ -9,9 +9,16 @@
     "front:dev": "yarn workspace frontend dev",
     "front:build": "yarn workspace frontend build",
     "front:start": "yarn workspace frontend start",
-    "front:lint": "yarn workspace frontend lint"
+    "front:lint": "yarn workspace frontend lint",
+    "e2e:playwright": "npx playwright test",
+    "e2e:cucumber": "npx cucumber-js e2e/features --require e2e/steps --require e2e/support",
+    "e2e:install": "npx playwright install",
+    "e2e:ui": "npx playwright test --ui"
   },
   "devDependencies": {
+    "@cucumber/cucumber": "^12.0.0",
+    "@playwright/test": "^1.54.1",
+    "playwright": "^1.54.1",
     "yarn": "^1.22.19"
   },
   "packageManager": "yarn@1.22.19"
