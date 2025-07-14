@@ -11,6 +11,7 @@
     "front:start": "yarn workspace frontend start",
     "front:lint": "yarn workspace frontend lint",
     "e2e:playwright": "npx playwright test",
+    "e2e": "npx cucumber-js e2e/features --require e2e/steps --require e2e/support --tags 'not @pending'",
     "e2e:cucumber": "npx cucumber-js e2e/features --require e2e/steps --require e2e/support",
     "e2e:install": "npx playwright install",
     "e2e:ui": "npx playwright test --ui"

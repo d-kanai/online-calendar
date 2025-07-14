@@ -16,6 +16,7 @@ module.exports = {
     ],
     formatOptions: {
       snippetInterface: 'async-await'
-    }
+    },
+    tags: 'not @pending'
   }
 };

@@ -65,7 +65,7 @@ export function CalendarView({ meetings, onDateSelect, onMeetingSelect, onCreate
   };
   
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" data-testid="calendar-view">
       {/* ヘッダー */}
       <div className="flex items-center justify-between p-4 border-b">
         <div className="flex items-center gap-4">
