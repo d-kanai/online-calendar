@@ -2,6 +2,7 @@ import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
+import { meetingRoutes } from './modules/meeting/meeting.routes.js';
 
 const app = new Hono();
 
@@ -22,6 +23,9 @@ app.get('/health', (c) => {
 app.get('/api/v1', (c) => {
   return c.json({ message: 'Online Calendar API v1', version: '1.0.0' });
 });
+
+// Module routes
+app.route('/api/v1/meetings', meetingRoutes);
 
 // 404 handler
 app.notFound((c) => {

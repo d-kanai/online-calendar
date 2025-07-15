@@ -1,0 +1,25 @@
+import { Hono } from 'hono';
+import { MeetingController } from './controllers/meeting.controller.js';
+
+const meetingRoutes = new Hono();
+const meetingController = new MeetingController();
+
+// GET /api/v1/meetings - Get all meetings
+meetingRoutes.get('/', (c) => meetingController.getAllMeetings(c));
+
+// GET /api/v1/meetings/:id - Get meeting by ID
+meetingRoutes.get('/:id', (c) => meetingController.getMeetingById(c));
+
+// POST /api/v1/meetings - Create new meeting
+meetingRoutes.post('/', (c) => meetingController.createMeeting(c));
+
+// PUT /api/v1/meetings/:id - Update meeting
+meetingRoutes.put('/:id', (c) => meetingController.updateMeeting(c));
+
+// DELETE /api/v1/meetings/:id - Delete meeting
+meetingRoutes.delete('/:id', (c) => meetingController.deleteMeeting(c));
+
+// GET /api/v1/meetings/owner/:ownerId - Get meetings by owner
+meetingRoutes.get('/owner/:ownerId', (c) => meetingController.getMeetingsByOwner(c));
+
+export { meetingRoutes };
