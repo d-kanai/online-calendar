@@ -1,7 +1,6 @@
 import { describe, test, expect, beforeEach } from 'vitest';
 import { MeetingController } from './meeting.controller.js';
 import { prisma } from '../../../shared/database/prisma.js';
-import { meetingFactory } from '../../../../tests/factories/index.js';
 
 // Mock Hono Context
 const createMockContext = (params: Record<string, string> = {}, jsonBody = {}) => ({
@@ -26,9 +25,25 @@ describe('MeetingController', () => {
   });
 
   test('getAllMeetings - 全ての会議を取得してJSONレスポンスを返す', async () => {
-    // Given - デフォルト値でテストデータを作成（特定の値は不要）
-    await meetingFactory.create({});
-    await meetingFactory.create({});
+    // Given - テストデータを作成（特定の値は不要）
+    await prisma.meeting.create({
+      data: {
+        title: 'テスト会議1',
+        startTime: new Date('2025-01-15T10:00:00Z'),
+        endTime: new Date('2025-01-15T11:00:00Z'),
+        isImportant: false,
+        ownerId: 'user123'
+      }
+    });
+    await prisma.meeting.create({
+      data: {
+        title: 'テスト会議2',
+        startTime: new Date('2025-01-16T14:00:00Z'),
+        endTime: new Date('2025-01-16T15:30:00Z'),
+        isImportant: true,
+        ownerId: 'user456'
+      }
+    });
 
     // When
     const mockContext = createMockContext();

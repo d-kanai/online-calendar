@@ -220,18 +220,92 @@ backend/src/modules/{module}/
 ### 🎭 Domain層（ドメイン層）
 - **責務**: ビジネスルールとドメインモデルの定義
 - **構成**: 
-  - エンティティ型定義
+  - エンティティクラス定義
   - 作成用データ型（`CreateXxxData`）
   - 更新用データ型（`UpdateXxxData`）
 - **依存**: 他の層に依存しない（最も内側の層）
+
+#### 🏭 Domain Model設計原則
+- **🔒 Private Constructor**: 直接インスタンス化を防止し、適切な生成方法を強制
+- **🏗️ Static Factory Methods**: 意図的なオブジェクト作成を促進
+  - `Entity.create(data)`: 新規エンティティ作成
+  - `Entity.fromPersistence(data)`: 永続化データからの復元
+- **🔄 State Transition Methods**: 状態変更は単一のupdateメソッドで実行
+  - 個別のupdateメソッドは状態遷移ルールの混乱を招くため禁止
+  - `update(data)`メソッドで全ての更新処理を一元管理
+  - `updatedAt`は更新時に自動更新
+- **🚫 永続化詳細の排除**: Domain層は永続化の詳細を持たない
+  - `toPersistence`等のメソッドは配置しない
+  - Repository層でMapping処理を担当
+```typescript
+export class Meeting {
+  private constructor(/* private fields */) {}
+
+  static create(data: CreateMeetingData): Meeting {
+    // 新規作成ロジック
+  }
+
+  static fromPersistence(data: PersistenceData): Meeting {
+    // 永続化データからの復元
+  }
+
+  update(data: UpdateMeetingData): void {
+    // 状態遷移ロジック
+  }
+
+  // getterのみ提供（永続化詳細はRepository層で処理）
+  get id(): string { return this._id; }
+  get title(): string { return this._title; }
+  // ... その他のgetterメソッド
+}
 
 ### 🏭 Infra層（インフラ層）
 - **責務**: データベースアクセス、外部API連携
 - **構成**: Repositoryパターンでデータアクセスを抽象化
 - **特徴**:
   - Prismaクライアントを直接使用
-  - ドメインモデルに対応するCRUD操作を提供
+  - ドメインモデルクラスとの変換を担当
   - エラーハンドリングは基本的な成功/失敗のみ
+
+#### 🗃️ Repository設計原則
+- **🔄 Domain Model変換**: 永続化データとドメインモデル間の変換
+- **📊 CRUD操作**: ドメインモデルクラスを引数・戻り値とする
+  - `create(entity)`: エンティティを永続化
+  - `save(entity)`: エンティティの更新を永続化
+  - `findById(id)`: IDでエンティティを取得
+  - `findAll()`: 全エンティティを取得
+- **🗂️ Mapping責務**: Domain ModelとPersistence Data間のマッピング処理
+
+```typescript
+export class MeetingRepository {
+  async create(meeting: Meeting): Promise<Meeting> {
+    const data = this.toPersistence(meeting);
+    const record = await prisma.meeting.create({ data });
+    return Meeting.fromPersistence(record);
+  }
+
+  async save(meeting: Meeting): Promise<Meeting> {
+    const data = this.toPersistence(meeting);
+    const record = await prisma.meeting.update({
+      where: { id: meeting.id },
+      data
+    });
+    return Meeting.fromPersistence(record);
+  }
+
+  private toPersistence(meeting: Meeting): PersistenceData {
+    return {
+      id: meeting.id,
+      title: meeting.title,
+      startTime: meeting.startTime,
+      endTime: meeting.endTime,
+      isImportant: meeting.isImportant,
+      ownerId: meeting.ownerId,
+      createdAt: meeting.createdAt,
+      updatedAt: meeting.updatedAt
+    };
+  }
+}
 
 ## 🚫 廃止パターン
 
@@ -260,8 +334,31 @@ Presentation → Application → Domain ← Infra
 - **Controller**: `{Entity}Controller`
 
 ### 🔄 データフロー
-1. **リクエスト**: Client → Controller → Query/Command → Repository → Database
-2. **レスポンス**: Database → Repository → Query/Command → Controller → Client
+
+#### 📖 Query（読み取り）フロー
+```
+Client → Controller → Query → Repository → Database
+Database → Repository → Query → Controller → Client
+```
+
+#### ✏️ Command（書き込み）フロー
+```
+Client → Controller → Command → Repository → Database
+Database → Repository → Command → Controller → Client
+```
+
+#### 🔄 Update Command詳細フロー
+```
+Client → Controller → UpdateCommand
+       ↓
+1. Repository.findById(id) → Database
+       ↓
+2. DomainModel.update(data) → State Transition
+       ↓
+3. Repository.save(model) → Database
+       ↓
+Controller → Client
+```
 
 この構造により、保守性・テスタビリティ・拡張性の高いBackendアーキテクチャを実現する 🚀
 

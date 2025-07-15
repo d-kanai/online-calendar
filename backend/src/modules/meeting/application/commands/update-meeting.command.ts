@@ -9,6 +9,12 @@ export class UpdateMeetingCommand {
   }
 
   async run(id: string, data: UpdateMeetingData): Promise<Meeting | null> {
-    return this.meetingRepository.update(id, data);
+    const meeting = await this.meetingRepository.findById(id);
+    if (!meeting) {
+      return null;
+    }
+    
+    meeting.update(data);
+    return this.meetingRepository.save(meeting);
   }
 }

@@ -9,6 +9,7 @@ export class CreateMeetingCommand {
   }
 
   async run(data: CreateMeetingData): Promise<Meeting> {
-    return this.meetingRepository.create(data);
+    const meeting = Meeting.create(data);
+    return this.meetingRepository.create(meeting);
   }
 }
