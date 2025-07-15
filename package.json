@@ -3,13 +3,18 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "frontend"
+    "frontend",
+    "backend"
   ],
   "scripts": {
     "front:dev": "yarn workspace frontend dev",
     "front:build": "yarn workspace frontend build",
     "front:start": "yarn workspace frontend start",
     "front:lint": "yarn workspace frontend lint",
+    "back:dev": "yarn workspace online-calendar-backend dev",
+    "back:build": "yarn workspace online-calendar-backend build",
+    "back:start": "yarn workspace online-calendar-backend start",
+    "back:lint": "yarn workspace online-calendar-backend lint",
     "e2e:playwright": "npx playwright test",
     "e2e": "npx cucumber-js e2e/features --require e2e/steps --require e2e/support --tags 'not @pending'",
     "e2e:develop": "npx cucumber-js e2e/features --require e2e/steps --require e2e/support --tags '@develop'",
