@@ -61,6 +61,38 @@
 
 このワークフローにより、ビジネス要件の明確化からUI実装まで一貫性のある開発プロセスを実現できる 🎉
 
+## ⚡ 基本コマンド
+
+### 🖥️ Backend開発
+```bash
+# 📁 backendディレクトリに移動
+cd backend
+
+# 🧪 テスト実行（一回のみ）
+npm run test:run
+
+# 🔄 テスト実行（ウォッチモード）
+npm test
+
+# 🏗️ ビルド
+npm run build
+
+# 🚀 サーバー起動
+npm start
+```
+
+### 🎨 Frontend開発
+```bash
+# 📁 frontendディレクトリに移動
+cd frontend
+
+# 🚀 開発サーバー起動
+npm run dev
+
+# 🏗️ ビルド
+npm run build
+```
+
 ## 🌿 Git運用ルール
 
 - 💬 Commitコメントは日本語で箇条書きスタイルで記述すること

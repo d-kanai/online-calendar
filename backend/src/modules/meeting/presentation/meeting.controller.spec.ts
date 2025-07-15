@@ -4,7 +4,7 @@ import { prisma } from '../../../shared/database/prisma.js';
 import { meetingFactory } from '../../../../tests/factories/index.js';
 
 // Mock Hono Context
-const createMockContext = (params = {}, jsonBody = {}) => ({
+const createMockContext = (params: Record<string, string> = {}, jsonBody = {}) => ({
   req: {
     param: (key: string) => params[key] || '',
     json: async () => jsonBody
@@ -35,8 +35,8 @@ describe('MeetingController', () => {
     const response = await meetingController.getAllMeetings(mockContext as any);
 
     // Then
-    expect(response.data.success).toBe(true);
-    expect(response.data.data).toHaveLength(2);
-    expect(response.status).toBe(200);
+    expect((response as any).data.success).toBe(true);
+    expect((response as any).data.data).toHaveLength(2);
+    expect((response as any).status).toBe(200);
   });
 });

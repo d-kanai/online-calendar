@@ -1,5 +1,6 @@
 import { Context } from 'hono';
-import { CreateMeetingRequest, UpdateMeetingRequest, ApiResponse } from '../../../shared/types/api.js';
+import { ApiResponse } from '../../../shared/types/api.js';
+import { CreateMeetingRequest, UpdateMeetingRequest } from './input.js';
 import { GetAllMeetingsQuery } from '../application/queries/get-all-meetings.query.js';
 import { GetMeetingByIdQuery } from '../application/queries/get-meeting-by-id.query.js';
 import { GetMeetingsByOwnerQuery } from '../application/queries/get-meetings-by-owner.query.js';
