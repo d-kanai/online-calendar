@@ -12,7 +12,9 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "keywords": ["hono", "typescript", "api", "calendar"],
   "author": "",
@@ -29,7 +31,9 @@
     "eslint": "^8.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
-    "prisma": "^5.0.0"
+    "prisma": "^5.0.0",
+    "vitest": "^1.0.0",
+    "@quramy/prisma-fabbrica": "^2.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
