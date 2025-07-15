@@ -140,6 +140,99 @@ find src/lib/ui -name "*.tsx" -exec sed -i '' 's/@[0-9][^"]*//g' {} \;
 
 # 🏗️ アーキテクチャ
 
+# 🖥️ Backendアーキテクチャルール
+
+## 🏗️ DDD/Clean Architecture 構造
+
+Backendモジュールは以下のDDD（ドメイン駆動設計）とClean Architectureの原則に従って構成する：
+
+```
+backend/src/modules/{module}/
+├── presentation/          # 🎯 プレゼンテーション層
+│   └── {module}.controller.ts
+├── application/          # ⚙️ アプリケーション層
+│   ├── queries/         # 📖 クエリ（読み取り操作）
+│   │   ├── get-all-{entities}.query.ts
+│   │   ├── get-{entity}-by-id.query.ts
+│   │   └── get-{entities}-by-{criteria}.query.ts
+│   └── commands/        # ✏️ コマンド（書き込み操作）
+│       ├── create-{entity}.command.ts
+│       ├── update-{entity}.command.ts
+│       └── delete-{entity}.command.ts
+├── domain/              # 🎭 ドメイン層
+│   └── {entity}.model.ts
+└── infra/              # 🏭 インフラ層
+    └── {entity}.repository.ts
+```
+
+## 🎯 層別責務
+
+### 🎪 Presentation層（プレゼンテーション層）
+- **責務**: HTTPリクエスト/レスポンスの処理、入力バリデーション、レスポンス形成
+- **依存**: Application層のQuery/Commandのみ
+- **特徴**: 
+  - Controllerクラスで構成
+  - 各エンドポイントに対応するメソッドを持つ
+  - エラーハンドリングとHTTPステータスコード管理
+
+### ⚙️ Application層（アプリケーション層）
+- **責務**: ビジネスユースケースの実行、処理フローの制御
+- **構成**: Query（読み取り）とCommand（書き込み）で分離
+- **Query/Command規約**:
+  - 🔧 **単一メソッド**: 各クラスは`run()`メソッドのみ持つ
+  - 🏷️ **命名規約**: クラス名はユーザーアクション名とする
+    - 例: `CreateMeetingCommand`, `GetAllMeetingsQuery`
+  - ⚡ **単一責任**: 1つのクエリ/コマンドは1つの処理のみ実行
+- **依存**: Domain層とInfra層のRepositoryのみ
+
+### 🎭 Domain層（ドメイン層）
+- **責務**: ビジネスルールとドメインモデルの定義
+- **構成**: 
+  - エンティティ型定義
+  - 作成用データ型（`CreateXxxData`）
+  - 更新用データ型（`UpdateXxxData`）
+- **依存**: 他の層に依存しない（最も内側の層）
+
+### 🏭 Infra層（インフラ層）
+- **責務**: データベースアクセス、外部API連携
+- **構成**: Repositoryパターンでデータアクセスを抽象化
+- **特徴**:
+  - Prismaクライアントを直接使用
+  - ドメインモデルに対応するCRUD操作を提供
+  - エラーハンドリングは基本的な成功/失敗のみ
+
+## 🚫 廃止パターン
+
+### ❌ Service層の廃止
+- **理由**: Query/Commandパターンでより明確な責務分離が可能
+- **代替**: ApplicationレイヤーのQuery/Commandクラス
+- **利点**: 
+  - 各処理の意図が明確
+  - テストしやすい単位
+  - 変更影響範囲の限定
+
+## 📐 実装指針
+
+### 🎯 依存関係の方向
+```
+Presentation → Application → Domain ← Infra
+```
+- 外側の層は内側の層に依存可能
+- 内側の層は外側の層に依存してはならない
+- Infra層のみDomain層に依存（データ型使用のため）
+
+### 🏷️ 命名規約
+- **Query**: `Get{Entity}By{Criteria}Query` または `GetAll{Entities}Query`
+- **Command**: `{Action}{Entity}Command` (例: `CreateMeetingCommand`)
+- **Repository**: `{Entity}Repository`
+- **Controller**: `{Entity}Controller`
+
+### 🔄 データフロー
+1. **リクエスト**: Client → Controller → Query/Command → Repository → Database
+2. **レスポンス**: Database → Repository → Query/Command → Controller → Client
+
+この構造により、保守性・テスタビリティ・拡張性の高いBackendアーキテクチャを実現する 🚀
+
 ## 📏 実装ルール
 
 - 🔤 Featureファイルのキーワードは英語を使用すること（Feature, Scenario, Given, When, Then, And, Rule）

@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { MeetingController } from './controllers/meeting.controller.js';
+import { MeetingController } from './presentation/meeting.controller.js';
 
 const meetingRoutes = new Hono();
 const meetingController = new MeetingController();
