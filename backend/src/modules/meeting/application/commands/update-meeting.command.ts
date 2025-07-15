@@ -14,7 +14,7 @@ export class UpdateMeetingCommand {
       return null;
     }
     
-    meeting.update(data);
+    meeting.modifyDetails(data);
     return this.meetingRepository.save(meeting);
   }
 }

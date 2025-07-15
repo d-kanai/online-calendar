@@ -63,7 +63,7 @@ export class Meeting {
     );
   }
 
-  update(data: UpdateMeetingData): void {
+  modifyDetails(data: UpdateMeetingData): void {
     if (data.title !== undefined) {
       this._title = data.title;
     }

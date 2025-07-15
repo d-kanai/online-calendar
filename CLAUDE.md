@@ -230,9 +230,10 @@ backend/src/modules/{module}/
 - **🏗️ Static Factory Methods**: 意図的なオブジェクト作成を促進
   - `Entity.create(data)`: 新規エンティティ作成
   - `Entity.fromPersistence(data)`: 永続化データからの復元
-- **🔄 State Transition Methods**: 状態変更は単一のupdateメソッドで実行
+- **🔄 State Transition Methods**: 状態変更はビジネス的振る舞いの名前で実行
+  - 抽象的な`update`ではなく具体的なビジネス的振る舞いを命名
+  - `modifyDetails(data)`等、ドメイン知識を表現するメソッド名を使用
   - 個別のupdateメソッドは状態遷移ルールの混乱を招くため禁止
-  - `update(data)`メソッドで全ての更新処理を一元管理
   - `updatedAt`は更新時に自動更新
 - **🚫 永続化詳細の排除**: Domain層は永続化の詳細を持たない
   - `toPersistence`等のメソッドは配置しない
@@ -249,8 +250,8 @@ export class Meeting {
     // 永続化データからの復元
   }
 
-  update(data: UpdateMeetingData): void {
-    // 状態遷移ロジック
+  modifyDetails(data: UpdateMeetingData): void {
+    // 会議詳細の修正（ビジネス的振る舞い）
   }
 
   // getterのみ提供（永続化詳細はRepository層で処理）
@@ -361,6 +362,58 @@ Controller → Client
 ```
 
 この構造により、保守性・テスタビリティ・拡張性の高いBackendアーキテクチャを実現する 🚀
+
+## 🏷️ Domain Model命名規約
+
+### 🎯 メソッド命名原則
+- **❌ 抽象的な命名**: `update()`, `change()`, `modify()` 等の汎用的な名前は避ける
+- **✅ ビジネス的振る舞い**: ドメイン知識を表現する具体的な名前を使用
+- **🎭 ドメイン表現**: エンティティが持つ実際のビジネス的振る舞いを命名に反映
+
+### 📝 命名例（Meeting エンティティ）
+```typescript
+// ❌ 抽象的な命名
+meeting.update(data);
+meeting.change(data);
+meeting.modify(data);
+
+// ✅ ビジネス的振る舞い
+meeting.modifyDetails(data);        // 会議詳細の修正
+meeting.reschedule(startTime, endTime); // 会議の再スケジュール
+meeting.rename(title);              // 会議名の変更
+meeting.markAsImportant();          // 重要度を設定
+meeting.markAsNormal();             // 重要度を解除
+meeting.cancel();                   // 会議のキャンセル
+meeting.postpone(newDate);          // 会議の延期
+```
+
+### 🎪 他のエンティティ命名例
+```typescript
+// User エンティティ
+user.activate();              // ユーザーの有効化
+user.deactivate();            // ユーザーの無効化
+user.updateProfile(data);     // プロフィール更新
+user.changePassword(newPwd);  // パスワード変更
+
+// Order エンティティ
+order.confirm();              // 注文の確定
+order.cancel();               // 注文のキャンセル
+order.ship();                 // 注文の発送
+order.complete();             // 注文の完了
+
+// Product エンティティ
+product.updatePrice(price);   // 価格の更新
+product.discontinue();        // 製品の廃止
+product.restock(quantity);    // 在庫の補充
+```
+
+### 📐 命名の指針
+- **🎯 意図の明確化**: メソッド名からビジネス的な意図が読み取れる
+- **📖 可読性**: コードがビジネス要件をそのまま表現する
+- **🤝 共通言語**: 開発者とドメインエキスパートが同じ語彙を使用
+- **🔍 発見しやすさ**: 機能を探す際に直感的に見つけられる
+
+この命名規約により、ドメイン知識がコードに直接表現され、保守性と理解しやすさが向上する 🎯
 
 ## 📏 実装ルール
 
