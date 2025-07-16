@@ -1064,6 +1064,217 @@ After(async function () {
 - **回帰テスト**: 機能追加時の既存機能への影響を検知
 - **仕様の生きた文書**: Featureファイルが常に最新の仕様書として機能
 
+## 🎭 Page Objectパターン
+
+### 🎯 基本原則
+- **DOM情報の集約**: 各ページのDOM構造とセレクターを1つのクラスに集約
+- **ビジネス操作の抽象化**: 低レベルなDOM操作を高レベルなビジネス操作に変換
+- **保守性の向上**: UI変更時の修正箇所を最小限に抑制
+- **可読性の向上**: step定義をビジネスロジック中心に簡素化
+
+### 🏗️ Page Objectクラス設計
+
+#### 📂 ファイル構成
+```
+e2e/
+├── page-objects/
+│   ├── CalendarPage.js      # カレンダー画面のPage Object
+│   ├── MeetingFormPage.js   # 会議フォームのPage Object
+│   └── [PageName]Page.js    # 各画面のPage Object
+├── steps/
+│   ├── meeting_creation.steps.js  # Page Objectを使用したstep定義
+│   └── toppage.steps.js           # Page Objectを使用したstep定義
+└── features/
+    └── *.feature             # Gherkinシナリオ
+```
+
+#### 🎨 Page Objectクラス構造
+```javascript
+class MeetingFormPage {
+  constructor(page) {
+    this.page = page;
+    
+    // 🎯 セレクター定義を集約
+    this.selectors = {
+      createMeetingButton: 'text=会議を作成',
+      titleInput: '[data-testid="meeting-title-input"]',
+      submitButton: '[data-testid="meeting-submit-button"]',
+      errorAlert: '[role="alert"]'
+    };
+  }
+
+  // 🎪 ビジネス操作メソッド
+  async createMeeting(title, period, importantFlag) {
+    await this.openCreateMeetingForm();
+    await this.fillTitle(title);
+    await this.setPeriod(period);
+    await this.setImportantFlag(importantFlag === 'true');
+    await this.submitAndWaitForCompletion();
+  }
+
+  // 📝 個別操作メソッド
+  async openCreateMeetingForm() {
+    await this.page.click(this.selectors.createMeetingButton);
+    await this.page.waitForSelector(this.selectors.titleInput);
+  }
+
+  // 🚨 検証メソッド
+  async waitForErrorMessage(expectedErrorMessage) {
+    await this.page.waitForSelector(this.selectors.errorAlert, { timeout: 10000 });
+    const alertContent = await this.page.textContent(this.selectors.errorAlert);
+    if (!alertContent.includes(expectedErrorMessage)) {
+      throw new Error(`Expected error message "${expectedErrorMessage}" not found`);
+    }
+  }
+}
+```
+
+### 🔄 step definition変更
+
+#### **Before（DOM操作が散在）:**
+```javascript
+When('period {string} で会議を作成する', async function (period) {
+  // 会議を作成ボタンをクリック
+  await page.click('text=会議を作成');
+  
+  // フォームが表示されるまで待機
+  await page.waitForSelector('[data-testid="meeting-title-input"]');
+  
+  // タイトルを入力（必須項目のため）
+  await page.fill('[data-testid="meeting-title-input"]', 'テスト会議');
+  
+  // 開始時刻と終了時刻を設定（期間に応じて）
+  const now = new Date();
+  const startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0);
+  const endTime = new Date(startTime);
+  
+  // 期間の解析
+  const periodMatch = period.match(/(\d+)分/);
+  if (periodMatch) {
+    const minutes = parseInt(periodMatch[1]);
+    endTime.setMinutes(startTime.getMinutes() + minutes);
+  }
+  
+  const startTimeString = startTime.toISOString().slice(0, 16);
+  const endTimeString = endTime.toISOString().slice(0, 16);
+  
+  await page.fill('#startTime', startTimeString);
+  await page.fill('#endTime', endTimeString);
+  
+  // 作成ボタンをクリック
+  await page.click('[data-testid="meeting-submit-button"]');
+});
+```
+
+#### **After（Page Object集約）:**
+```javascript
+When('period {string} で会議を作成する', async function (period) {
+  // Page Objectを使用した期間指定会議作成
+  await meetingFormPage.createMeetingWithPeriod(period);
+});
+```
+
+### 🏭 Page Object実装パターン
+
+#### 🎯 セレクター管理
+```javascript
+class CalendarPage {
+  constructor(page) {
+    this.page = page;
+    
+    this.selectors = {
+      // ナビゲーション
+      calendarView: '[data-testid="calendar-view"]',
+      createMeetingButton: 'text=会議を作成',
+      
+      // カレンダー要素
+      monthHeader: '.text-2xl.font-semibold',
+      dateCells: '.min-h-24.p-2.cursor-pointer',
+      
+      // 会議要素
+      meetingItems: '.text-xs.p-1.rounded.truncate',
+      importantMeetings: '.bg-destructive.text-destructive-foreground'
+    };
+  }
+}
+```
+
+#### ⚡ 操作メソッド分類
+**基本操作**: `click()`, `fill()`, `navigate()`
+```javascript
+async clickCreateMeeting() {
+  await this.page.click(this.selectors.createMeetingButton);
+}
+
+async navigate(url = 'http://localhost:3000') {
+  await this.page.goto(url);
+}
+```
+
+**複合操作**: 複数の基本操作を組み合わせたビジネス操作
+```javascript
+async createMeeting(title, period, importantFlag) {
+  await this.openCreateMeetingForm();
+  await this.fillTitle(title);
+  await this.setPeriod(period);
+  await this.setImportantFlag(importantFlag === 'true');
+  await this.submitAndWaitForCompletion();
+}
+```
+
+**検証操作**: 状態確認・待機・エラー検証
+```javascript
+async waitForSuccessMessage() {
+  await this.page.waitForSelector(this.selectors.successToast, { timeout: 10000 });
+}
+
+async waitForErrorMessage(expectedErrorMessage) {
+  await this.page.waitForSelector(this.selectors.errorAlert, { timeout: 10000 });
+  const alertContent = await this.page.textContent(this.selectors.errorAlert);
+  if (!alertContent.includes(expectedErrorMessage)) {
+    throw new Error(`Expected error message "${expectedErrorMessage}" not found`);
+  }
+}
+```
+
+### 🚀 Page Object導入効果
+
+#### **1. 保守性向上** 🛠️
+- **UI変更対応**: セレクター変更時の修正箇所が1ファイルに集約
+- **影響範囲明確化**: DOM構造変更の影響範囲が特定しやすい
+- **一元管理**: 画面固有のロジックが1箇所に集約
+
+#### **2. 可読性向上** 📖
+- **ビジネス中心**: step定義がビジネス操作中心になり理解しやすい
+- **抽象化**: 技術的詳細が隠蔽されてシナリオが読みやすい
+- **意図明確**: メソッド名でビジネス意図が明確に表現
+
+#### **3. 再利用性向上** ♻️
+- **共通操作**: 画面固有の操作を他のシナリオで簡単に再利用
+- **標準化**: 同じ操作が常に同じ方法で実行される
+- **DRY原則**: 重複コードの削減
+
+#### **4. テスト安定性向上** 🛡️
+- **待機処理統一**: Page Object内で適切な待機処理を実装
+- **エラーハンドリング**: 統一されたエラーハンドリング
+- **セレクター品質**: data-testid等の推奨セレクターを集約管理
+
+### 📋 Page Object実装ガイドライン
+
+#### ✅ 推奨パターン
+- **1画面1クラス**: 各画面に対応する専用Page Objectクラスを作成
+- **セレクター集約**: 全セレクターをコンストラクタで定義
+- **ビジネス操作**: 高レベルなビジネス操作メソッドを提供
+- **適切な待機**: 非同期処理に対する適切な待機処理
+
+#### ❌ アンチパターン
+- **巨大クラス**: 複数画面の操作を1つのクラスに混在
+- **DOM操作露出**: step定義に直接的なDOM操作が残存
+- **重複実装**: 同じ操作を複数のPage Objectで重複実装
+- **セレクター散在**: セレクターがメソッド内に散在
+
+この設計により、E2Eテストの保守性・可読性・再利用性が大幅に向上し、チーム開発での品質が確保される 🎉
+
 # 🎨 Frontendアーキテクチャルール
 
 ## 🪝 Custom Hooks Pattern
