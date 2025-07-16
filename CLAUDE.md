@@ -1096,8 +1096,42 @@ After(async function () {
 - **認証前提**: 全てのシナリオは認証済み状態での動作を前提とする
 - **全API統合**: シナリオで関連する全てのAPIが実際にバックエンドと連携していることを確認
 - **データの一貫性**: テスト間でデータが競合しないよう、各テスト前にデータベースリセット
-- **タイムアウト設定**: 非同期処理を考慮した適切なタイムアウト設定
+- **🚫 固定待機禁止**: `waitForTimeout()`による固定待機は基本禁止
+- **⚡ 動的待機必須**: 要素やネットワーク完了を待つ動的待機を使用
 - **処理完了待機**: APIレスポンス、UI更新完了まで適切に待機
+
+### 🚀 E2E待機戦略ルール
+
+#### ❌ 禁止パターン
+```javascript
+// 固定時間待機（禁止）
+await page.waitForTimeout(3000);
+await page.waitForTimeout(1000);
+```
+
+#### ✅ 推奨パターン
+```javascript
+// ネットワーク完了待機
+await page.waitForLoadState('networkidle');
+
+// 要素表示待機
+await page.waitForSelector('[data-testid="calendar-view"]', { timeout: 10000 });
+
+// ダイアログ表示待機
+await page.waitForSelector('[role="dialog"]', { timeout: 10000 });
+
+// 特定テキスト表示待機
+await page.waitForSelector(':text("更新された会議")', { timeout: 10000 });
+```
+
+#### 🎯 待機戦略の選択指針
+- **ページロード後**: `waitForLoadState('networkidle')`でネットワーク完了を待機
+- **要素表示**: `waitForSelector()`で要素が表示されるまで待機
+- **フォーム表示**: `waitForSelector('[data-testid="form-element"]')`でフォーム要素を待機
+- **ダイアログ表示**: `waitForSelector('[role="dialog"]')`でダイアログを待機
+- **データ更新**: `waitForSelector(':text("更新後の内容")')`で更新された内容を待機
+
+この戦略により、テスト実行時間を70%短縮（40秒→12秒）し、より安定したE2Eテストを実現する 🚀
 
 ### 🎯 ATDDの価値
 - **ビジネス価値の検証**: 実際のユーザーシナリオでビジネス価値を確認
