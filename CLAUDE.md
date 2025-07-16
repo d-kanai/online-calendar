@@ -1099,6 +1099,7 @@ After(async function () {
 - **🚫 固定待機禁止**: `waitForTimeout()`による固定待機は基本禁止
 - **⚡ 動的待機必須**: 要素やネットワーク完了を待つ動的待機を使用
 - **処理完了待機**: APIレスポンス、UI更新完了まで適切に待機
+- **📊 データ準備分離**: Given（データ準備）ステップは`data.steps.js`に集約
 
 ### 🚀 E2E待機戦略ルール
 
@@ -1132,6 +1133,90 @@ await page.waitForSelector(':text("更新された会議")', { timeout: 10000 })
 - **データ更新**: `waitForSelector(':text("更新後の内容")')`で更新された内容を待機
 
 この戦略により、テスト実行時間を70%短縮（40秒→12秒）し、より安定したE2Eテストを実現する 🚀
+
+## 📊 E2Eステップ分離ルール
+
+### 🎯 基本原則
+- **関心の分離**: 認証・データ準備・UI操作を独立したファイルに分離
+- **純粋性**: Givenステップは純粋なデータベース操作のみ実行
+- **再利用性**: 共通のデータパターンを全featureファイルで使用可能
+
+### 📂 ファイル構成と責務
+
+#### 🔐 `auth.steps.js`
+- **責務**: 認証処理・ブラウザ管理・グローバル状態管理
+- **含む内容**:
+  - `Given ユーザー"Daiki"でログイン`
+  - `BeforeAll`/`AfterAll`フック
+  - グローバルPage Object初期化
+
+#### 📊 `data.steps.js`
+- **責務**: テストデータの作成（純粋なDB操作のみ）
+- **含む内容**:
+  - `Given 会議 "タイトル" を作成済み`
+  - `Given 時間帯 "10:00-11:00" の会議を作成済み`
+  - `Given 重要会議 "タイトル" を作成済み`
+  - `Given 会議 "タイトル" に参加者 "email" を追加済み`
+- **特徴**:
+  - ページアクセス一切なし
+  - Prismaによる直接DB操作
+  - `this.createdMeeting`で他ステップに共有
+
+#### 🖥️ `{feature}.steps.js`
+- **責務**: UI操作・ページアクセス・結果確認
+- **含む内容**:
+  - `When` ステップ（ページ操作）
+  - `Then` ステップ（結果確認）
+- **特徴**:
+  - グローバルPage Object使用
+  - 動的待機戦略の適用
+
+### 🚫 禁止パターン
+```javascript
+// ❌ data.steps.js内でのページ操作（禁止）
+Given('会議を作成済み', async function () {
+  await page.goto('http://localhost:3000'); // NG
+  await page.click('button'); // NG
+});
+
+// ❌ UI操作ステップ内でのデータ作成（禁止）
+When('会議を作成する', async function () {
+  await prisma.meeting.create({...}); // NG
+});
+```
+
+### ✅ 推奨パターン
+```javascript
+// ✅ data.steps.js - 純粋なDB操作
+Given('会議 {string} を作成済み', async function (title) {
+  const meeting = await prisma.meeting.create({
+    data: { title, startTime: tomorrow, endTime: endTime, ownerId: this.currentUser.id }
+  });
+  this.createdMeeting = meeting;
+});
+
+// ✅ {feature}.steps.js - UI操作
+When('カレンダー画面で会議詳細を開く', async function () {
+  await global.calendarPage.navigate();
+  await global.calendarPage.page.click(':text("会議タイトル")');
+});
+```
+
+### 🎯 データパターンの設計指針
+- **柔軟性**: パラメータ化でさまざまなデータパターンに対応
+- **デフォルト**: 合理的なデフォルト値（明日14:00-15:00等）
+- **組み合わせ**: 複数のGivenステップを組み合わせて複雑なシナリオを構成
+- **命名規約**: `Given {エンティティ} "{パラメータ}" を{状態}済み`
+
+### 🔄 ステップ実行フロー
+```
+1. Background: ユーザー"Daiki"でログイン (auth.steps.js)
+2. Given: 会議 "タイトル" を作成済み (data.steps.js)
+3. When: カレンダー画面で会議詳細を開く ({feature}.steps.js)
+4. Then: 会議詳細が表示される ({feature}.steps.js)
+```
+
+この構成により、保守性・再利用性・テスト実行速度の全てを向上させる 🎯
 
 ### 🎯 ATDDの価値
 - **ビジネス価値の検証**: 実際のユーザーシナリオでビジネス価値を確認
