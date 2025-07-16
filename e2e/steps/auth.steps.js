@@ -1,45 +1,7 @@
-const { Given, Before, After, BeforeAll, AfterAll } = require('@cucumber/cucumber');
+const { Given } = require('@cucumber/cucumber');
 const { PrismaClient } = require('@prisma/client');
-const { chromium } = require('@playwright/test');
-const CalendarPage = require('../page-objects/CalendarPage');
-const MeetingFormPage = require('../page-objects/MeetingFormPage');
 
 const prisma = new PrismaClient();
-let browser;
-let page;
-
-// グローバル変数としてPage Objectを定義
-global.calendarPage = null;
-global.meetingFormPage = null;
-
-// テストスイート開始時にブラウザを起動
-BeforeAll(async function () {
-  // 環境変数でheadlessモードを制御（デフォルトはheadless）
-  const headless = process.env.E2E_HEADLESS !== 'false';
-  browser = await chromium.launch({ headless });
-  page = await browser.newPage();
-  
-  // Page Objectインスタンスを作成
-  global.calendarPage = new CalendarPage(page);
-  global.meetingFormPage = new MeetingFormPage(page);
-});
-
-// テストスイート終了時にブラウザを終了
-AfterAll(async function () {
-  try {
-    if (page) {
-      await page.close();
-      page = null;
-    }
-    if (browser) {
-      await browser.close();
-      browser = null;
-    }
-    await prisma.$disconnect();
-  } catch (error) {
-    console.log('Cleanup error:', error);
-  }
-});
 
 Given('ユーザー{string}でログイン', async function (userName) {
   // データベースリセット - 全テーブルをクリア
@@ -56,17 +18,17 @@ Given('ユーザー{string}でログイン', async function (userName) {
   });
   
   // ページエラーをキャッチ（デバッグ用）
-  if (page) {
-    page.on('pageerror', error => console.log('PAGE ERROR:', error.message));
+  if (global.calendarPage && global.calendarPage.page) {
+    global.calendarPage.page.on('pageerror', error => console.log('PAGE ERROR:', error.message));
     
     // ページアクセス前にlocalStorageを設定
-    await page.goto('http://localhost:3000');
+    await global.calendarPage.page.goto('http://localhost:3000');
     
     // ページが読み込まれるまで待機
-    await page.waitForLoadState('networkidle');
+    await global.calendarPage.page.waitForLoadState('networkidle');
     
     // ログイン状態をlocalStorageに設定
-    await page.evaluate((userData) => {
+    await global.calendarPage.page.evaluate((userData) => {
       // ユーザー一覧をlocalStorageに保存
       const users = [userData];
       localStorage.setItem('calendar_app_users', JSON.stringify(users));
@@ -81,10 +43,10 @@ Given('ユーザー{string}でログイン', async function (userName) {
     });
     
     // ページをリロードして認証状態を反映
-    await page.reload();
+    await global.calendarPage.page.reload();
     
     // カレンダーが表示されるまで待機（認証完了を確認）
-    await page.waitForSelector('[data-testid="calendar-view"]', { timeout: 10000 });
+    await global.calendarPage.page.waitForSelector('[data-testid="calendar-view"]', { timeout: 10000 });
   }
   
   // ユーザー情報を保存（他のステップで使用）
@@ -92,17 +54,7 @@ Given('ユーザー{string}でログイン', async function (userName) {
 });
 
 // データ準備のGivenステップはdata.steps.jsに移動
-
-// After hook for cleanup between scenarios
-After(async function () {
-  // シナリオ間でページを再利用するため、各シナリオ後はページをクリアのみ
-  if (page) {
-    await page.evaluate(() => {
-      localStorage.clear();
-      sessionStorage.clear();
-    });
-  }
-});
+// フック関連のコードはhook.steps.jsに移動
 
 Given('ユーザー{string}でログインしてページにアクセス', async function (userName) {
   // ユーザー作成
@@ -114,16 +66,16 @@ Given('ユーザー{string}でログインしてページにアクセス', async
   });
   
   // ページエラーをキャッチ（デバッグ用）
-  page.on('pageerror', error => console.log('PAGE ERROR:', error.message));
+  global.calendarPage.page.on('pageerror', error => console.log('PAGE ERROR:', error.message));
   
   // トップページにアクセス
-  await page.goto('http://localhost:3000');
+  await global.calendarPage.page.goto('http://localhost:3000');
   
   // ページが読み込まれるまで待機
-  await page.waitForLoadState('networkidle');
+  await global.calendarPage.page.waitForLoadState('networkidle');
   
   // ログイン状態をlocalStorageに設定
-  await page.evaluate((userData) => {
+  await global.calendarPage.page.evaluate((userData) => {
     // ユーザー一覧をlocalStorageに保存
     const users = [userData];
     localStorage.setItem('calendar_app_users', JSON.stringify(users));
@@ -138,10 +90,10 @@ Given('ユーザー{string}でログインしてページにアクセス', async
   });
   
   // ページをリロードして認証状態を反映
-  await page.reload();
+  await global.calendarPage.page.reload();
   
   // カレンダーが表示されるまで待機（認証完了を確認）
-  await page.waitForSelector('[data-testid="calendar-view"]', { timeout: 10000 });
+  await global.calendarPage.page.waitForSelector('[data-testid="calendar-view"]', { timeout: 10000 });
   
   // ユーザー情報を保存（他のステップで使用）
   this.currentUser = user;

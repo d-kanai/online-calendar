@@ -1,19 +1,11 @@
-const { Given, When, Then, After, setDefaultTimeout } = require('@cucumber/cucumber');
-const { chromium, expect } = require('@playwright/test');
+const { Given, When, Then, setDefaultTimeout } = require('@cucumber/cucumber');
+const { expect } = require('@playwright/test');
 const { PrismaClient } = require('@prisma/client');
-const CalendarPage = require('../page-objects/CalendarPage');
-const MeetingFormPage = require('../page-objects/MeetingFormPage');
 
 // タイムアウトを60秒に設定
 setDefaultTimeout(60000);
 
 const prisma = new PrismaClient();
-
-let browser;
-let page;
-let calendarPage;
-let meetingFormPage;
-let createdMeetingId;
 
 // 古いGivenステップは削除 - auth.steps.jsの共通ステップを使用
 
@@ -121,4 +113,4 @@ When('更新された会議をクリックする', async function () {
   await global.calendarPage.page.waitForSelector('[role="dialog"]', { timeout: 10000 });
 });
 
-// After hook moved to auth.steps.js for unified cleanup
+// After hook moved to hook.steps.js for unified cleanup
