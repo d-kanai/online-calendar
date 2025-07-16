@@ -1,5 +1,14 @@
 # 🧪 テスト戦略
 
+## 📋 テスト種別一覧
+
+| テスト種別 | 対象領域 | テスト内容 |
+|-----------|---------|-----------|
+| **TestA** | Backend | API in-out Test |
+| **TestB** | Backend | Domain Layer Pattern Test |
+| **TestC** | Frontend | Page Event Test |
+| **TestD** | E2E Test | Scenario Test |
+
 ## 🎯 TestA: Controller API テスト
 
 ### 📋 テスト方針

@@ -9,8 +9,8 @@
 | **Git** | [./docs/git_rule.md](./docs/git_rule.md) | Gitワークフロー・ブランチ戦略 |
 | **Backend** | [./docs/backend_architecture.md](./docs/backend_architecture.md) | バックエンドアーキテクチャ |
 | **Frontend** | [./docs/frontend_architecture.md](./docs/frontend_architecture.md) | フロントエンドアーキテクチャ |
-| **E2E Testing** | [./docs/e2e_spec_rule.md](./docs/e2e_spec_rule.md) | E2Eテスト仕様・ルール |
-| **Testing** | [./docs/test_strategy.md](./docs/test_strategy.md) | テスト戦略・Controller APIテスト |
+| **E2E Testing** | [./docs/e2e_spec_rule.md](./docs/e2e_spec_rule.md) | E2Eテストルール |
+| **Testing** | [./docs/test_strategy.md](./docs/test_strategy.md) | テスト戦略 |
 | **Design** | [./docs/figma_rule.md](./docs/figma_rule.md) | Figmaデザインルール |
 | **Workflow** | [./docs/development_workflow.md](./docs/development_workflow.md) | 開発ワークフロー |
 
