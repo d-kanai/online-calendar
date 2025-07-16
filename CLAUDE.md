@@ -100,7 +100,15 @@ yarn ut
 - Controller・Application・Domain層を順次実装
 - Exception駆動設計とエラーハンドリング統一
 
-**7. 🔄 統合確認（Refactor段階）**
+**7. 🔧 TypeCheck & Fix（品質保証段階）**
+```bash
+yarn typecheck
+```
+- Frontend/Backend全体の型安全性を確認
+- 型エラーが発生した場合は即座に修正
+- 型安全な実装で回帰バグを予防
+
+**8. 🔄 統合確認（Refactor段階）**
 - 対象のシナリオがpassするまで繰り返し
 - **backend test** と **e2e test** 両方がパスするように実装を進める
 - コード品質・設計原則を確認してリファクタリング
@@ -109,8 +117,9 @@ yarn ut
 
 - **🚫 実装ファーストの禁止**: テストなしでの実装は絶対に行わない
 - **🎯 一つずつ進める**: 複数シナリオを並行実装しない
-- **✅ 両方パス必須**: backend test単体 + e2e test統合の両方が成功するまで完了としない
+- **✅ 3つパス必須**: backend test + e2e test + typecheck の全てが成功するまで完了としない
 - **📊 継続確認**: 実装中も定期的にテスト実行して状態確認
+- **🔧 型安全優先**: TypeCheckエラーは他の作業より優先して修正
 
 このプロセスにより、品質の高い機能を確実に実装し、回帰バグを防止できる 🛡️
 
@@ -147,6 +156,21 @@ yarn front:start
 
 # 🔍 Lint実行
 yarn front:lint
+
+# 🔧 型チェック実行
+yarn front:typecheck
+```
+
+### 🛡️ 全体品質チェック
+```bash
+# 🔧 Frontend + Backend 統合型チェック
+yarn typecheck
+
+# 🔧 Backend のみ型チェック
+yarn back:typecheck
+
+# 🔧 Frontend のみ型チェック
+yarn front:typecheck
 ```
 
 ## 🌿 Git運用ルール
