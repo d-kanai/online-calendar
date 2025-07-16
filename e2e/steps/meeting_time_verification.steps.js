@@ -17,7 +17,9 @@ let createdMeetingId;
 
 Given('オーナーが {string} の会議を作成済み', async function (timeRange) {
   // データベースリセット - 全テーブルをクリア
+  await prisma.meetingParticipant.deleteMany();
   await prisma.meeting.deleteMany();
+  await prisma.user.deleteMany();
   
   // ブラウザとページを初期化
   browser = await chromium.launch({ headless: true });
@@ -26,6 +28,14 @@ Given('オーナーが {string} の会議を作成済み', async function (timeR
   // Page Objectインスタンスを作成
   calendarPage = new CalendarPage(page);
   meetingFormPage = new MeetingFormPage(page);
+  
+  // オーナーユーザーを作成
+  const owner = await prisma.user.create({
+    data: {
+      email: 'taro@example.com',
+      name: 'taro'
+    }
+  });
   
   // timeRangeから開始時刻と終了時刻を抽出（例: "10:00-11:00"）
   const [startTimeStr, endTimeStr] = timeRange.split('-');
@@ -47,7 +57,7 @@ Given('オーナーが {string} の会議を作成済み', async function (timeR
       startTime: tomorrow,
       endTime: endTime,
       isImportant: false,
-      ownerId: 'taro@example.com'
+      ownerId: owner.id
     }
   });
   

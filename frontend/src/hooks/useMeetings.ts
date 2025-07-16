@@ -19,8 +19,12 @@ export const useMeetings = () => {
           title: meeting.title,
           startTime: new Date(meeting.startTime),
           endTime: new Date(meeting.endTime),
-          owner: meeting.ownerId,
-          participants: [],
+          owner: meeting.owner || meeting.ownerId,
+          participants: meeting.participants ? meeting.participants.map((p: any) => ({
+            id: p.id,
+            email: p.email,
+            name: p.name
+          })) : [],
           isImportant: meeting.isImportant,
           status: 'scheduled',
           createdAt: new Date(meeting.createdAt),

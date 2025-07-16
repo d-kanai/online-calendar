@@ -7,17 +7,22 @@ import { GetMeetingsByOwnerQuery } from '../application/queries/get-meetings-by-
 import { CreateMeetingCommand } from '../application/commands/create-meeting.command.js';
 import { UpdateMeetingCommand } from '../application/commands/update-meeting.command.js';
 import { DeleteMeetingCommand } from '../application/commands/delete-meeting.command.js';
+import { AddParticipantCommand } from '../application/commands/add-participant.command.js';
+import { MeetingRepository } from '../infra/meeting.repository.js';
+import { MeetingWithOwnerHelper } from '../application/queries/meeting-with-owner.helper.js';
 import { 
   GetAllMeetingsOutput,
   GetMeetingByIdOutput,
   CreateMeetingOutput,
   UpdateMeetingOutput,
   GetMeetingsByOwnerOutput,
+  AddParticipantOutput,
   toGetAllMeetingsOutput,
   toGetMeetingByIdOutput,
   toCreateMeetingOutput,
   toUpdateMeetingOutput,
-  toGetMeetingsByOwnerOutput
+  toGetMeetingsByOwnerOutput,
+  toAddParticipantOutput
 } from './output.js';
 
 export class MeetingController {
@@ -27,31 +32,36 @@ export class MeetingController {
   private createMeetingCommand: CreateMeetingCommand;
   private updateMeetingCommand: UpdateMeetingCommand;
   private deleteMeetingCommand: DeleteMeetingCommand;
+  private addParticipantCommand: AddParticipantCommand;
+  private helper: MeetingWithOwnerHelper;
 
   constructor() {
+    const repository = new MeetingRepository();
     this.getAllMeetingsQuery = new GetAllMeetingsQuery();
     this.getMeetingByIdQuery = new GetMeetingByIdQuery();
     this.getMeetingsByOwnerQuery = new GetMeetingsByOwnerQuery();
     this.createMeetingCommand = new CreateMeetingCommand();
     this.updateMeetingCommand = new UpdateMeetingCommand();
     this.deleteMeetingCommand = new DeleteMeetingCommand();
+    this.addParticipantCommand = new AddParticipantCommand(repository);
+    this.helper = new MeetingWithOwnerHelper();
   }
 
   async getAllMeetings(c: Context): Promise<Response> {
-    const meetings = await this.getAllMeetingsQuery.run();
+    const meetingsWithOwners = await this.getAllMeetingsQuery.run();
     return c.json<ApiResponse<GetAllMeetingsOutput[]>>({
       success: true,
-      data: meetings.map(toGetAllMeetingsOutput)
+      data: meetingsWithOwners.map(toGetAllMeetingsOutput)
     });
   }
 
   async getMeetingById(c: Context) {
     const id = c.req.param('id');
-    const meeting = await this.getMeetingByIdQuery.run(id);
+    const meetingWithOwner = await this.getMeetingByIdQuery.run(id);
 
     return c.json<ApiResponse<GetMeetingByIdOutput>>({
       success: true,
-      data: toGetMeetingByIdOutput(meeting)
+      data: toGetMeetingByIdOutput(meetingWithOwner)
     });
   }
 
@@ -67,10 +77,11 @@ export class MeetingController {
     };
 
     const meeting = await this.createMeetingCommand.run(meetingData);
+    const meetingWithOwner = await this.helper.getMeetingWithOwner(meeting);
 
     return c.json<ApiResponse<CreateMeetingOutput>>({
       success: true,
-      data: toCreateMeetingOutput(meeting),
+      data: toCreateMeetingOutput(meetingWithOwner),
       message: 'Meeting created successfully'
     }, 201);
   }
@@ -86,10 +97,11 @@ export class MeetingController {
     if (body.isImportant !== undefined) updateData.isImportant = body.isImportant;
 
     const meeting = await this.updateMeetingCommand.run(id, updateData);
+    const meetingWithOwner = await this.helper.getMeetingWithOwner(meeting);
 
     return c.json<ApiResponse<UpdateMeetingOutput>>({
       success: true,
-      data: toUpdateMeetingOutput(meeting),
+      data: toUpdateMeetingOutput(meetingWithOwner),
       message: 'Meeting updated successfully'
     });
   }
@@ -106,11 +118,30 @@ export class MeetingController {
 
   async getMeetingsByOwner(c: Context) {
     const ownerId = c.req.param('ownerId');
-    const meetings = await this.getMeetingsByOwnerQuery.run(ownerId);
+    const meetingsWithOwners = await this.getMeetingsByOwnerQuery.run(ownerId);
 
     return c.json<ApiResponse<GetMeetingsByOwnerOutput[]>>({
       success: true,
-      data: meetings.map(toGetMeetingsByOwnerOutput)
+      data: meetingsWithOwners.map(toGetMeetingsByOwnerOutput)
+    });
+  }
+
+  async addParticipant(c: Context) {
+    const id = c.req.param('id');
+    const body = await c.req.json<{ email: string, name: string, requesterId: string }>();
+    
+    const meeting = await this.addParticipantCommand.run({
+      meetingId: id,
+      email: body.email,
+      name: body.name,
+      requesterId: body.requesterId
+    });
+    const meetingWithOwner = await this.helper.getMeetingWithOwner(meeting);
+
+    return c.json<ApiResponse<AddParticipantOutput>>({
+      success: true,
+      data: toAddParticipantOutput(meetingWithOwner),
+      message: '参加者が追加されました'
     });
   }
 }

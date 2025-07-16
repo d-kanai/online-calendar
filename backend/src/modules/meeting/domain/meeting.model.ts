@@ -50,6 +50,13 @@ export interface UpdateMeetingData {
   isImportant?: boolean;
 }
 
+export interface MeetingParticipant {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  joinedAt: Date;
+}
+
 export class Meeting {
   private constructor(
     private readonly _id: string,
@@ -58,6 +65,7 @@ export class Meeting {
     private _endTime: Date,
     private _isImportant: boolean,
     private readonly _ownerId: string,
+    private _participants: MeetingParticipant[],
     private readonly _createdAt: Date,
     private _updatedAt: Date
   ) {}
@@ -77,6 +85,7 @@ export class Meeting {
         validatedData.endTime,
         validatedData.isImportant,
         validatedData.ownerId,
+        [],
         now,
         now
       );
@@ -101,6 +110,7 @@ export class Meeting {
     endTime: Date;
     isImportant: boolean;
     ownerId: string;
+    participants?: MeetingParticipant[];
     createdAt: Date;
     updatedAt: Date;
   }): Meeting {
@@ -111,6 +121,7 @@ export class Meeting {
       data.endTime,
       data.isImportant,
       data.ownerId,
+      data.participants || [],
       data.createdAt,
       data.updatedAt
     );
@@ -173,6 +184,33 @@ export class Meeting {
 
   get updatedAt(): Date {
     return this._updatedAt;
+  }
+
+  get participants(): MeetingParticipant[] {
+    return [...this._participants];
+  }
+
+  addParticipant(participant: MeetingParticipant): void {
+    const MAX_PARTICIPANTS = 50;
+    
+    if (this._participants.length >= MAX_PARTICIPANTS) {
+      throw new Error('参加者は50名までです');
+    }
+    
+    if (this._participants.some(p => p.userId === participant.userId)) {
+      throw new Error('この参加者は既に追加されています');
+    }
+    
+    this._participants.push(participant);
+    this._updatedAt = new Date();
+  }
+
+  removeParticipant(userId: string): void {
+    const index = this._participants.findIndex(p => p.userId === userId);
+    if (index > -1) {
+      this._participants.splice(index, 1);
+      this._updatedAt = new Date();
+    }
   }
 
 }

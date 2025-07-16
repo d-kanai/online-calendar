@@ -6,9 +6,12 @@ import { Badge } from '../lib/ui/badge';
 import { Alert, AlertDescription } from '../lib/ui/alert';
 import { Separator } from '../lib/ui/separator';
 import { Participant } from '../types/meeting';
-import { Plus, X, Mail, Bell, BellOff, Users, AlertCircle } from 'lucide-react';
+import { Plus, X, Users, AlertCircle } from 'lucide-react';
+import { meetingApi } from '../lib/api';
+import { toast } from 'sonner';
 
 interface ParticipantManagerProps {
+  meetingId: string;
   participants: Participant[];
   onParticipantsChange: (participants: Participant[]) => void;
   owner: string;
@@ -17,6 +20,7 @@ interface ParticipantManagerProps {
 }
 
 export function ParticipantManager({ 
+  meetingId,
   participants, 
   onParticipantsChange, 
   owner, 
@@ -28,7 +32,7 @@ export function ParticipantManager({
   
   const MAX_PARTICIPANTS = 50;
   
-  const addParticipant = () => {
+  const addParticipant = async () => {
     setError('');
     
     if (!newParticipantEmail.trim()) {
@@ -60,18 +64,31 @@ export function ParticipantManager({
       return;
     }
     
-    const newParticipant: Participant = {
-      id: Date.now().toString(),
-      email,
-      name: email.split('@')[0], // 仮の名前
-      notificationChannels: {
-        email: true,
-        push: false
+    try {
+      // Call backend API
+      const response = await meetingApi.addParticipant(meetingId, {
+        email,
+        name: email.split('@')[0],
+        requesterId: currentUser
+      });
+      
+      if (response.success) {
+        const newParticipant: Participant = {
+          id: Date.now().toString(),
+          email,
+          name: email.split('@')[0]
+        };
+        
+        onParticipantsChange([...participants, newParticipant]);
+        setNewParticipantEmail('');
+        toast.success(response.message || '参加者が追加されました');
+      } else {
+        setError(response.error || '参加者の追加に失敗しました');
       }
-    };
-    
-    onParticipantsChange([...participants, newParticipant]);
-    setNewParticipantEmail('');
+    } catch (error) {
+      console.error('API Error:', error);
+      setError('参加者の追加に失敗しました');
+    }
   };
   
   const removeParticipant = (participantId: string) => {
@@ -83,21 +100,7 @@ export function ParticipantManager({
     onParticipantsChange(participants.filter(p => p.id !== participantId));
   };
   
-  const toggleNotificationChannel = (participantId: string, channel: 'email' | 'push') => {
-    onParticipantsChange(
-      participants.map(p => 
-        p.id === participantId 
-          ? {
-              ...p,
-              notificationChannels: {
-                ...p.notificationChannels,
-                [channel]: !p.notificationChannels[channel]
-              }
-            }
-          : p
-      )
-    );
-  };
+  // Notification toggle removed since notificationChannels is no longer part of Participant
   
   return (
     <div className="space-y-4">
@@ -155,24 +158,6 @@ export function ParticipantManager({
                   <div className="flex items-center gap-2">
                     <span>{participant.name}</span>
                     <span className="text-sm text-muted-foreground">({participant.email})</span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleNotificationChannel(participant.id, 'email')}
-                      className={`h-6 p-1 ${participant.notificationChannels.email ? 'text-primary' : 'text-muted-foreground'}`}
-                    >
-                      <Mail className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleNotificationChannel(participant.id, 'push')}
-                      className={`h-6 p-1 ${participant.notificationChannels.push ? 'text-primary' : 'text-muted-foreground'}`}
-                    >
-                      {participant.notificationChannels.push ? <Bell className="h-3 w-3" /> : <BellOff className="h-3 w-3" />}
-                    </Button>
                   </div>
                 </div>
                 {isOwner && (

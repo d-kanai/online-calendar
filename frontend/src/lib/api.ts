@@ -55,5 +55,18 @@ export const meetingApi = {
     
     const result = await response.json();
     return result;
+  },
+
+  async addParticipant(meetingId: string, data: { email: string; name: string; requesterId: string }): Promise<ApiResponse> {
+    const response = await fetch(`${API_BASE_URL}/meetings/${meetingId}/participants`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    
+    const result = await response.json();
+    return result;
   }
 };

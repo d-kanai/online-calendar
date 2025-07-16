@@ -2,10 +2,6 @@ export interface Participant {
   id: string;
   email: string;
   name: string;
-  notificationChannels: {
-    email: boolean;
-    push: boolean;
-  };
 }
 
 export interface Meeting {

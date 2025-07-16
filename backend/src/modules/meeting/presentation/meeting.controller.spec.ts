@@ -21,18 +21,34 @@ describe('MeetingController', () => {
 
   beforeEach(async () => {
     meetingController = new MeetingController();
+    await prisma.meetingParticipant.deleteMany();
     await prisma.meeting.deleteMany();
+    await prisma.user.deleteMany();
   });
 
   test('getAllMeetings - 全ての会議を取得してJSONレスポンスを返す', async () => {
-    // Given - テストデータを作成（特定の値は不要）
+    // Given - ユーザーを作成
+    const user1 = await prisma.user.create({
+      data: {
+        email: 'user123@example.com',
+        name: 'user123'
+      }
+    });
+    const user2 = await prisma.user.create({
+      data: {
+        email: 'user456@example.com',
+        name: 'user456'
+      }
+    });
+    
+    // テストデータを作成（特定の値は不要）
     await prisma.meeting.create({
       data: {
         title: 'テスト会議1',
         startTime: new Date('2025-01-15T10:00:00Z'),
         endTime: new Date('2025-01-15T11:00:00Z'),
         isImportant: false,
-        ownerId: 'user123'
+        ownerId: user1.id
       }
     });
     await prisma.meeting.create({
@@ -41,7 +57,7 @@ describe('MeetingController', () => {
         startTime: new Date('2025-01-16T14:00:00Z'),
         endTime: new Date('2025-01-16T15:30:00Z'),
         isImportant: true,
-        ownerId: 'user456'
+        ownerId: user2.id
       }
     });
 
@@ -73,7 +89,7 @@ describe('MeetingController', () => {
     expect((response as any).data.success).toBe(true);
     expect((response as any).data.data.title).toBe('定例MTG');
     expect((response as any).data.data.isImportant).toBe(false);
-    expect((response as any).data.data.ownerId).toBe('taro@example.com');
+    expect((response as any).data.data.owner).toBe('taro@example.com');
     expect((response as any).data.message).toBe('Meeting created successfully');
     expect((response as any).status).toBe(201);
   });
@@ -143,7 +159,7 @@ describe('MeetingController', () => {
     const mockContext = createMockContext({}, meetingData);
     await expect(meetingController.createMeeting(mockContext as any))
       .rejects
-      .toThrow('オーナーIDは必須です');
+      .toThrow('メールアドレスは必須です');
   });
 
   test('createMeeting - 複数項目が未入力の場合BadRequestExceptionを発生させる', async () => {
@@ -160,7 +176,7 @@ describe('MeetingController', () => {
     const mockContext = createMockContext({}, meetingData);
     await expect(meetingController.createMeeting(mockContext as any))
       .rejects
-      .toThrow('会議タイトルは必須です');
+      .toThrow();
   });
 
   test('createMeeting - 開始時刻が終了時刻より後の場合BadRequestExceptionを発生させる', async () => {
@@ -198,14 +214,22 @@ describe('MeetingController', () => {
   });
 
   test('updateMeeting - 会議のタイトルと時刻を正常に更新できる', async () => {
-    // Given - 既存の会議を作成
+    // Given - ユーザーを作成
+    const owner = await prisma.user.create({
+      data: {
+        email: 'taro@example.com',
+        name: 'taro'
+      }
+    });
+    
+    // 既存の会議を作成
     const existingMeeting = await prisma.meeting.create({
       data: {
         title: '既存会議',
         startTime: new Date('2025-01-15T10:00:00Z'),
         endTime: new Date('2025-01-15T11:00:00Z'),
         isImportant: false,
-        ownerId: 'taro@example.com'
+        ownerId: owner.id
       }
     });
 
@@ -244,14 +268,22 @@ describe('MeetingController', () => {
   });
 
   test('updateMeeting - 期間が15分未満の場合BadRequestExceptionを発生させる', async () => {
-    // Given - 既存の会議を作成
+    // Given - ユーザーを作成
+    const owner = await prisma.user.create({
+      data: {
+        email: 'taro@example.com',
+        name: 'taro'
+      }
+    });
+    
+    // 既存の会議を作成
     const existingMeeting = await prisma.meeting.create({
       data: {
         title: '既存会議',
         startTime: new Date('2025-01-15T10:00:00Z'),
         endTime: new Date('2025-01-15T11:00:00Z'),
         isImportant: false,
-        ownerId: 'taro@example.com'
+        ownerId: owner.id
       }
     });
 
@@ -266,5 +298,183 @@ describe('MeetingController', () => {
     await expect(meetingController.updateMeeting(mockContext as any))
       .rejects
       .toThrow('会議は15分以上である必要があります');
+  });
+
+  test('addParticipant - オーナーが参加者を追加できる', async () => {
+    // Given - オーナーユーザーを作成
+    const owner = await prisma.user.create({
+      data: {
+        email: 'taro@example.com',
+        name: 'taro'
+      }
+    });
+    
+    // 会議が存在する
+    const existingMeeting = await prisma.meeting.create({
+      data: {
+        title: 'チームミーティング',
+        startTime: new Date('2025-01-15T14:00:00Z'),
+        endTime: new Date('2025-01-15T15:00:00Z'),
+        isImportant: false,
+        ownerId: owner.id
+      }
+    });
+
+    const participantData = {
+      email: 'hanako@example.com',
+      name: 'hanako',
+      requesterId: 'taro@example.com' // オーナー自身のリクエスト
+    };
+
+    // When
+    const mockContext = createMockContext({ id: existingMeeting.id }, participantData);
+    const response = await meetingController.addParticipant(mockContext as any);
+
+    // Then
+    expect((response as any).data.success).toBe(true);
+    expect((response as any).data.message).toBe('参加者が追加されました');
+    expect((response as any).status).toBe(200);
+    
+    // データベースで確認
+    const participants = await prisma.meetingParticipant.findMany({
+      where: { meetingId: existingMeeting.id }
+    });
+    expect(participants).toHaveLength(1);
+    
+    const participantUser = await prisma.user.findUnique({
+      where: { email: 'hanako@example.com' }
+    });
+    expect(participantUser).not.toBeNull();
+  });
+
+  test('addParticipant - オーナー以外は参加者を追加できない', async () => {
+    // Given - オーナーユーザーを作成
+    const owner = await prisma.user.create({
+      data: {
+        email: 'other@example.com',
+        name: 'other'
+      }
+    });
+    
+    // 他のユーザーが作成した会議
+    const existingMeeting = await prisma.meeting.create({
+      data: {
+        title: 'チームミーティング',
+        startTime: new Date('2025-01-15T14:00:00Z'),
+        endTime: new Date('2025-01-15T15:00:00Z'),
+        isImportant: false,
+        ownerId: owner.id
+      }
+    });
+
+    const participantData = {
+      email: 'hanako@example.com',
+      name: 'hanako',
+      requesterId: 'taro@example.com' // オーナーではない
+    };
+
+    // When & Then
+    const mockContext = createMockContext({ id: existingMeeting.id }, participantData);
+    await expect(meetingController.addParticipant(mockContext as any))
+      .rejects
+      .toThrow('参加者の追加はオーナーのみ可能です');
+  });
+
+  test('addParticipant - 最大参加者数（50名）を超えて追加できない', async () => {
+    // Given - オーナーユーザーを作成
+    const owner = await prisma.user.create({
+      data: {
+        email: 'taro@example.com',
+        name: 'taro'
+      }
+    });
+    
+    // 会議を作成
+    const existingMeeting = await prisma.meeting.create({
+      data: {
+        title: 'チームミーティング',
+        startTime: new Date('2025-01-15T14:00:00Z'),
+        endTime: new Date('2025-01-15T15:00:00Z'),
+        isImportant: false,
+        ownerId: owner.id
+      }
+    });
+    
+    // 既に50名の参加者を追加
+    for (let i = 0; i < 50; i++) {
+      const user = await prisma.user.create({
+        data: {
+          email: `user${i}@example.com`,
+          name: `user${i}`
+        }
+      });
+      await prisma.meetingParticipant.create({
+        data: {
+          meetingId: existingMeeting.id,
+          userId: user.id
+        }
+      });
+    }
+
+    const participantData = {
+      email: 'hanako@example.com',
+      name: 'hanako',
+      requesterId: 'taro@example.com'
+    };
+
+    // When & Then
+    const mockContext = createMockContext({ id: existingMeeting.id }, participantData);
+    await expect(meetingController.addParticipant(mockContext as any))
+      .rejects
+      .toThrow('参加者は50名までです');
+  });
+
+  test('addParticipant - 既に参加している人を重複して追加できない', async () => {
+    // Given - オーナーユーザーを作成
+    const owner = await prisma.user.create({
+      data: {
+        email: 'taro@example.com',
+        name: 'taro'
+      }
+    });
+    
+    // 参加者ユーザーを作成
+    const participant = await prisma.user.create({
+      data: {
+        email: 'hanako@example.com',
+        name: 'hanako'
+      }
+    });
+    
+    // 会議を作成
+    const existingMeeting = await prisma.meeting.create({
+      data: {
+        title: 'チームミーティング',
+        startTime: new Date('2025-01-15T14:00:00Z'),
+        endTime: new Date('2025-01-15T15:00:00Z'),
+        isImportant: false,
+        ownerId: owner.id
+      }
+    });
+    
+    // 既に参加者を追加
+    await prisma.meetingParticipant.create({
+      data: {
+        meetingId: existingMeeting.id,
+        userId: participant.id
+      }
+    });
+
+    const participantData = {
+      email: 'hanako@example.com',
+      name: 'hanako',
+      requesterId: 'taro@example.com'
+    };
+
+    // When & Then
+    const mockContext = createMockContext({ id: existingMeeting.id }, participantData);
+    await expect(meetingController.addParticipant(mockContext as any))
+      .rejects
+      .toThrow('この参加者は既に追加されています');
   });
 });

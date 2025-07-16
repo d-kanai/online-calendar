@@ -7,15 +7,47 @@ datasource db {
   url      = "file:./dev.db"
 }
 
-model Meeting {
+model User {
   id        String   @id @default(cuid())
-  title     String
-  startTime DateTime
-  endTime   DateTime
-  isImportant Boolean @default(false)
-  ownerId   String
+  email     String   @unique
+  name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  // Relations
+  ownedMeetings Meeting[]
+  participations MeetingParticipant[]
+  
+  @@map("users")
+}
 
+model Meeting {
+  id          String   @id @default(cuid())
+  title       String
+  startTime   DateTime
+  endTime     DateTime
+  isImportant Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id])
+  participants MeetingParticipant[]
+  
   @@map("meetings")
+}
+
+model MeetingParticipant {
+  id        String   @id @default(cuid())
+  joinedAt  DateTime @default(now())
+  
+  // Relations
+  meetingId String
+  meeting   Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+  
+  @@unique([meetingId, userId])
+  @@map("meeting_participants")
 }

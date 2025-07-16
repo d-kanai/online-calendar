@@ -18,12 +18,11 @@ export const useReminderService = ({ meetings }: UseReminderServiceProps) => {
         
         // リマインダー時刻の1分以内なら通知
         if (Math.abs(now.getTime() - reminderTime.getTime()) < 60000) {
-          const activeParticipants = meeting.participants.filter(p => 
-            p.notificationChannels.email || p.notificationChannels.push
-          );
+          // 全参加者に通知を送信（通知設定は別途管理される前提）
+          const participantCount = meeting.participants.length;
           
-          if (activeParticipants.length > 0) {
-            toast.info(`「${meeting.title}」のリマインダーを${activeParticipants.length}名に送信しました`);
+          if (participantCount > 0) {
+            toast.info(`「${meeting.title}」のリマインダーを${participantCount}名に送信しました`);
           }
         }
       });

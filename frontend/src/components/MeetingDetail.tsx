@@ -142,6 +142,7 @@ export function MeetingDetail({
           
           {/* 参加者管理 */}
           <ParticipantManager
+            meetingId={meeting.id}
             participants={meeting.participants}
             onParticipantsChange={(participants) => onParticipantsChange(meeting.id, participants)}
             owner={meeting.owner}

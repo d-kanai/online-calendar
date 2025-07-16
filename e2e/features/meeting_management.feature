@@ -4,7 +4,6 @@ Feature: 会議編集
   Rule: 会議編集可能項目
     オーナーは title と period を編集できる
 
-    @develop
     Scenario: オーナーがtitleとperiodを更新し、全画面で正しい時刻が表示される
       Given オーナーが "10:00-11:00" の会議を作成済み
       When カレンダー画面で会議をクリックする
