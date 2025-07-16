@@ -87,13 +87,14 @@ When('オーナーが参加者を削除する', async function () {
   // 参加者リストで削除ボタンを探してクリック
   await page.waitForSelector('text=participant@example.com', { timeout: 10000 });
   
-  // 確認ダイアログを受け入れる
-  page.on('dialog', async dialog => {
-    await dialog.accept();
-  });
-  
-  // 削除ボタンをクリック
+  // 削除ボタンをクリック（Dialogコンポーネントが開く）
   await page.click('button:has-text("削除")');
+  
+  // 削除確認ダイアログが表示されるのを待つ
+  await page.waitForSelector('text=参加者の削除', { timeout: 10000 });
+  
+  // 削除確認ダイアログの「削除する」ボタンをクリック
+  await page.click('button:has-text("削除する")');
   
   // ネットワークの完了を待機
   await page.waitForLoadState('networkidle');

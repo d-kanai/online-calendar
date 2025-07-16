@@ -5,6 +5,14 @@ import { Label } from '../lib/ui/label';
 import { Badge } from '../lib/ui/badge';
 import { Alert, AlertDescription } from '../lib/ui/alert';
 import { Separator } from '../lib/ui/separator';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../lib/ui/dialog';
 import { Participant } from '../types/meeting';
 import { Plus, X, Users, AlertCircle } from 'lucide-react';
 import { meetingApi } from '../lib/api';
@@ -29,6 +37,8 @@ export function ParticipantManager({
 }: ParticipantManagerProps) {
   const [newParticipantEmail, setNewParticipantEmail] = useState('');
   const [error, setError] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [participantToDelete, setParticipantToDelete] = useState<Participant | null>(null);
   
   const MAX_PARTICIPANTS = 50;
   
@@ -91,29 +101,31 @@ export function ParticipantManager({
     }
   };
   
-  const removeParticipant = async (participantId: string) => {
+  const openDeleteDialog = (participant: Participant) => {
     if (!isOwner) {
       setError('参加者の削除はオーナーのみ可能です');
       return;
     }
     
-    const participant = participants.find(p => p.id === participantId);
-    if (!participant) return;
-    
-    // 確認ダイアログを表示
-    const confirmed = window.confirm(`${participant.email}を削除しますか？`);
-    if (!confirmed) return;
+    setParticipantToDelete(participant);
+    setDeleteDialogOpen(true);
+  };
+
+  const removeParticipant = async () => {
+    if (!participantToDelete) return;
     
     try {
       // Call backend API
       const response = await meetingApi.removeParticipant(meetingId, {
-        participantId,
+        participantId: participantToDelete.id,
         requesterId: currentUser
       });
       
       if (response.success) {
-        onParticipantsChange(participants.filter(p => p.id !== participantId));
+        onParticipantsChange(participants.filter(p => p.id !== participantToDelete.id));
         toast.success(response.message || '参加者が削除されました');
+        setDeleteDialogOpen(false);
+        setParticipantToDelete(null);
       } else {
         setError(response.error || '参加者の削除に失敗しました');
       }
@@ -187,7 +199,7 @@ export function ParticipantManager({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => removeParticipant(participant.id)}
+                    onClick={() => openDeleteDialog(participant)}
                     className="text-destructive hover:text-destructive"
                   >
                     <X className="h-4 w-4" />
@@ -221,6 +233,41 @@ export function ParticipantManager({
           </Button>
         </div>
       )}
+
+      {/* 削除確認ダイアログ */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>参加者の削除</DialogTitle>
+            <DialogDescription>
+              {participantToDelete && (
+                <>
+                  <strong>{participantToDelete.email}</strong> を会議から削除しますか？
+                  <br />
+                  この操作は取り消すことができません。
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setParticipantToDelete(null);
+              }}
+            >
+              キャンセル
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={removeParticipant}
+            >
+              削除する
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
