@@ -1,10 +1,40 @@
-export interface CreateMeetingData {
-  title: string;
-  startTime: Date;
-  endTime: Date;
-  isImportant?: boolean;
-  ownerId: string;
-}
+import { z, ZodError } from 'zod';
+
+export const CreateMeetingDataSchema = z.object({
+  title: z.string()
+    .min(1, '会議タイトルは必須です')
+    .trim(),
+  startTime: z.date({
+    required_error: '開始時刻は必須です',
+    invalid_type_error: '開始時刻の形式が正しくありません'
+  }).refine(
+    (date) => !isNaN(date.getTime()),
+    {
+      message: '開始時刻の形式が正しくありません'
+    }
+  ),
+  endTime: z.date({
+    required_error: '終了時刻は必須です',
+    invalid_type_error: '終了時刻の形式が正しくありません'
+  }).refine(
+    (date) => !isNaN(date.getTime()),
+    {
+      message: '終了時刻の形式が正しくありません'
+    }
+  ),
+  isImportant: z.boolean().optional().default(false),
+  ownerId: z.string()
+    .min(1, 'オーナーIDは必須です')
+    .trim()
+}).refine(
+  (data) => data.startTime < data.endTime,
+  {
+    message: '開始時刻は終了時刻より前である必要があります',
+    path: ['startTime']
+  }
+);
+
+export type CreateMeetingData = z.infer<typeof CreateMeetingDataSchema>;
 
 export interface UpdateMeetingData {
   title?: string;
@@ -26,19 +56,35 @@ export class Meeting {
   ) {}
 
   static create(data: CreateMeetingData): Meeting {
-    const now = new Date();
-    const id = `meeting_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    return new Meeting(
-      id,
-      data.title,
-      data.startTime,
-      data.endTime,
-      data.isImportant ?? false,
-      data.ownerId,
-      now,
-      now
-    );
+    try {
+      // Zodによるvalidation実行
+      const validatedData = CreateMeetingDataSchema.parse(data);
+
+      const now = new Date();
+      const id = `meeting_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      return new Meeting(
+        id,
+        validatedData.title,
+        validatedData.startTime,
+        validatedData.endTime,
+        validatedData.isImportant,
+        validatedData.ownerId,
+        now,
+        now
+      );
+    } catch (error) {
+      if (error instanceof ZodError) {
+        // Zodエラーメッセージをフォーマット
+        const issues = error.issues || error.errors;
+        if (issues && issues.length > 0) {
+          throw new Error(issues[0].message);
+        }
+        // フォールバック
+        throw new Error('Validation failed');
+      }
+      throw error;
+    }
   }
 
   static fromPersistence(data: {

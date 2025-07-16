@@ -299,12 +299,16 @@ backend/src/modules/{module}/
 ## 🎯 層別責務
 
 ### 🎪 Presentation層（プレゼンテーション層）
-- **責務**: HTTPリクエスト/レスポンスの処理、入力バリデーション、レスポンス形成
+- **責務**: HTTPリクエスト/レスポンスの処理、データ変換、レスポンス形成
 - **依存**: Application層のQuery/Commandのみ
 - **特徴**: 
   - Controllerクラスで構成
   - 各エンドポイントに対応するメソッドを持つ
   - ハッピーパスのみ処理（エラーハンドリングは共通化）
+- **🚫 禁止事項**: 
+  - ビジネスロジックvalidationの実装
+  - データ整合性チェック
+  - ビジネスルールの実装
 
 #### 🚨 エラーハンドリング設計
 - **🎯 Controller層の責務**: ハッピーパスのみ処理
@@ -384,7 +388,7 @@ export class NotFoundException extends HttpException {
 ```
 
 ### 🎭 Domain層（ドメイン層）
-- **責務**: ビジネスルールとドメインモデルの定義
+- **責務**: ビジネスルールとドメインモデルの定義、データvalidation
 - **構成**: 
   - エンティティクラス定義
   - 作成用データ型（`CreateXxxData`）
@@ -393,6 +397,7 @@ export class NotFoundException extends HttpException {
 
 #### 🏭 Domain Model設計原則
 - **🔒 Private Constructor**: 直接インスタンス化を防止し、適切な生成方法を強制
+- **✅ 完全コンストラクタパターン**: `create`メソッドで全validationを実行
 - **🏗️ Static Factory Methods**: 意図的なオブジェクト作成を促進
   - `Entity.create(data)`: 新規エンティティ作成
   - `Entity.fromPersistence(data)`: 永続化データからの復元
@@ -405,15 +410,58 @@ export class NotFoundException extends HttpException {
   - `toPersistence`等のメソッドは配置しない
   - Repository層でMapping処理を担当
 ```typescript
+import { z, ZodError } from 'zod';
+
+// 🎯 Zodスキーマ定義
+export const CreateMeetingDataSchema = z.object({
+  title: z.string()
+    .min(1, '会議タイトルは必須です')
+    .trim(),
+  startTime: z.date({
+    required_error: '開始時刻は必須です',
+    invalid_type_error: '開始時刻の形式が正しくありません'
+  }),
+  endTime: z.date({
+    required_error: '終了時刻は必須です', 
+    invalid_type_error: '終了時刻の形式が正しくありません'
+  }),
+  isImportant: z.boolean().optional().default(false),
+  ownerId: z.string()
+    .min(1, 'オーナーIDは必須です')
+    .trim()
+}).refine(
+  (data) => data.startTime < data.endTime,
+  {
+    message: '開始時刻は終了時刻より前である必要があります',
+    path: ['startTime']
+  }
+);
+
+export type CreateMeetingData = z.infer<typeof CreateMeetingDataSchema>;
+
 export class Meeting {
   private constructor(/* private fields */) {}
 
   static create(data: CreateMeetingData): Meeting {
-    // 新規作成ロジック
+    try {
+      // 🎯 Zodによるvalidation実行
+      const validatedData = CreateMeetingDataSchema.parse(data);
+      return new Meeting(/* validated data */);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        // 🔄 統一エラーハンドリング
+        const issues = error.issues || error.errors;
+        if (issues && issues.length > 0) {
+          throw new Error(issues[0].message);
+        }
+        throw new Error('Validation failed');
+      }
+      throw error;
+    }
   }
 
   static fromPersistence(data: PersistenceData): Meeting {
-    // 永続化データからの復元
+    // 永続化データからの復元（validationスキップ）
   }
 
   modifyDetails(data: UpdateMeetingData): void {
@@ -425,6 +473,15 @@ export class Meeting {
   get title(): string { return this._title; }
   // ... その他のgetterメソッド
 }
+
+#### 🎯 Validation設計原則
+- **⚡ Zod使用必須**: すべてのvalidationはZodスキーマで実装
+- **✅ 必須項目チェック**: `.min(1, 'エラーメッセージ')`で空文字検証
+- **📅 データ形式チェック**: `.date()`, `.number()`等の型安全検証  
+- **🎯 ビジネスルール検証**: `.refine()`でドメイン固有制約を実装
+- **🚫 Controller層での重複実装禁止**: validation責務はDomain層のみ
+- **💬 具体的エラーメッセージ**: 日本語でわかりやすいエラー文言
+- **🔄 統一エラーハンドリング**: ZodError → Error変換で一貫性確保
 
 ### 🏭 Infra層（インフラ層）
 - **責務**: データベースアクセス、外部API連携

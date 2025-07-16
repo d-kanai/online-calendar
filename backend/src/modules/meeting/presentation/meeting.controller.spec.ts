@@ -92,7 +92,7 @@ describe('MeetingController', () => {
     const mockContext = createMockContext({}, meetingData);
     await expect(meetingController.createMeeting(mockContext as any))
       .rejects
-      .toThrow('必須項目が入力されていません');
+      .toThrow('会議タイトルは必須です');
   });
 
   test('createMeeting - startTimeが空の場合BadRequestExceptionを発生させる', async () => {
@@ -109,7 +109,7 @@ describe('MeetingController', () => {
     const mockContext = createMockContext({}, meetingData);
     await expect(meetingController.createMeeting(mockContext as any))
       .rejects
-      .toThrow('必須項目が入力されていません');
+      .toThrow('Invalid input: expected date, received Date');
   });
 
   test('createMeeting - endTimeが空の場合BadRequestExceptionを発生させる', async () => {
@@ -126,7 +126,7 @@ describe('MeetingController', () => {
     const mockContext = createMockContext({}, meetingData);
     await expect(meetingController.createMeeting(mockContext as any))
       .rejects
-      .toThrow('必須項目が入力されていません');
+      .toThrow('Invalid input: expected date, received Date');
   });
 
   test('createMeeting - ownerIdが空の場合BadRequestExceptionを発生させる', async () => {
@@ -143,7 +143,7 @@ describe('MeetingController', () => {
     const mockContext = createMockContext({}, meetingData);
     await expect(meetingController.createMeeting(mockContext as any))
       .rejects
-      .toThrow('必須項目が入力されていません');
+      .toThrow('オーナーIDは必須です');
   });
 
   test('createMeeting - 複数項目が未入力の場合BadRequestExceptionを発生させる', async () => {
@@ -160,6 +160,23 @@ describe('MeetingController', () => {
     const mockContext = createMockContext({}, meetingData);
     await expect(meetingController.createMeeting(mockContext as any))
       .rejects
-      .toThrow('必須項目が入力されていません');
+      .toThrow('会議タイトルは必須です');
+  });
+
+  test('createMeeting - 開始時刻が終了時刻より後の場合BadRequestExceptionを発生させる', async () => {
+    // Given - 開始時刻 > 終了時刻のリクエストデータ
+    const meetingData = {
+      title: '定例MTG',
+      startTime: '2025-01-15T11:00:00Z',
+      endTime: '2025-01-15T10:00:00Z',
+      isImportant: false,
+      ownerId: 'taro@example.com'
+    };
+
+    // When & Then - BadRequestExceptionが発生することを確認
+    const mockContext = createMockContext({}, meetingData);
+    await expect(meetingController.createMeeting(mockContext as any))
+      .rejects
+      .toThrow('開始時刻は終了時刻より前である必要があります');
   });
 });

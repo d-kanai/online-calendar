@@ -7,7 +7,6 @@ import { GetMeetingsByOwnerQuery } from '../application/queries/get-meetings-by-
 import { CreateMeetingCommand } from '../application/commands/create-meeting.command.js';
 import { UpdateMeetingCommand } from '../application/commands/update-meeting.command.js';
 import { DeleteMeetingCommand } from '../application/commands/delete-meeting.command.js';
-import { BadRequestException } from '../../../shared/exceptions/http-exceptions.js';
 
 export class MeetingController {
   private getAllMeetingsQuery: GetAllMeetingsQuery;
@@ -47,25 +46,12 @@ export class MeetingController {
   async createMeeting(c: Context) {
     const body = await c.req.json<CreateMeetingRequest>();
     
-    // バリデーション: 必須項目チェック
-    if (!body.title?.trim() || !body.startTime || !body.endTime || !body.ownerId?.trim()) {
-      throw new BadRequestException('必須項目が入力されていません');
-    }
-    
-    // 日付の妥当性チェック
-    const startDate = new Date(body.startTime);
-    const endDate = new Date(body.endTime);
-    
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-      throw new BadRequestException('日時の形式が正しくありません');
-    }
-    
     const meetingData = {
-      title: body.title.trim(),
-      startTime: startDate,
-      endTime: endDate,
-      isImportant: body.isImportant || false,
-      ownerId: body.ownerId.trim()
+      title: body.title,
+      startTime: new Date(body.startTime),
+      endTime: new Date(body.endTime),
+      isImportant: body.isImportant,
+      ownerId: body.ownerId
     };
 
     const meeting = await this.createMeetingCommand.run(meetingData);
