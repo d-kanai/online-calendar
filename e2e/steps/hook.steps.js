@@ -41,8 +41,13 @@ AfterAll(async function () {
   }
 });
 
+// Before hook for scenario logging
+Before(async function (scenario) {
+  console.log(`\n🚀 Starting scenario: ${scenario.pickle.name}`);
+});
+
 // After hook for cleanup between scenarios
-After(async function () {
+After(async function (scenario) {
   // シナリオ間でページを再利用するため、各シナリオ後はページをクリアのみ
   if (page) {
     await page.evaluate(() => {
@@ -50,4 +55,8 @@ After(async function () {
       sessionStorage.clear();
     });
   }
+  
+  const status = scenario.result.status;
+  const statusEmoji = status === 'PASSED' ? '✅' : '❌';
+  console.log(`${statusEmoji} Scenario completed: ${scenario.pickle.name} (${status})`);
 });

@@ -19,7 +19,7 @@
     "back:typecheck": "yarn workspace online-calendar-backend typecheck",
     "front:typecheck": "yarn workspace frontend typecheck",
     "e2e:playwright": "npx playwright test",
-    "e2e": "npx cucumber-js e2e/features --require e2e/steps --require e2e/support --tags 'not @pending' --exit",
+    "e2e": "npx cucumber-js e2e/features --require e2e/steps --require e2e/support --tags 'not @pending' --exit --format progress --format summary",
     "e2e:develop": "npx cucumber-js e2e/features --require e2e/steps --require e2e/support --tags '@develop' --exit",
     "e2e:debug": "E2E_HEADLESS=false npx cucumber-js e2e/features --require e2e/steps --require e2e/support --tags '@develop' --exit",
     "e2e:cucumber": "npx cucumber-js e2e/features --require e2e/steps --require e2e/support",
