@@ -1,5 +1,6 @@
 import { prisma } from '../../../shared/database/prisma.js';
 import { Meeting } from '../domain/meeting.model.js';
+import { MeetingParticipant } from '../domain/meeting-participant.model.js';
 
 export class MeetingRepository {
   async findAll(): Promise<Meeting[]> {
@@ -148,13 +149,15 @@ export class MeetingRepository {
       endTime: record.endTime,
       isImportant: record.isImportant,
       ownerId: record.ownerId,
-      participants: record.participants?.map((p: any) => ({
-        id: p.id,
-        userId: p.userId,
-        userName: p.user.name,
-        userEmail: p.user.email,
-        joinedAt: p.joinedAt
-      })) || [],
+      participants: record.participants?.map((p: any) => 
+        MeetingParticipant.fromPersistence({
+          id: p.id,
+          userId: p.userId,
+          userName: p.user.name,
+          userEmail: p.user.email,
+          joinedAt: p.joinedAt
+        })
+      ) || [],
       createdAt: record.createdAt,
       updatedAt: record.updatedAt
     };

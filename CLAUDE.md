@@ -689,6 +689,10 @@ export class NotFoundException extends HttpException {
 - **依存**: 他の層に依存しない（最も内側の層）
 
 #### 🏭 Domain Model設計原則
+- **📊 テーブル対応モデル**: データベーステーブルに対応するモデルクラスを基本的に作成
+  - 主要エンティティ（Meeting、User等）は必須
+  - 関連エンティティ（MeetingParticipant等）も独立したモデルクラスとして定義
+  - 値オブジェクトは必要に応じて作成
 - **🔒 Private Constructor**: 直接インスタンス化を防止し、適切な生成方法を強制
 - **✅ 完全コンストラクタパターン**: `create`メソッドで全validationを実行
 - **🏗️ Static Factory Methods**: 意図的なオブジェクト作成を促進

@@ -1,4 +1,6 @@
 import { z, ZodError } from 'zod';
+import { MeetingParticipant } from './meeting-participant.model.js';
+import { User } from '../../user/domain/user.model.js';
 
 export const CreateMeetingDataSchema = z.object({
   title: z.string()
@@ -50,13 +52,6 @@ export interface UpdateMeetingData {
   isImportant?: boolean;
 }
 
-export interface MeetingParticipant {
-  id: string;
-  userId: string;
-  userName: string;
-  userEmail: string;
-  joinedAt: Date;
-}
 
 export class Meeting {
   private constructor(
@@ -191,17 +186,18 @@ export class Meeting {
     return [...this._participants];
   }
 
-  addParticipant(participant: MeetingParticipant): void {
+  addParticipant(user: User): void {
     const MAX_PARTICIPANTS = 50;
     
     if (this._participants.length >= MAX_PARTICIPANTS) {
       throw new Error('参加者は50名までです');
     }
     
-    if (this._participants.some(p => p.userId === participant.userId)) {
+    if (this._participants.some(p => p.userId === user.id)) {
       throw new Error('この参加者は既に追加されています');
     }
     
+    const participant = MeetingParticipant.create(user.id, user.name, user.email);
     this._participants.push(participant);
     this._updatedAt = new Date();
   }

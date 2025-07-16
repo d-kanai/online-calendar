@@ -53,12 +53,7 @@ export class AddParticipantCommand {
     }
     
     // 参加者追加（ドメインロジックで重複・上限チェック）
-    meeting.addParticipant({
-      userId: participantUser.id,
-      userName: participantUser.name,
-      userEmail: participantUser.email,
-      joinedAt: new Date()
-    });
+    meeting.addParticipant(participantUser);
     
     // 永続化
     return await this.repository.save(meeting);
