@@ -172,7 +172,7 @@ Given('参加者がいる会議がある', async function () {
   });
   
   // 参加者を会議に追加
-  await prisma.meetingParticipant.create({
+  const meetingParticipant = await prisma.meetingParticipant.create({
     data: {
       meetingId: meeting.id,
       userId: participant.id
@@ -182,4 +182,5 @@ Given('参加者がいる会議がある', async function () {
   // 他のステップで使用するため保存
   this.createdMeeting = meeting;
   this.createdParticipant = participant;
+  this.createdMeetingParticipant = meetingParticipant;
 });

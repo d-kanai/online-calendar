@@ -110,7 +110,7 @@ export function toGetAllMeetingsOutput(data: MeetingWithOwner): GetAllMeetingsOu
     meeting.ownerId,
     data.ownerEmail,
     meeting.participants.map(p => ({
-      id: p.userId,
+      id: p.id,
       email: p.userEmail,
       name: p.userName
     })),
@@ -130,7 +130,7 @@ export function toGetMeetingByIdOutput(data: MeetingWithOwner): GetMeetingByIdOu
     meeting.ownerId,
     data.ownerEmail,
     meeting.participants.map(p => ({
-      id: p.userId,
+      id: p.id,
       email: p.userEmail,
       name: p.userName
     })),
@@ -150,7 +150,7 @@ export function toCreateMeetingOutput(data: MeetingWithOwner): CreateMeetingOutp
     meeting.ownerId,
     data.ownerEmail,
     meeting.participants.map(p => ({
-      id: p.userId,
+      id: p.id,
       email: p.userEmail,
       name: p.userName
     })),
@@ -170,7 +170,7 @@ export function toUpdateMeetingOutput(data: MeetingWithOwner): UpdateMeetingOutp
     meeting.ownerId,
     data.ownerEmail,
     meeting.participants.map(p => ({
-      id: p.userId,
+      id: p.id,
       email: p.userEmail,
       name: p.userName
     })),
@@ -190,7 +190,7 @@ export function toGetMeetingsByOwnerOutput(data: MeetingWithOwner): GetMeetingsB
     meeting.ownerId,
     data.ownerEmail,
     meeting.participants.map(p => ({
-      id: p.userId,
+      id: p.id,
       email: p.userEmail,
       name: p.userName
     })),
@@ -210,7 +210,7 @@ export function toAddParticipantOutput(data: MeetingWithOwner): AddParticipantOu
     meeting.ownerId,
     data.ownerEmail,
     meeting.participants.map(p => ({
-      id: p.userId,
+      id: p.id,
       email: p.userEmail,
       name: p.userName
     })),

@@ -28,7 +28,7 @@ export class RemoveParticipantCommand {
     }
 
     // 参加者が存在するか確認
-    const participant = await this.prisma.meetingParticipant.findUnique({
+    const participant = await this.prisma.meetingParticipant.findFirst({
       where: { 
         id: participantId,
         meetingId: meetingId
@@ -42,8 +42,7 @@ export class RemoveParticipantCommand {
     // 参加者を削除
     await this.prisma.meetingParticipant.delete({
       where: { 
-        id: participantId,
-        meetingId: meetingId
+        id: participantId
       }
     });
   }

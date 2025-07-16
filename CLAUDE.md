@@ -121,6 +121,7 @@ yarn typecheck
 - **📊 継続確認**: 実装中も定期的にテスト実行して状態確認
 - **🔧 型安全優先**: TypeCheckエラーは他の作業より優先して修正
 - **🛡️ Validation二重チェック**: Frontend + Backend両方でvalidation実装必須
+- **🧪 Backend修正時のテスト必須**: Backendコードを修正した場合は必ずAPI Test (TestA) も合わせて修正・確認すること
 
 ### 🐛 E2Eデバッグルール
 

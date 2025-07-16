@@ -51,6 +51,7 @@ export interface UpdateMeetingData {
 }
 
 export interface MeetingParticipant {
+  id: string;
   userId: string;
   userName: string;
   userEmail: string;

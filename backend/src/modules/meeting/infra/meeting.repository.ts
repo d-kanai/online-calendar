@@ -149,6 +149,7 @@ export class MeetingRepository {
       isImportant: record.isImportant,
       ownerId: record.ownerId,
       participants: record.participants?.map((p: any) => ({
+        id: p.id,
         userId: p.userId,
         userName: p.user.name,
         userEmail: p.user.email,

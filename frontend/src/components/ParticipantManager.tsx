@@ -106,19 +106,15 @@ export function ParticipantManager({
     
     try {
       // Call backend API
-      console.log('Removing participant:', { meetingId, participantId, requesterId: currentUser });
       const response = await meetingApi.removeParticipant(meetingId, {
         participantId,
         requesterId: currentUser
       });
       
-      console.log('Remove participant response:', response);
-      
       if (response.success) {
         onParticipantsChange(participants.filter(p => p.id !== participantId));
         toast.success(response.message || '参加者が削除されました');
       } else {
-        console.error('Remove participant failed:', response.error);
         setError(response.error || '参加者の削除に失敗しました');
       }
     } catch (error) {
