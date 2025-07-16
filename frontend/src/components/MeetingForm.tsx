@@ -55,6 +55,16 @@ const MeetingFormSchema = z.object({
   }
 );
 
+// ローカル時刻でフォームに設定するためのヘルパー関数
+const toLocalDateTimeString = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
 export function MeetingForm({ 
   open, 
   onClose, 
@@ -64,7 +74,6 @@ export function MeetingForm({
   existingMeetings,
   currentUser 
 }: MeetingFormProps) {
-  console.log('MeetingForm rendered:', { open, selectedDate });
   const [formData, setFormData] = useState({
     title: '',
     startTime: '',
@@ -75,15 +84,38 @@ export function MeetingForm({
   const [errors, setErrors] = useState<string[]>([]);
   
   useEffect(() => {
+    if (!open) {
+      // フォームが閉じているときは初期状態にリセット
+      setFormData({
+        title: '',
+        startTime: '',
+        endTime: '',
+        isImportant: false,
+        description: ''
+      });
+      setErrors([]);
+      return;
+    }
+    
     if (meeting) {
+      // 編集モード: 既存の会議データをセット
+      // startTimeとendTimeがDateオブジェクトかチェック
+      const startTime = meeting.startTime instanceof Date 
+        ? meeting.startTime 
+        : new Date(meeting.startTime);
+      const endTime = meeting.endTime instanceof Date 
+        ? meeting.endTime 
+        : new Date(meeting.endTime);
+      
       setFormData({
         title: meeting.title,
-        startTime: meeting.startTime.toISOString().slice(0, 16),
-        endTime: meeting.endTime.toISOString().slice(0, 16),
+        startTime: toLocalDateTimeString(startTime),
+        endTime: toLocalDateTimeString(endTime),
         isImportant: meeting.isImportant,
         description: ''
       });
     } else if (selectedDate) {
+      // 新規作成モード: デフォルト値をセット
       const defaultStart = new Date(selectedDate);
       defaultStart.setHours(10, 0, 0, 0);
       const defaultEnd = new Date(defaultStart);
@@ -91,13 +123,27 @@ export function MeetingForm({
       
       setFormData({
         title: '',
-        startTime: defaultStart.toISOString().slice(0, 16),
-        endTime: defaultEnd.toISOString().slice(0, 16),
+        startTime: toLocalDateTimeString(defaultStart),
+        endTime: toLocalDateTimeString(defaultEnd),
+        isImportant: false,
+        description: ''
+      });
+    } else {
+      // デフォルト: 現在時刻ベース
+      const now = new Date();
+      now.setHours(now.getHours() + 1, 0, 0, 0);
+      const endTime = new Date(now);
+      endTime.setHours(endTime.getHours() + 1);
+      
+      setFormData({
+        title: '',
+        startTime: toLocalDateTimeString(now),
+        endTime: toLocalDateTimeString(endTime),
         isImportant: false,
         description: ''
       });
     }
-  }, [meeting, selectedDate]);
+  }, [open, meeting, selectedDate]);
   
   const validateForm = () => {
     const newErrors: string[] = [];
