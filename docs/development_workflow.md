@@ -6,6 +6,8 @@
 
 ### 📋 開発プロセス手順
 
+**以下のプロセスをclaude code TODOとして利用し開発を進めること**
+
 **1. 📝 対象のシナリオを確認**
 - `e2e/features/` ディレクトリのGherkinシナリオを確認
 - 実装対象の `@develop` タグ付きシナリオを特定
@@ -25,7 +27,7 @@ yarn e2e:develop
 
 **4. 🧪 Backend TDD開始（TestA実装）**
 - backend連携がある場合はTDDプロセス開始
-- **TestA: API test**をまずは実装・実行してfail確認
+- **TestA**をまずは実装・実行してfail確認
 
 **5. 🔴 Backend Test実行（Red確認）**
 ```bash
@@ -37,7 +39,7 @@ yarn ut
 **6. ⚡ Backend実装（Green段階）**
 - backend testをpassするように実装
 - Controller・Application・Domain層を順次実装
-- Exception駆動設計とエラーハンドリング統一
+- Exception設計とエラーハンドリング統一
 
 **7. 🔧 TypeCheck & Fix（品質保証段階）**
 ```bash
@@ -47,10 +49,12 @@ yarn typecheck
 - 型エラーが発生した場合は即座に修正
 - 型安全な実装で回帰バグを予防
 
-**8. 🔄 統合確認（Refactor段階）**
+**8. 🔄 E2E確認**
 - 対象のシナリオがpassするまで繰り返し
 - **backend test** と **e2e test** 両方がパスするように実装を進める
-- コード品質・設計原則を確認してリファクタリング
+
+**9.リファクタリング**
+- アーキテクチャルール・コード品質・設計原則を確認してリファクタリング
 
 ### ⚠️ ATDD実施時の注意点
 
