@@ -89,6 +89,62 @@ Given('ユーザー{string}でログイン', async function (userName) {
   this.currentUser = user;
 });
 
+// データ準備用の共通Givenステップ（純粋なDB操作のみ）
+Given('会議 {string} を作成済み', async function (title) {
+  const owner = this.currentUser;
+  
+  // 明日の14:00-15:00の会議を作成
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(14, 0, 0, 0);
+  
+  const endTime = new Date(tomorrow);
+  endTime.setHours(15, 0, 0, 0);
+  
+  const meeting = await prisma.meeting.create({
+    data: {
+      title: title,
+      startTime: tomorrow,
+      endTime: endTime,
+      isImportant: false,
+      ownerId: owner.id
+    }
+  });
+  
+  // 他のステップで使用するため保存
+  this.createdMeeting = meeting;
+});
+
+Given('時間帯 {string} の会議を作成済み', async function (timeRange) {
+  const owner = this.currentUser;
+  
+  // timeRangeから開始時刻と終了時刻を抽出（例: "10:00-11:00"）
+  const [startTimeStr, endTimeStr] = timeRange.split('-');
+  const [startHour, startMinute] = startTimeStr.split(':').map(Number);
+  const [endHour, endMinute] = endTimeStr.split(':').map(Number);
+  
+  // 明日の日付で指定された時刻の会議を作成
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(startHour, startMinute, 0, 0);
+  
+  const endTime = new Date(tomorrow);
+  endTime.setHours(endHour, endMinute, 0, 0);
+  
+  const meeting = await prisma.meeting.create({
+    data: {
+      title: '既存会議',
+      startTime: tomorrow,
+      endTime: endTime,
+      isImportant: false,
+      ownerId: owner.id
+    }
+  });
+  
+  // 他のステップで使用するため保存
+  this.createdMeeting = meeting;
+});
+
 // After hook for cleanup between scenarios
 After(async function () {
   // シナリオ間でページを再利用するため、各シナリオ後はページをクリアのみ
