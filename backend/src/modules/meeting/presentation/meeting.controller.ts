@@ -7,6 +7,7 @@ import { GetMeetingsByOwnerQuery } from '../application/queries/get-meetings-by-
 import { CreateMeetingCommand } from '../application/commands/create-meeting.command.js';
 import { UpdateMeetingCommand } from '../application/commands/update-meeting.command.js';
 import { DeleteMeetingCommand } from '../application/commands/delete-meeting.command.js';
+import { prisma } from '../../../shared/database/prisma.js';
 
 export class MeetingController {
   private getAllMeetingsQuery: GetAllMeetingsQuery;

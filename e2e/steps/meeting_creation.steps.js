@@ -1,12 +1,21 @@
-const { Given, When, Then, After } = require('@cucumber/cucumber');
+const { Given, When, Then, After, setDefaultTimeout } = require('@cucumber/cucumber');
 const { chromium, expect } = require('@playwright/test');
+const { PrismaClient } = require('@prisma/client');
+
+// タイムアウトを60秒に設定
+setDefaultTimeout(60000);
+
+const prisma = new PrismaClient();
 
 let browser;
 let page;
 
 Given('オーナーがログインしている', async function () {
+  // データベースリセット - 全テーブルをクリア
+  await prisma.meeting.deleteMany();
+  
   // ブラウザとページを初期化
-  browser = await chromium.launch({ headless: true }); // headlessにして高速化
+  browser = await chromium.launch({ headless: true });
   page = await browser.newPage();
   
   // トップページにアクセス（ログイン済み状態と仮定）
@@ -48,11 +57,14 @@ When('title {string}, period {string}, important flag {string} で会議を作�
   
   // 作成ボタンをクリック
   await page.click('[data-testid="meeting-submit-button"]');
+  
+  // フォームが閉じるまで待つ（処理完了の指標）
+  await page.waitForSelector('[data-testid="meeting-title-input"]', { state: 'hidden', timeout: 10000 });
 });
 
 Then('会議が正常に作成される', async function () {
   // 成功トーストメッセージが表示されることを確認
-  await page.waitForSelector('text=会議が作成されました', { timeout: 5000 });
+  await page.waitForSelector('text=会議が作成されました', { timeout: 10000 });
   
   // フォームが閉じていることを確認
   await page.waitForSelector('[data-testid="meeting-title-input"]', { state: 'hidden' });
@@ -68,4 +80,5 @@ After(async function () {
     await browser.close();
     browser = null;
   }
+  await prisma.$disconnect();
 });

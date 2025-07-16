@@ -46,12 +46,41 @@ const initialMeetings: Meeting[] = [
 ];
 
 export default function Home() {
-  const [meetings, setMeetings] = useState<Meeting[]>(initialMeetings);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
   const [showMeetingForm, setShowMeetingForm] = useState(false);
   const [editingMeeting, setEditingMeeting] = useState<Meeting | undefined>(undefined);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [showMeetingDetail, setShowMeetingDetail] = useState(false);
+
+  // 会議データを取得
+  const loadMeetings = async () => {
+    try {
+      const response = await meetingApi.getAll();
+      if (response.success && response.data) {
+        const mappedMeetings: Meeting[] = response.data.map((meeting: any) => ({
+          id: meeting.id,
+          title: meeting.title,
+          startTime: new Date(meeting.startTime),
+          endTime: new Date(meeting.endTime),
+          owner: meeting.ownerId,
+          participants: [],
+          isImportant: meeting.isImportant,
+          status: 'scheduled',
+          createdAt: new Date(meeting.createdAt),
+          updatedAt: new Date(meeting.updatedAt)
+        }));
+        setMeetings(mappedMeetings);
+      }
+    } catch (error) {
+      console.error('Failed to load meetings:', error);
+    }
+  };
+
+  // 初期ロード
+  useEffect(() => {
+    loadMeetings();
+  }, []);
 
   // 会議作成・更新
   const handleMeetingSubmit = async (meetingData: Omit<Meeting, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -85,19 +114,8 @@ export default function Home() {
         });
         
         if (response.success && response.data) {
-          const newMeeting: Meeting = {
-            id: response.data.id,
-            title: response.data.title,
-            startTime: new Date(response.data.startTime),
-            endTime: new Date(response.data.endTime),
-            owner: response.data.ownerId,
-            participants: [],
-            isImportant: response.data.isImportant,
-            status: 'scheduled',
-            createdAt: new Date(response.data.createdAt),
-            updatedAt: new Date(response.data.updatedAt)
-          };
-          setMeetings(prev => [...prev, newMeeting]);
+          // 会議作成後、全ての会議を再取得してUIを更新
+          await loadMeetings();
           toast.success('会議が作成されました');
         } else {
           toast.error(response.error || '会議の作成に失敗しました');
