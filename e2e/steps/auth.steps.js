@@ -24,13 +24,19 @@ BeforeAll(async function () {
 
 // テストスイート終了時にブラウザを終了
 AfterAll(async function () {
-  if (page) {
-    await page.close();
+  try {
+    if (page) {
+      await page.close();
+      page = null;
+    }
+    if (browser) {
+      await browser.close();
+      browser = null;
+    }
+    await prisma.$disconnect();
+  } catch (error) {
+    console.log('Cleanup error:', error);
   }
-  if (browser) {
-    await browser.close();
-  }
-  await prisma.$disconnect();
 });
 
 Given('ユーザー{string}でログイン', async function (userName) {
