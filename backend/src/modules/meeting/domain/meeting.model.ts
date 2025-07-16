@@ -5,8 +5,7 @@ export const CreateMeetingDataSchema = z.object({
     .min(1, '会議タイトルは必須です')
     .trim(),
   startTime: z.date({
-    required_error: '開始時刻は必須です',
-    invalid_type_error: '開始時刻の形式が正しくありません'
+    message: '開始時刻は必須です'
   }).refine(
     (date) => !isNaN(date.getTime()),
     {
@@ -14,8 +13,7 @@ export const CreateMeetingDataSchema = z.object({
     }
   ),
   endTime: z.date({
-    required_error: '終了時刻は必須です',
-    invalid_type_error: '終了時刻の形式が正しくありません'
+    message: '終了時刻は必須です'
   }).refine(
     (date) => !isNaN(date.getTime()),
     {
@@ -76,7 +74,7 @@ export class Meeting {
     } catch (error) {
       if (error instanceof ZodError) {
         // Zodエラーメッセージをフォーマット
-        const issues = error.issues || error.errors;
+        const issues = error.issues;
         if (issues && issues.length > 0) {
           throw new Error(issues[0].message);
         }

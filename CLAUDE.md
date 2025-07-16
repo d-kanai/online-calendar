@@ -226,6 +226,18 @@ find src/lib/ui -name "*.tsx" -exec sed -i '' 's/@[0-9][^"]*//g' {} \;
 
 この手順に従うことで、Figma Make Codeから出力されたコードを効率的にNext.jsプロジェクトに統合できる 🎉
 
+### 🚨 Figma Make Code保護ルール
+- **🚫 絶対削除禁止**: `figma-make-code/`ディレクトリは絶対に削除してはならない
+- **🔧 タイプチェック除外**: TypeScript設定で`figma-make-code`を除外対象に追加
+- **💾 設計資産保護**: Figma Makeで生成されたコードは重要な設計資産として保持
+- **🏗️ 開発参照**: 新機能開発時の参考コードとして活用
+- **📝 TypeScript設定例**:
+```json
+{
+  "exclude": ["node_modules", "figma-make-code"]
+}
+```
+
 # 🏗️ アーキテクチャ
 
 ## 🚨 エラーハンドリング共通設計

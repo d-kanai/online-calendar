@@ -50,7 +50,7 @@ export class MeetingController {
       title: body.title,
       startTime: new Date(body.startTime),
       endTime: new Date(body.endTime),
-      isImportant: body.isImportant,
+      isImportant: body.isImportant ?? false,
       ownerId: body.ownerId
     };
 

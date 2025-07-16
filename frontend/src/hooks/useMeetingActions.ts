@@ -9,7 +9,7 @@ interface UseMeetingActionsProps {
   editingMeeting?: Meeting;
   setEditingMeeting: (meeting: Meeting | undefined) => void;
   selectedMeeting: Meeting | null;
-  setSelectedMeeting: (meeting: Meeting | null) => void;
+  setSelectedMeeting: React.Dispatch<React.SetStateAction<Meeting | null>>;
   setShowMeetingDetail: (show: boolean) => void;
 }
 
@@ -97,7 +97,10 @@ export const useMeetingActions = ({
     ));
     
     if (selectedMeeting && selectedMeeting.id === meetingId) {
-      setSelectedMeeting(prev => prev ? { ...prev, participants } : null);
+      setSelectedMeeting((prev: Meeting | null) => {
+        if (!prev) return null;
+        return { ...prev, participants };
+      });
     }
     
     toast.success('参加者が更新されました');
