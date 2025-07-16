@@ -61,36 +61,92 @@
 
 このワークフローにより、ビジネス要件の明確化からUI実装まで一貫性のある開発プロセスを実現できる 🎉
 
+## 🎯 ATDD開発プロセス（必須）
+
+**すべての機能開発はATDD（Acceptance Test-Driven Development）で実施すること** 🔥
+
+### 📋 開発プロセス手順
+
+**1. 📝 対象のシナリオを確認**
+- `e2e/features/` ディレクトリのGherkinシナリオを確認
+- 実装対象の `@develop` タグ付きシナリオを特定
+- ビジネス要件とユーザーアクションを理解
+
+**2. 🚨 E2E実行（Red段階）**
+```bash
+yarn e2e:develop
+```
+- まず失敗することを確認（Red段階）
+- failしたstepを詳細に確認・分析
+
+**3. 🎨 Frontend実装（Green段階）**
+- failをパスさせるためにstep定義を実装
+- 必要に応じてfrontendコンポーネント・フックを実装
+- UI動作・状態管理・エラーハンドリングを実装
+
+**4. 🧪 Backend TDD開始（TestA実装）**
+- backend連携がある場合はTDDプロセス開始
+- **TestA: API test**をまずは実装・実行してfail確認
+
+**5. 🔴 Backend Test実行（Red確認）**
+```bash
+yarn ut
+```
+- APIテストが失敗することを確認（Red段階）
+- 期待するエラーメッセージ・振る舞いを確認
+
+**6. ⚡ Backend実装（Green段階）**
+- backend testをpassするように実装
+- Controller・Application・Domain層を順次実装
+- Exception駆動設計とエラーハンドリング統一
+
+**7. 🔄 統合確認（Refactor段階）**
+- 対象のシナリオがpassするまで繰り返し
+- **backend test** と **e2e test** 両方がパスするように実装を進める
+- コード品質・設計原則を確認してリファクタリング
+
+### ⚠️ ATDD実施時の注意点
+
+- **🚫 実装ファーストの禁止**: テストなしでの実装は絶対に行わない
+- **🎯 一つずつ進める**: 複数シナリオを並行実装しない
+- **✅ 両方パス必須**: backend test単体 + e2e test統合の両方が成功するまで完了としない
+- **📊 継続確認**: 実装中も定期的にテスト実行して状態確認
+
+このプロセスにより、品質の高い機能を確実に実装し、回帰バグを防止できる 🛡️
+
 ## ⚡ 基本コマンド
 
 ### 🖥️ Backend開発
 ```bash
-# 📁 backendディレクトリに移動
-cd backend
+# 🚀 開発サーバー起動（ホットリロード対応）- プロジェクトルートで実行
+yarn back:dev
 
 # 🧪 テスト実行（一回のみ）
-npm run test:run
+yarn workspace online-calendar-backend test:run
 
 # 🔄 テスト実行（ウォッチモード）
-npm test
+yarn workspace online-calendar-backend test
 
 # 🏗️ ビルド
-npm run build
+yarn workspace online-calendar-backend build
 
-# 🚀 サーバー起動
-npm start
+# 🚀 本番サーバー起動
+yarn back:start
 ```
 
 ### 🎨 Frontend開発
 ```bash
-# 📁 frontendディレクトリに移動
-cd frontend
-
-# 🚀 開発サーバー起動
-npm run dev
+# 🚀 開発サーバー起動 - プロジェクトルートで実行
+yarn front:dev
 
 # 🏗️ ビルド
-npm run build
+yarn front:build
+
+# 🚀 本番サーバー起動
+yarn front:start
+
+# 🔍 Lint実行
+yarn front:lint
 ```
 
 ## 🌿 Git運用ルール

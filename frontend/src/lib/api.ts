@@ -25,7 +25,11 @@ export const meetingApi = {
       body: JSON.stringify(data),
     });
     
-    return response.json();
+    // HTTPステータスが400の場合もレスポンスボディを解析
+    const result = await response.json();
+    
+    // HTTPステータスが失敗でもレスポンスボディにエラー情報があればそれを返す
+    return result;
   },
   
   async getAll(): Promise<ApiResponse> {

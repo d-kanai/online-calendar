@@ -77,4 +77,89 @@ describe('MeetingController', () => {
     expect((response as any).data.message).toBe('Meeting created successfully');
     expect((response as any).status).toBe(201);
   });
+
+  test('createMeeting - titleが空の場合BadRequestExceptionを発生させる', async () => {
+    // Given - titleが空のリクエストデータ
+    const meetingData = {
+      title: '',
+      startTime: '2025-01-15T10:00:00Z',
+      endTime: '2025-01-15T10:30:00Z',
+      isImportant: false,
+      ownerId: 'taro@example.com'
+    };
+
+    // When & Then - BadRequestExceptionが発生することを確認
+    const mockContext = createMockContext({}, meetingData);
+    await expect(meetingController.createMeeting(mockContext as any))
+      .rejects
+      .toThrow('必須項目が入力されていません');
+  });
+
+  test('createMeeting - startTimeが空の場合BadRequestExceptionを発生させる', async () => {
+    // Given - startTimeが空のリクエストデータ
+    const meetingData = {
+      title: '定例MTG',
+      startTime: '',
+      endTime: '2025-01-15T10:30:00Z',
+      isImportant: false,
+      ownerId: 'taro@example.com'
+    };
+
+    // When & Then - BadRequestExceptionが発生することを確認
+    const mockContext = createMockContext({}, meetingData);
+    await expect(meetingController.createMeeting(mockContext as any))
+      .rejects
+      .toThrow('必須項目が入力されていません');
+  });
+
+  test('createMeeting - endTimeが空の場合BadRequestExceptionを発生させる', async () => {
+    // Given - endTimeが空のリクエストデータ
+    const meetingData = {
+      title: '定例MTG',
+      startTime: '2025-01-15T10:00:00Z',
+      endTime: '',
+      isImportant: false,
+      ownerId: 'taro@example.com'
+    };
+
+    // When & Then - BadRequestExceptionが発生することを確認
+    const mockContext = createMockContext({}, meetingData);
+    await expect(meetingController.createMeeting(mockContext as any))
+      .rejects
+      .toThrow('必須項目が入力されていません');
+  });
+
+  test('createMeeting - ownerIdが空の場合BadRequestExceptionを発生させる', async () => {
+    // Given - ownerIdが空のリクエストデータ
+    const meetingData = {
+      title: '定例MTG',
+      startTime: '2025-01-15T10:00:00Z',
+      endTime: '2025-01-15T10:30:00Z',
+      isImportant: false,
+      ownerId: ''
+    };
+
+    // When & Then - BadRequestExceptionが発生することを確認
+    const mockContext = createMockContext({}, meetingData);
+    await expect(meetingController.createMeeting(mockContext as any))
+      .rejects
+      .toThrow('必須項目が入力されていません');
+  });
+
+  test('createMeeting - 複数項目が未入力の場合BadRequestExceptionを発生させる', async () => {
+    // Given - 複数項目が空のリクエストデータ
+    const meetingData = {
+      title: '',
+      startTime: '',
+      endTime: '',
+      isImportant: false,
+      ownerId: ''
+    };
+
+    // When & Then - BadRequestExceptionが発生することを確認
+    const mockContext = createMockContext({}, meetingData);
+    await expect(meetingController.createMeeting(mockContext as any))
+      .rejects
+      .toThrow('必須項目が入力されていません');
+  });
 });

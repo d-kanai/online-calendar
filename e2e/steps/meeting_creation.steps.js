@@ -70,6 +70,29 @@ Then('会議が正常に作成される', async function () {
   await page.waitForSelector('[data-testid="meeting-title-input"]', { state: 'hidden' });
 });
 
+When('title, period, important flag のいずれかが未入力で会議を作成する', async function () {
+  // 会議を作成ボタンをクリック
+  await page.click('text=会議を作成');
+  
+  // フォームが表示されるまで待機
+  await page.waitForSelector('[data-testid="meeting-title-input"]');
+  
+  // 必須項目を空のままにして作成ボタンをクリック
+  // タイトルは空のまま
+  // 開始時刻、終了時刻も空のまま
+  
+  // 作成ボタンをクリック
+  await page.click('[data-testid="meeting-submit-button"]');
+});
+
+Then('{string} エラーが表示される', async function (expectedErrorMessage) {
+  // エラーメッセージが表示されることを確認
+  await page.waitForSelector(`text=${expectedErrorMessage}`, { timeout: 10000 });
+  
+  // フォームがまだ開いていることを確認（エラーのため閉じない）
+  await page.waitForSelector('[data-testid="meeting-title-input"]', { state: 'visible' });
+});
+
 // After hook to clean up
 After(async function () {
   if (page) {

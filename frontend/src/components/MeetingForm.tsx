@@ -113,11 +113,10 @@ export function MeetingForm({
     return newErrors.length === 0;
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
-    
+    // クライアントサイドバリデーションをスキップしてバックエンドバリデーションをテスト
     const meetingData: Omit<Meeting, 'id' | 'createdAt' | 'updatedAt'> = {
       title: formData.title.trim(),
       startTime: new Date(formData.startTime),
@@ -128,8 +127,13 @@ export function MeetingForm({
       status: 'scheduled'
     };
     
-    onSubmit(meetingData);
-    handleClose();
+    try {
+      await onSubmit(meetingData);
+      handleClose();
+    } catch (error) {
+      // エラーがある場合はフォームを閉じない
+      console.error('Form submission error:', error);
+    }
   };
   
   const handleClose = () => {

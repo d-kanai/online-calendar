@@ -60,14 +60,18 @@ export const useMeetingActions = ({
           await loadMeetings();
           toast.success('会議が作成されました');
         } else {
-          toast.error(response.error || '会議の作成に失敗しました');
+          // バックエンドからのエラーメッセージを表示
+          const errorMessage = response.error || '会議の作成に失敗しました';
+          toast.error(errorMessage);
+          throw new Error(errorMessage);
         }
       }
       
       setEditingMeeting(undefined);
     } catch (error) {
       console.error('API Error:', error);
-      toast.error('会議の作成に失敗しました');
+      // エラーはtoastで既に表示済みなので、ここではre-throwのみ
+      throw error;
     }
   };
 
