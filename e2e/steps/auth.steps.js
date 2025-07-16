@@ -14,7 +14,9 @@ global.meetingFormPage = null;
 
 // テストスイート開始時にブラウザを起動
 BeforeAll(async function () {
-  browser = await chromium.launch({ headless: false });
+  // 環境変数でheadlessモードを制御（デフォルトはheadless）
+  const headless = process.env.E2E_HEADLESS !== 'false';
+  browser = await chromium.launch({ headless });
   page = await browser.newPage();
   
   // Page Objectインスタンスを作成
