@@ -1,4 +1,4 @@
-const { Given, Before } = require('@cucumber/cucumber');
+const { Given, Before, After, BeforeAll, AfterAll } = require('@cucumber/cucumber');
 const { PrismaClient } = require('@prisma/client');
 const { chromium } = require('@playwright/test');
 const CalendarPage = require('../page-objects/CalendarPage');
@@ -12,17 +12,25 @@ let page;
 global.calendarPage = null;
 global.meetingFormPage = null;
 
-Before(async function () {
-  if (!browser) {
-    browser = await chromium.launch({ headless: false });
-  }
-  if (!page) {
-    page = await browser.newPage();
-  }
+// テストスイート開始時にブラウザを起動
+BeforeAll(async function () {
+  browser = await chromium.launch({ headless: false });
+  page = await browser.newPage();
   
   // Page Objectインスタンスを作成
   global.calendarPage = new CalendarPage(page);
   global.meetingFormPage = new MeetingFormPage(page);
+});
+
+// テストスイート終了時にブラウザを終了
+AfterAll(async function () {
+  if (page) {
+    await page.close();
+  }
+  if (browser) {
+    await browser.close();
+  }
+  await prisma.$disconnect();
 });
 
 Given('ユーザー{string}でログイン', async function (userName) {
@@ -73,6 +81,17 @@ Given('ユーザー{string}でログイン', async function (userName) {
   
   // ユーザー情報を保存（他のステップで使用）
   this.currentUser = user;
+});
+
+// After hook for cleanup between scenarios
+After(async function () {
+  // シナリオ間でページを再利用するため、各シナリオ後はページをクリアのみ
+  if (page) {
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
+  }
 });
 
 Given('ユーザー{string}でログインしてページにアクセス', async function (userName) {

@@ -184,15 +184,4 @@ When('更新された会議をクリックする', async function () {
   await page.waitForTimeout(1000);
 });
 
-// After hook to clean up
-After(async function () {
-  if (page) {
-    await page.close();
-    page = null;
-  }
-  if (browser) {
-    await browser.close();
-    browser = null;
-  }
-  await prisma.$disconnect();
-});
+// After hook moved to auth.steps.js for unified cleanup

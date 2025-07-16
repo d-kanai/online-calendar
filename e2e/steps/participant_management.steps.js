@@ -118,15 +118,4 @@ Then('参加者が正常に追加される', async function () {
   expect(participantEmails).toContain('hanako@example.com');
 });
 
-// After hook to clean up
-After(async function () {
-  if (page) {
-    await page.close();
-    page = null;
-  }
-  if (browser) {
-    await browser.close();
-    browser = null;
-  }
-  await prisma.$disconnect();
-});
+// After hook moved to auth.steps.js for unified cleanup

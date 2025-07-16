@@ -57,15 +57,4 @@ Then('{string} エラーが表示される', async function (expectedErrorMessag
   await global.meetingFormPage.waitForFormStillVisible();
 });
 
-// After hook to clean up
-After(async function () {
-  if (page) {
-    await page.close();
-    page = null;
-  }
-  if (browser) {
-    await browser.close();
-    browser = null;
-  }
-  await prisma.$disconnect();
-});
+// After hook moved to auth.steps.js for unified cleanup
