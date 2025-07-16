@@ -706,6 +706,10 @@ export class NotFoundException extends HttpException {
 - **🚫 永続化詳細の排除**: Domain層は永続化の詳細を持たない
   - `toPersistence`等のメソッドは配置しない
   - Repository層でMapping処理を担当
+- **🤝 モデル間コミュニケーション**: ドメイン層ではモデル同士が直接対話
+  - プリミティブ型の引数を避け、ドメインモデルを引数に使用
+  - 例: `meeting.addParticipant(user)` （userIdではなくUserモデルを渡す）
+  - ビジネスロジックの表現力と型安全性を向上
 ```typescript
 import { z, ZodError } from 'zod';
 
