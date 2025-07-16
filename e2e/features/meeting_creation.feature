@@ -9,11 +9,10 @@ Feature: 会議登録
       When title "定例MTG", period "30分", important flag "false" で会議を作成する
       Then 会議が正常に作成される
 
-    @develop
     Scenario: 必要項目が未入力の場合エラーになる
       Given オーナーがログインしている
       When title, period, important flag のいずれかが未入力で会議を作成する
-      Then "必須項目が入力されていません" エラーが表示される
+      Then "タイトルは必須項目です" エラーが表示される
 
   Rule: 会議の最小期間制限
     会議の期間は15分以上である必要がある

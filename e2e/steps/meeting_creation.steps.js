@@ -86,8 +86,14 @@ When('title, period, important flag のいずれかが未入力で会議を作�
 });
 
 Then('{string} エラーが表示される', async function (expectedErrorMessage) {
-  // エラーメッセージが表示されることを確認
-  await page.waitForSelector(`text=${expectedErrorMessage}`, { timeout: 10000 });
+  // エラーメッセージが表示されることを確認（Alertコンポーネント内）
+  await page.waitForSelector('[role="alert"]', { timeout: 10000 });
+  
+  // 期待するエラーメッセージが含まれているか確認
+  const alertContent = await page.textContent('[role="alert"]');
+  if (!alertContent.includes(expectedErrorMessage)) {
+    throw new Error(`Expected error message "${expectedErrorMessage}" not found. Actual content: "${alertContent}"`);
+  }
   
   // フォームがまだ開いていることを確認（エラーのため閉じない）
   await page.waitForSelector('[data-testid="meeting-title-input"]', { state: 'visible' });

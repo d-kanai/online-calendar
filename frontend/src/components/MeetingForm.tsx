@@ -116,7 +116,11 @@ export function MeetingForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // クライアントサイドバリデーションをスキップしてバックエンドバリデーションをテスト
+    // クライアントサイドバリデーション実行
+    if (!validateForm()) {
+      return; // バリデーションエラーがある場合は送信しない
+    }
+    
     const meetingData: Omit<Meeting, 'id' | 'createdAt' | 'updatedAt'> = {
       title: formData.title.trim(),
       startTime: new Date(formData.startTime),
