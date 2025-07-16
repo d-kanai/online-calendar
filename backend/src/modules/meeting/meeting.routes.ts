@@ -26,6 +26,9 @@ meetingRoutes.delete('/:id', (c) => meetingController.deleteMeeting(c));
 // POST /api/v1/meetings/:id/participants - Add participant to meeting
 meetingRoutes.post('/:id/participants', (c) => meetingController.addParticipant(c));
 
+// DELETE /api/v1/meetings/:id/participants/:participantId - Remove participant from meeting
+meetingRoutes.delete('/:id/participants/:participantId', (c) => meetingController.removeParticipant(c));
+
 // GET /api/v1/meetings/owner/:ownerId - Get meetings by owner
 meetingRoutes.get('/owner/:ownerId', (c) => meetingController.getMeetingsByOwner(c));
 

@@ -91,13 +91,40 @@ export function ParticipantManager({
     }
   };
   
-  const removeParticipant = (participantId: string) => {
+  const removeParticipant = async (participantId: string) => {
     if (!isOwner) {
       setError('参加者の削除はオーナーのみ可能です');
       return;
     }
     
-    onParticipantsChange(participants.filter(p => p.id !== participantId));
+    const participant = participants.find(p => p.id === participantId);
+    if (!participant) return;
+    
+    // 確認ダイアログを表示
+    const confirmed = window.confirm(`${participant.email}を削除しますか？`);
+    if (!confirmed) return;
+    
+    try {
+      // Call backend API
+      console.log('Removing participant:', { meetingId, participantId, requesterId: currentUser });
+      const response = await meetingApi.removeParticipant(meetingId, {
+        participantId,
+        requesterId: currentUser
+      });
+      
+      console.log('Remove participant response:', response);
+      
+      if (response.success) {
+        onParticipantsChange(participants.filter(p => p.id !== participantId));
+        toast.success(response.message || '参加者が削除されました');
+      } else {
+        console.error('Remove participant failed:', response.error);
+        setError(response.error || '参加者の削除に失敗しました');
+      }
+    } catch (error) {
+      console.error('API Error:', error);
+      setError('参加者の削除に失敗しました');
+    }
   };
   
   // Notification toggle removed since notificationChannels is no longer part of Participant
@@ -168,6 +195,7 @@ export function ParticipantManager({
                     className="text-destructive hover:text-destructive"
                   >
                     <X className="h-4 w-4" />
+                    削除
                   </Button>
                 )}
               </div>

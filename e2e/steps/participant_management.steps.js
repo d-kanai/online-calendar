@@ -67,4 +67,66 @@ Then('参加者が正常に追加される', async function () {
   expect(participantEmails).toContain('hanako@example.com');
 });
 
+When('オーナーが参加者を削除する', async function () {
+  const page = global.calendarPage.page;
+  
+  // カレンダーページにアクセス
+  await global.calendarPage.navigate();
+  
+  // カレンダーが表示されているか確認
+  await global.calendarPage.waitForCalendarVisible();
+  
+  // 会議をクリックして詳細を開く
+  await page.click(':text("参加者がいる会議")');
+  await page.waitForSelector('[role="dialog"]', { timeout: 10000 });
+  
+  // 参加者管理セクションまでスクロール
+  const participantSection = await page.locator('text=参加者管理').first();
+  await participantSection.scrollIntoViewIfNeeded();
+  
+  // 参加者リストで削除ボタンを探してクリック
+  await page.waitForSelector('text=participant@example.com', { timeout: 10000 });
+  
+  // 確認ダイアログを受け入れる
+  page.on('dialog', async dialog => {
+    await dialog.accept();
+  });
+  
+  // 削除ボタンをクリック
+  await page.click('button:has-text("削除")');
+  
+  // ネットワークの完了を待機
+  await page.waitForLoadState('networkidle');
+});
+
+Then('参加者が正常に削除される', async function () {
+  const page = global.calendarPage.page;
+  
+  // まず、データベースで参加者が削除されたことを確認
+  const participants = await prisma.meetingParticipant.findMany({
+    where: { meetingId: this.createdMeeting.id },
+    include: { user: true }
+  });
+  
+  // 参加者が削除されていることを確認
+  const participantEmails = participants.map(p => p.user.email);
+  expect(participantEmails).not.toContain('participant@example.com');
+  
+  // UIでも削除を確認（エラーメッセージが表示されていないか確認）
+  const hasError = await page.locator('[role="alert"]').count();
+  if (hasError > 0) {
+    const errorText = await page.locator('[role="alert"]').first().textContent();
+    console.log('Error found:', errorText);
+  }
+  
+  // 成功メッセージまたは参加者の削除を確認
+  try {
+    await page.waitForSelector(':text("参加者が削除されました")', { timeout: 2000 });
+  } catch (e) {
+    // トーストメッセージが表示されない場合は、参加者がリストから削除されたことを確認
+    const participantExists = await page.locator(':text("participant@example.com")').count();
+    expect(participantExists).toBe(0);
+  }
+});
+
 // After hook moved to auth.steps.js for unified cleanup

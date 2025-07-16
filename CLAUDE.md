@@ -122,6 +122,33 @@ yarn typecheck
 - **🔧 型安全優先**: TypeCheckエラーは他の作業より優先して修正
 - **🛡️ Validation二重チェック**: Frontend + Backend両方でvalidation実装必須
 
+### 🐛 E2Eデバッグルール
+
+**E2Eテストがfailした場合の必須デバッグ手順：**
+
+1. **📸 スクリーンショット自動取得**
+   - テストfail時に自動でスクリーンショットを保存
+   - 保存先: `e2e/screenshots/[feature名]_[scenario名]_[timestamp].png`
+
+2. **📋 ブラウザログ出力**
+   - console.log、console.error、console.warnを全て出力
+   - ネットワークエラーやJavaScriptエラーを即座に確認
+
+3. **🔍 デバッグ情報収集**
+   ```javascript
+   // E2E失敗時の自動実行
+   - ブラウザコンソールログ
+   - JavaScriptエラー
+   - ネットワークエラー
+   - 最後のDOM状態
+   ```
+
+4. **🎯 デバッグモード実行**
+   ```bash
+   # ブラウザログをリアルタイム出力
+   yarn e2e:debug
+   ```
+
 このプロセスにより、品質の高い機能を確実に実装し、回帰バグを防止できる 🛡️
 
 ## ⚡ 基本コマンド

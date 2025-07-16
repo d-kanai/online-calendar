@@ -8,6 +8,7 @@ import { CreateMeetingCommand } from '../application/commands/create-meeting.com
 import { UpdateMeetingCommand } from '../application/commands/update-meeting.command.js';
 import { DeleteMeetingCommand } from '../application/commands/delete-meeting.command.js';
 import { AddParticipantCommand } from '../application/commands/add-participant.command.js';
+import { RemoveParticipantCommand } from '../application/commands/remove-participant.command.js';
 import { MeetingRepository } from '../infra/meeting.repository.js';
 import { MeetingWithOwnerHelper } from '../application/queries/meeting-with-owner.helper.js';
 import { 
@@ -33,6 +34,7 @@ export class MeetingController {
   private updateMeetingCommand: UpdateMeetingCommand;
   private deleteMeetingCommand: DeleteMeetingCommand;
   private addParticipantCommand: AddParticipantCommand;
+  private removeParticipantCommand: RemoveParticipantCommand;
   private helper: MeetingWithOwnerHelper;
 
   constructor() {
@@ -44,6 +46,7 @@ export class MeetingController {
     this.updateMeetingCommand = new UpdateMeetingCommand();
     this.deleteMeetingCommand = new DeleteMeetingCommand();
     this.addParticipantCommand = new AddParticipantCommand(repository);
+    this.removeParticipantCommand = new RemoveParticipantCommand();
     this.helper = new MeetingWithOwnerHelper();
   }
 
@@ -142,6 +145,19 @@ export class MeetingController {
       success: true,
       data: toAddParticipantOutput(meetingWithOwner),
       message: '参加者が追加されました'
+    });
+  }
+
+  async removeParticipant(c: Context) {
+    const meetingId = c.req.param('id');
+    const participantId = c.req.param('participantId');
+    const body = await c.req.json<{ requesterId: string }>();
+    
+    await this.removeParticipantCommand.run(meetingId, participantId, body.requesterId);
+
+    return c.json<ApiResponse>({
+      success: true,
+      message: '参加者が削除されました'
     });
   }
 }

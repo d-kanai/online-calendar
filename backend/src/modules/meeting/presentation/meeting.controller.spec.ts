@@ -477,4 +477,138 @@ describe('MeetingController', () => {
       .rejects
       .toThrow('この参加者は既に追加されています');
   });
+
+  test('removeParticipant - オーナーが参加者を削除できる', async () => {
+    // Given - オーナーユーザーを作成
+    const owner = await prisma.user.create({
+      data: {
+        email: 'taro@example.com',
+        name: 'taro'
+      }
+    });
+    
+    // 参加者ユーザーを作成
+    const participant = await prisma.user.create({
+      data: {
+        email: 'hanako@example.com',
+        name: 'hanako'
+      }
+    });
+    
+    // 会議を作成
+    const existingMeeting = await prisma.meeting.create({
+      data: {
+        title: 'チームミーティング',
+        startTime: new Date('2025-01-15T14:00:00Z'),
+        endTime: new Date('2025-01-15T15:00:00Z'),
+        isImportant: false,
+        ownerId: owner.id
+      }
+    });
+    
+    // 参加者を追加
+    const meetingParticipant = await prisma.meetingParticipant.create({
+      data: {
+        meetingId: existingMeeting.id,
+        userId: participant.id
+      }
+    });
+
+    const removeData = {
+      requesterId: 'taro@example.com'
+    };
+
+    // When
+    const mockContext = createMockContext({ id: existingMeeting.id, participantId: meetingParticipant.id }, removeData);
+    const response = await meetingController.removeParticipant(mockContext as any);
+
+    // Then
+    expect((response as any).data.success).toBe(true);
+    expect((response as any).data.message).toBe('参加者が削除されました');
+    expect((response as any).status).toBe(200);
+    
+    // データベースで確認
+    const participants = await prisma.meetingParticipant.findMany({
+      where: { meetingId: existingMeeting.id }
+    });
+    expect(participants).toHaveLength(0);
+  });
+
+  test('removeParticipant - オーナー以外は参加者を削除できない', async () => {
+    // Given - オーナーユーザーを作成
+    const owner = await prisma.user.create({
+      data: {
+        email: 'taro@example.com',
+        name: 'taro'
+      }
+    });
+    
+    // 参加者ユーザーを作成
+    const participant = await prisma.user.create({
+      data: {
+        email: 'hanako@example.com',
+        name: 'hanako'
+      }
+    });
+    
+    // 会議を作成
+    const existingMeeting = await prisma.meeting.create({
+      data: {
+        title: 'チームミーティング',
+        startTime: new Date('2025-01-15T14:00:00Z'),
+        endTime: new Date('2025-01-15T15:00:00Z'),
+        isImportant: false,
+        ownerId: owner.id
+      }
+    });
+    
+    // 参加者を追加
+    const meetingParticipant = await prisma.meetingParticipant.create({
+      data: {
+        meetingId: existingMeeting.id,
+        userId: participant.id
+      }
+    });
+
+    const removeData = {
+      requesterId: 'other@example.com' // オーナーではない
+    };
+
+    // When & Then
+    const mockContext = createMockContext({ id: existingMeeting.id, participantId: meetingParticipant.id }, removeData);
+    await expect(meetingController.removeParticipant(mockContext as any))
+      .rejects
+      .toThrow('Only the meeting owner can remove participants');
+  });
+
+  test('removeParticipant - 存在しない参加者の削除でNotFoundExceptionが発生する', async () => {
+    // Given - オーナーユーザーを作成
+    const owner = await prisma.user.create({
+      data: {
+        email: 'taro@example.com',
+        name: 'taro'
+      }
+    });
+    
+    // 会議を作成
+    const existingMeeting = await prisma.meeting.create({
+      data: {
+        title: 'チームミーティング',
+        startTime: new Date('2025-01-15T14:00:00Z'),
+        endTime: new Date('2025-01-15T15:00:00Z'),
+        isImportant: false,
+        ownerId: owner.id
+      }
+    });
+
+    const removeData = {
+      requesterId: 'taro@example.com'
+    };
+
+    // When & Then
+    const mockContext = createMockContext({ id: existingMeeting.id, participantId: 'non-existent-id' }, removeData);
+    await expect(meetingController.removeParticipant(mockContext as any))
+      .rejects
+      .toThrow('Participant not found in this meeting');
+  });
 });

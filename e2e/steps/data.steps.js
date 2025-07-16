@@ -112,8 +112,7 @@ Given('会議 {string} に参加者 {string} を追加済み', async function (m
   await prisma.meetingParticipant.create({
     data: {
       meetingId: meeting.id,
-      userId: participant.id,
-      response: 'pending'
+      userId: participant.id
     }
   });
 });
@@ -141,4 +140,46 @@ Given('昨日の会議 {string} を作成済み', async function (title) {
   
   // 他のステップで使用するため保存
   this.createdMeeting = meeting;
+});
+
+Given('参加者がいる会議がある', async function () {
+  const owner = this.currentUser;
+  
+  // 明日の14:00-15:00の会議を作成
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(14, 0, 0, 0);
+  
+  const endTime = new Date(tomorrow);
+  endTime.setHours(15, 0, 0, 0);
+  
+  const meeting = await prisma.meeting.create({
+    data: {
+      title: '参加者がいる会議',
+      startTime: tomorrow,
+      endTime: endTime,
+      isImportant: false,
+      ownerId: owner.id
+    }
+  });
+  
+  // 参加者ユーザーを作成
+  const participant = await prisma.user.create({
+    data: {
+      email: 'participant@example.com',
+      name: 'participant'
+    }
+  });
+  
+  // 参加者を会議に追加
+  await prisma.meetingParticipant.create({
+    data: {
+      meetingId: meeting.id,
+      userId: participant.id
+    }
+  });
+  
+  // 他のステップで使用するため保存
+  this.createdMeeting = meeting;
+  this.createdParticipant = participant;
 });

@@ -63,5 +63,18 @@ export const meetingApi = {
     
     const result = await response.json();
     return result;
+  },
+
+  async removeParticipant(meetingId: string, data: { participantId: string; requesterId: string }): Promise<ApiResponse<ApiMeeting>> {
+    const response = await fetch(`${API_BASE_URL}/meetings/${meetingId}/participants/${data.participantId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ requesterId: data.requesterId }),
+    });
+    
+    const result = await response.json();
+    return result;
   }
 };
