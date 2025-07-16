@@ -13,14 +13,14 @@
 - 実装対象の `@develop` タグ付きシナリオを特定
 - ビジネス要件とユーザーアクションを理解
 
-**2. 🚨 E2E実行（Red段階）**
+**2. 🚨 E2E実行（AT Red）**
 ```bash
 yarn e2e:develop
 ```
 - まず失敗することを確認（Red段階）
 - failしたstepを詳細に確認・分析
 
-**3. 🎨 Frontend実装（Green段階）**
+**3. 🎨 Frontend実装**
 - failをパスさせるためにstep定義を実装
 - 必要に応じてfrontendコンポーネント・フックを実装
 - UI動作・状態管理・エラーハンドリングを実装
@@ -28,15 +28,16 @@ yarn e2e:develop
 **4. 🧪 Backend TDD開始（TestA実装）**
 - backend連携がある場合はTDDプロセス開始
 - **TestA**をまずは実装・実行してfail確認
+- frontendと結合するAPIの開発をする
 
-**5. 🔴 Backend Test実行（Red確認）**
+**5. 🔴 Backend Test実行（UT Red）**
 ```bash
 yarn ut
 ```
-- APIテストが失敗することを確認（Red段階）
+- APIテストが失敗することを確認（Red）
 - 期待するエラーメッセージ・振る舞いを確認
 
-**6. ⚡ Backend実装（Green段階）**
+**6. ⚡ Backend実装（UT Green）**
 - backend testをpassするように実装
 - Controller・Application・Domain層を順次実装
 - Exception設計とエラーハンドリング統一
@@ -49,9 +50,10 @@ yarn typecheck
 - 型エラーが発生した場合は即座に修正
 - 型安全な実装で回帰バグを予防
 
-**8. 🔄 E2E確認**
+**8. 🔄 E2E確認 (AT Green)**
 - 対象のシナリオがpassするまで繰り返し
 - **backend test** と **e2e test** 両方がパスするように実装を進める
+- 予期せぬfailした際はe2eデバッグルールに沿ってfixさせる
 
 **9.リファクタリング**
 - アーキテクチャルール・コード品質・設計原則を確認してリファクタリング
