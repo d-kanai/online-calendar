@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Meeting } from '../types/meeting';
+import { ApiMeeting, ApiParticipant } from '../types/api';
 import { meetingApi } from '../lib/api';
 
 export const useMeetings = () => {
@@ -14,19 +15,19 @@ export const useMeetings = () => {
     try {
       const response = await meetingApi.getAll();
       if (response.success && response.data) {
-        const mappedMeetings: Meeting[] = response.data.map((meeting: any) => ({
+        const mappedMeetings: Meeting[] = response.data.map((meeting: ApiMeeting) => ({
           id: meeting.id,
           title: meeting.title,
           startTime: new Date(meeting.startTime),
           endTime: new Date(meeting.endTime),
           owner: meeting.owner || meeting.ownerId,
-          participants: meeting.participants ? meeting.participants.map((p: any) => ({
+          participants: meeting.participants ? meeting.participants.map((p: ApiParticipant) => ({
             id: p.id,
             email: p.email,
             name: p.name
           })) : [],
           isImportant: meeting.isImportant,
-          status: 'scheduled',
+          status: 'scheduled' as const,
           createdAt: new Date(meeting.createdAt),
           updatedAt: new Date(meeting.updatedAt)
         }));

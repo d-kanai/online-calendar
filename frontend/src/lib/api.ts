@@ -1,3 +1,5 @@
+import { ApiMeeting, ApiResponse } from '../types/api';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
 export interface CreateMeetingRequest {
@@ -15,15 +17,8 @@ export interface UpdateMeetingRequest {
   isImportant?: boolean;
 }
 
-export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
-}
-
 export const meetingApi = {
-  async create(data: CreateMeetingRequest): Promise<ApiResponse> {
+  async create(data: CreateMeetingRequest): Promise<ApiResponse<ApiMeeting>> {
     const response = await fetch(`${API_BASE_URL}/meetings`, {
       method: 'POST',
       headers: {
@@ -39,12 +34,12 @@ export const meetingApi = {
     return result;
   },
   
-  async getAll(): Promise<ApiResponse> {
+  async getAll(): Promise<ApiResponse<ApiMeeting[]>> {
     const response = await fetch(`${API_BASE_URL}/meetings`);
     return response.json();
   },
   
-  async update(id: string, data: UpdateMeetingRequest): Promise<ApiResponse> {
+  async update(id: string, data: UpdateMeetingRequest): Promise<ApiResponse<ApiMeeting>> {
     const response = await fetch(`${API_BASE_URL}/meetings/${id}`, {
       method: 'PUT',
       headers: {
@@ -57,7 +52,7 @@ export const meetingApi = {
     return result;
   },
 
-  async addParticipant(meetingId: string, data: { email: string; name: string; requesterId: string }): Promise<ApiResponse> {
+  async addParticipant(meetingId: string, data: { email: string; name: string; requesterId: string }): Promise<ApiResponse<ApiMeeting>> {
     const response = await fetch(`${API_BASE_URL}/meetings/${meetingId}/participants`, {
       method: 'POST',
       headers: {

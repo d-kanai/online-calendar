@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthLayout } from './components/auth/AuthLayout';
+import { AppHeader } from './components/AppHeader';
 import { CalendarView } from './components/CalendarView';
 import { MeetingForm } from './components/MeetingForm';
 import { MeetingDetail } from './components/MeetingDetail';
@@ -7,15 +10,13 @@ import { toast } from 'sonner@2.0.3';
 import { Meeting, Participant } from './types/meeting';
 
 // モックデータ
-const CURRENT_USER = 'taro@example.com';
-
 const initialMeetings: Meeting[] = [
   {
     id: '1',
     title: '定例MTG',
     startTime: new Date(2025, 3, 1, 10, 0), // 2025年4月1日 10:00
     endTime: new Date(2025, 3, 1, 11, 0),   // 2025年4月1日 11:00
-    owner: CURRENT_USER,
+    owner: 'taro@example.com',
     participants: [
       {
         id: '1',
@@ -34,7 +35,7 @@ const initialMeetings: Meeting[] = [
     title: '重要会議',
     startTime: new Date(2025, 3, 2, 14, 0), // 2025年4月2日 14:00
     endTime: new Date(2025, 3, 2, 16, 0),   // 2025年4月2日 16:00
-    owner: CURRENT_USER,
+    owner: 'taro@example.com',
     participants: [],
     isImportant: true,
     status: 'scheduled',
@@ -43,13 +44,16 @@ const initialMeetings: Meeting[] = [
   }
 ];
 
-export default function App() {
+function CalendarApp() {
+  const { user } = useAuth();
   const [meetings, setMeetings] = useState<Meeting[]>(initialMeetings);
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
   const [showMeetingForm, setShowMeetingForm] = useState(false);
   const [editingMeeting, setEditingMeeting] = useState<Meeting | undefined>(undefined);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [showMeetingDetail, setShowMeetingDetail] = useState(false);
+
+  const currentUser = user?.email || '';
 
   // 会議作成・更新
   const handleMeetingSubmit = (meetingData: Omit<Meeting, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -169,13 +173,17 @@ export default function App() {
   }, [meetings]);
 
   return (
-    <div className="h-screen bg-background">
-      <CalendarView
-        meetings={meetings}
-        onDateSelect={handleDateSelect}
-        onMeetingSelect={handleMeetingSelect}
-        onCreateMeeting={handleCreateMeeting}
-      />
+    <div className="h-screen bg-background flex flex-col">
+      <AppHeader />
+      
+      <div className="flex-1 overflow-hidden">
+        <CalendarView
+          meetings={meetings}
+          onDateSelect={handleDateSelect}
+          onMeetingSelect={handleMeetingSelect}
+          onCreateMeeting={handleCreateMeeting}
+        />
+      </div>
       
       <MeetingForm
         open={showMeetingForm}
@@ -188,7 +196,7 @@ export default function App() {
         meeting={editingMeeting}
         selectedDate={selectedDate}
         existingMeetings={meetings}
-        currentUser={CURRENT_USER}
+        currentUser={currentUser}
       />
       
       <MeetingDetail
@@ -201,10 +209,34 @@ export default function App() {
         onEdit={handleEditMeeting}
         onDelete={handleMeetingDelete}
         onParticipantsChange={handleParticipantsChange}
-        currentUser={CURRENT_USER}
+        currentUser={currentUser}
       />
-      
-      <Toaster />
     </div>
+  );
+}
+
+function AppContent() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return isAuthenticated ? <CalendarApp /> : <AuthLayout />;
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+      <Toaster />
+    </AuthProvider>
   );
 }

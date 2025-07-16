@@ -4,17 +4,30 @@ import React from 'react';
 import { CalendarView } from '../components/CalendarView';
 import { MeetingForm } from '../components/MeetingForm';
 import { MeetingDetail } from '../components/MeetingDetail';
+import { AuthLayout } from '../components/auth/AuthLayout';
 import { Toaster } from 'sonner';
 import { useMeetings } from '../hooks/useMeetings';
 import { useMeetingModals } from '../hooks/useMeetingModals';
 import { useMeetingActions } from '../hooks/useMeetingActions';
 import { useReminderService } from '../hooks/useReminderService';
-
-const CURRENT_USER = 'taro@example.com';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Home() {
+  const { isAuthenticated, isLoading, user } = useAuth();
+  
+  // ローディング中は何も表示しない
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">読み込み中...</div>;
+  }
+  
+  // 未認証の場合は認証画面を表示
+  if (!isAuthenticated) {
+    return <AuthLayout />;
+  }
+
+  const CURRENT_USER = user?.email || 'unknown@example.com';
   // Custom Hooks
-  const { meetings, isLoading, error, loadMeetings, updateMeetings } = useMeetings();
+  const { meetings, loadMeetings, updateMeetings } = useMeetings();
   
   const {
     selectedMeeting,

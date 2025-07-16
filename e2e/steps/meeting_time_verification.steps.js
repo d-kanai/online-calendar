@@ -15,11 +15,7 @@ let calendarPage;
 let meetingFormPage;
 let createdMeetingId;
 
-Given('オーナーが {string} の会議を作成済み', async function (timeRange) {
-  // データベースリセット - 全テーブルをクリア
-  await prisma.meetingParticipant.deleteMany();
-  await prisma.meeting.deleteMany();
-  await prisma.user.deleteMany();
+Given('{string} の会議を作成済み', async function (timeRange) {
   
   // ブラウザとページを初期化
   browser = await chromium.launch({ headless: true });
@@ -29,13 +25,11 @@ Given('オーナーが {string} の会議を作成済み', async function (timeR
   calendarPage = new CalendarPage(page);
   meetingFormPage = new MeetingFormPage(page);
   
-  // オーナーユーザーを作成
-  const owner = await prisma.user.create({
-    data: {
-      email: 'taro@example.com',
-      name: 'taro'
-    }
-  });
+  // ページエラーをキャッチ（デバッグ用）
+  page.on('pageerror', error => console.log('PAGE ERROR:', error.message));
+  
+  // 現在のユーザー（Backgroundで作成済み）を取得
+  const owner = this.currentUser;
   
   // timeRangeから開始時刻と終了時刻を抽出（例: "10:00-11:00"）
   const [startTimeStr, endTimeStr] = timeRange.split('-');
@@ -66,7 +60,28 @@ Given('オーナーが {string} の会議を作成済み', async function (timeR
   // トップページにアクセス
   await calendarPage.navigate();
   
-  // ページが読み込まれて会議が表示されるまで待機
+  // ページが読み込まれるまで待機
+  await page.waitForTimeout(1000);
+  
+  // ログイン状態をlocalStorageに設定
+  await page.evaluate((userData) => {
+    // ユーザー一覧をlocalStorageに保存
+    const users = [userData];
+    localStorage.setItem('calendar_app_users', JSON.stringify(users));
+    
+    // 現在のユーザーをlocalStorageに保存
+    localStorage.setItem('calendar_app_current_user', JSON.stringify(userData));
+  }, {
+    id: owner.id,
+    email: owner.email,
+    name: owner.name,
+    createdAt: new Date(owner.createdAt)
+  });
+  
+  // ページをリロードして認証状態を反映
+  await page.reload();
+  
+  // 認証処理とコンポーネントの初期化を待機
   await page.waitForTimeout(3000);
 });
 
