@@ -61,7 +61,7 @@ Given('{string} の会議を作成済み', async function (timeRange) {
   await calendarPage.navigate();
   
   // ページが読み込まれるまで待機
-  await page.waitForTimeout(1000);
+  await page.waitForLoadState('networkidle');
   
   // ログイン状態をlocalStorageに設定
   await page.evaluate((userData) => {
@@ -81,8 +81,8 @@ Given('{string} の会議を作成済み', async function (timeRange) {
   // ページをリロードして認証状態を反映
   await page.reload();
   
-  // 認証処理とコンポーネントの初期化を待機
-  await page.waitForTimeout(3000);
+  // カレンダーが表示されるまで待機（認証完了を確認）
+  await page.waitForSelector('[data-testid="calendar-view"]', { timeout: 10000 });
 });
 
 When('カレンダー画面で会議をクリックする', async function () {
@@ -110,7 +110,7 @@ Then('会議詳細画面に {string} と表示される', async function (expect
 
 When('編集ボタンをクリックする', async function () {
   await page.click('button:has-text("編集")');
-  await page.waitForTimeout(1000);
+  await page.waitForSelector('[data-testid="meeting-title-input"]', { timeout: 10000 });
 });
 
 Then('編集フォームの開始時刻に {string} が表示される', async function (expectedStartTime) {
@@ -181,7 +181,7 @@ Then('カレンダー画面に {string} が表示される', async function (exp
 When('更新された会議をクリックする', async function () {
   // 更新された会議をクリック（部分一致）
   await page.click(':text("更新された会議")');
-  await page.waitForTimeout(1000);
+  await page.waitForSelector('[role="dialog"]', { timeout: 10000 });
 });
 
 // After hook moved to auth.steps.js for unified cleanup

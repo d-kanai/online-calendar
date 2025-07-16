@@ -61,7 +61,7 @@ Given('ユーザー{string}でログイン', async function (userName) {
     await page.goto('http://localhost:3000');
     
     // ページが読み込まれるまで待機
-    await page.waitForTimeout(1000);
+    await page.waitForLoadState('networkidle');
     
     // ログイン状態をlocalStorageに設定
     await page.evaluate((userData) => {
@@ -81,8 +81,8 @@ Given('ユーザー{string}でログイン', async function (userName) {
     // ページをリロードして認証状態を反映
     await page.reload();
     
-    // 認証処理とコンポーネントの初期化を待機
-    await page.waitForTimeout(3000);
+    // カレンダーが表示されるまで待機（認証完了を確認）
+    await page.waitForSelector('[data-testid="calendar-view"]', { timeout: 10000 });
   }
   
   // ユーザー情報を保存（他のステップで使用）
@@ -116,7 +116,7 @@ Given('ユーザー{string}でログインしてページにアクセス', async
   await page.goto('http://localhost:3000');
   
   // ページが読み込まれるまで待機
-  await page.waitForTimeout(1000);
+  await page.waitForLoadState('networkidle');
   
   // ログイン状態をlocalStorageに設定
   await page.evaluate((userData) => {
@@ -136,8 +136,8 @@ Given('ユーザー{string}でログインしてページにアクセス', async
   // ページをリロードして認証状態を反映
   await page.reload();
   
-  // 認証処理とコンポーネントの初期化を待機
-  await page.waitForTimeout(3000);
+  // カレンダーが表示されるまで待機（認証完了を確認）
+  await page.waitForSelector('[data-testid="calendar-view"]', { timeout: 10000 });
   
   // ユーザー情報を保存（他のステップで使用）
   this.currentUser = user;

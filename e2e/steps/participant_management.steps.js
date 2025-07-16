@@ -56,7 +56,7 @@ Given('作成した会議がある', async function () {
   await calendarPage.navigate();
   
   // ページが読み込まれるまで待機
-  await page.waitForTimeout(1000);
+  await page.waitForLoadState('networkidle');
   
   // ログイン状態をlocalStorageに設定
   await page.evaluate((userData) => {
@@ -76,8 +76,8 @@ Given('作成した会議がある', async function () {
   // ページをリロードして認証状態を反映
   await page.reload();
   
-  // 認証処理とコンポーネントの初期化を待機
-  await page.waitForTimeout(3000);
+  // カレンダーが表示されるまで待機（認証完了を確認）
+  await page.waitForSelector('[data-testid="calendar-view"]', { timeout: 10000 });
   
   // 会議をクリックして詳細を開く
   await page.click(':text("チームミーティング")');
