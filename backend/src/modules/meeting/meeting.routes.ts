@@ -1,8 +1,12 @@
 import { Hono } from 'hono';
 import { MeetingController } from './presentation/meeting.controller.js';
+import { errorHandler } from '../../shared/middleware/error-handler.js';
 
 const meetingRoutes = new Hono();
 const meetingController = new MeetingController();
+
+// Error handler
+meetingRoutes.onError(errorHandler);
 
 // GET /api/v1/meetings - Get all meetings
 meetingRoutes.get('/', (c) => meetingController.getAllMeetings(c));

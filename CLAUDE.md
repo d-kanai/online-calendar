@@ -172,6 +172,49 @@ find src/lib/ui -name "*.tsx" -exec sed -i '' 's/@[0-9][^"]*//g' {} \;
 
 # 🏗️ アーキテクチャ
 
+## 🚨 エラーハンドリング共通設計
+
+### 🎯 基本原則
+- **🎪 Presentation層**: ハッピーパスのみ処理
+- **⚙️ Application層**: Exception駆動でビジネスエラーを表現
+- **🔄 共通処理**: Honoのグローバルエラーハンドラーで統一レスポンス
+
+### 🏗️ 実装構成
+```
+shared/
+├── exceptions/
+│   └── http-exceptions.ts    # HTTPException基底クラス
+└── middleware/
+    └── error-handler.ts      # Honoグローバルエラーハンドラー
+```
+
+### 🔄 エラーフロー
+```
+Application Layer → throw HttpException
+       ↓
+Hono Error Handler → catch HttpException
+       ↓
+Unified JSON Response → { success: false, error: message }
+```
+
+### 📋 実装例
+```typescript
+// Route設定
+meetingRoutes.onError(errorHandler);
+
+// Application Layer
+if (!meeting) {
+  throw new NotFoundException('Meeting not found');
+}
+
+// Error Handler
+if (err instanceof HttpException) {
+  return c.json({ success: false, error: err.message }, err.statusCode);
+}
+```
+
+この設計により、エラーハンドリングが統一され、Controller層が大幅に簡素化される 🎯
+
 # 🖥️ Backendアーキテクチャルール
 
 ## 🏗️ DDD/Clean Architecture 構造
@@ -205,7 +248,30 @@ backend/src/modules/{module}/
 - **特徴**: 
   - Controllerクラスで構成
   - 各エンドポイントに対応するメソッドを持つ
-  - エラーハンドリングとHTTPステータスコード管理
+  - ハッピーパスのみ処理（エラーハンドリングは共通化）
+
+#### 🚨 エラーハンドリング設計
+- **🎯 Controller層の責務**: ハッピーパスのみ処理
+- **🚫 避けるべきパターン**: Controller内での404/500チェック
+- **✅ 推奨パターン**: Application層でのException throw
+- **🔄 統一処理**: Honoのグローバルエラーハンドラーで統一レスポンス
+
+```typescript
+// ❌ 避けるべきパターン
+async getMeetingById(c: Context) {
+  const meeting = await this.query.run(id);
+  if (!meeting) {
+    return c.json({ error: 'Not found' }, 404);
+  }
+  return c.json({ data: meeting });
+}
+
+// ✅ 推奨パターン
+async getMeetingById(c: Context) {
+  const meeting = await this.query.run(id); // 内部でNotFoundException throw
+  return c.json({ success: true, data: meeting });
+}
+```
 
 ### ⚙️ Application層（アプリケーション層）
 - **責務**: ビジネスユースケースの実行、処理フローの制御
@@ -216,6 +282,50 @@ backend/src/modules/{module}/
     - 例: `CreateMeetingCommand`, `GetAllMeetingsQuery`
   - ⚡ **単一責任**: 1つのクエリ/コマンドは1つの処理のみ実行
 - **依存**: Domain層とInfra層のRepositoryのみ
+
+#### 🚨 Application層エラーハンドリング
+- **🎯 Exception駆動**: 適切なHTTPExceptionを発生させる
+- **🚫 null返却の禁止**: Query/Commandはnullを返さない
+- **✅ 明示的エラー**: ビジネスエラーを具体的なExceptionで表現
+
+```typescript
+// ❌ 避けるべきパターン
+async run(id: string): Promise<Meeting | null> {
+  const meeting = await this.repository.findById(id);
+  return meeting; // nullを返却
+}
+
+// ✅ 推奨パターン
+async run(id: string): Promise<Meeting> {
+  const meeting = await this.repository.findById(id);
+  if (!meeting) {
+    throw new NotFoundException('Meeting not found');
+  }
+  return meeting;
+}
+```
+
+#### 🏗️ 共通Exception設計
+```typescript
+// HTTPException基底クラス
+export class HttpException extends Error {
+  public readonly statusCode: number;
+  public readonly message: string;
+}
+
+// 具体的なException
+export class BadRequestException extends HttpException {
+  constructor(message: string = 'Bad request') {
+    super(400, message);
+  }
+}
+
+export class NotFoundException extends HttpException {
+  constructor(message: string = 'Not found') {
+    super(404, message);
+  }
+}
+```
 
 ### 🎭 Domain層（ドメイン層）
 - **責務**: ビジネスルールとドメインモデルの定義
