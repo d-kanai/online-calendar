@@ -2,14 +2,16 @@
 
 このファイルは、Claude Code (claude.ai/code) がこのリポジトリでコードを扱う際のガイダンスを提供します 🤖✨
 
-## 📚 ドキュメント構成
+# 📚 ドキュメント構成
 
-@import ./docs/git_rule.md
-@import ./docs/backend_architecture.md
-@import ./docs/frontend_architecture.md
-@import ./docs/e2e_spec_rule.md
-@import ./docs/figma_rule.md
-@import ./docs/development_workflow.md
+| カテゴリ | ファイル | 説明 |
+|---------|---------|------|
+| **Git** | `./docs/git_rule.md` | Gitワークフロー・ブランチ戦略 |
+| **Backend** | `./docs/backend_architecture.md` | バックエンドアーキテクチャ |
+| **Frontend** | `./docs/frontend_architecture.md` | フロントエンドアーキテクチャ |
+| **E2E Testing** | `./docs/e2e_spec_rule.md` | E2Eテスト仕様・ルール |
+| **Design** | `./docs/figma_rule.md` | Figmaデザインルール |
+| **Workflow** | `./docs/development_workflow.md` | 開発ワークフロー |
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
