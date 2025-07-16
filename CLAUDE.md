@@ -540,10 +540,25 @@ backend/src/modules/{module}/
   - Controllerクラスで構成
   - 各エンドポイントに対応するメソッドを持つ
   - ハッピーパスのみ処理（エラーハンドリングは共通化）
+  - **📤 Output型**: 1 APIごとに1つの専用Output型を定義
 - **🚫 禁止事項**: 
   - ビジネスロジックvalidationの実装
   - データ整合性チェック
   - ビジネスルールの実装
+
+#### 📤 API Output型設計
+- **🎯 原則**: 1 APIエンドポイント = 1 Output型
+- **📁 配置**: `presentation/output.ts`にすべてのOutput型を定義
+- **🏗️ 構造**: 
+  - `GetAllMeetingsOutput`: 一覧取得API用
+  - `GetMeetingByIdOutput`: 個別取得API用
+  - `CreateMeetingOutput`: 作成API用
+  - `UpdateMeetingOutput`: 更新API用
+  - 各APIに対応する`to{ApiName}Output()`変換関数
+- **✅ メリット**: 
+  - API仕様の明確化
+  - 将来のAPI個別拡張が容易
+  - ドメインモデルの隠蔽を保証
 
 #### 🚨 エラーハンドリング設計
 - **🎯 Controller層の責務**: ハッピーパスのみ処理

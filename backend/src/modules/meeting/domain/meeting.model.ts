@@ -121,8 +121,21 @@ export class Meeting {
       this._title = data.title;
     }
     if (data.startTime !== undefined || data.endTime !== undefined) {
-      this._startTime = data.startTime ?? this._startTime;
-      this._endTime = data.endTime ?? this._endTime;
+      const newStartTime = data.startTime ?? this._startTime;
+      const newEndTime = data.endTime ?? this._endTime;
+      
+      // 時刻更新時のバリデーション
+      if (newStartTime >= newEndTime) {
+        throw new Error('開始時刻は終了時刻より前である必要があります');
+      }
+      
+      const duration = newEndTime.getTime() - newStartTime.getTime();
+      if (duration < 15 * 60 * 1000) { // 15分未満
+        throw new Error('会議は15分以上である必要があります');
+      }
+      
+      this._startTime = newStartTime;
+      this._endTime = newEndTime;
     }
     if (data.isImportant !== undefined) {
       this._isImportant = data.isImportant;

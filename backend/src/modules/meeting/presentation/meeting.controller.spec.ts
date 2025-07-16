@@ -196,4 +196,75 @@ describe('MeetingController', () => {
       .rejects
       .toThrow('会議は15分以上である必要があります');
   });
+
+  test('updateMeeting - 会議のタイトルと時刻を正常に更新できる', async () => {
+    // Given - 既存の会議を作成
+    const existingMeeting = await prisma.meeting.create({
+      data: {
+        title: '既存会議',
+        startTime: new Date('2025-01-15T10:00:00Z'),
+        endTime: new Date('2025-01-15T11:00:00Z'),
+        isImportant: false,
+        ownerId: 'taro@example.com'
+      }
+    });
+
+    const updateData = {
+      title: '更新された会議',
+      startTime: '2025-01-15T14:00:00Z',
+      endTime: '2025-01-15T15:30:00Z',
+      isImportant: true
+    };
+
+    // When
+    const mockContext = createMockContext({ id: existingMeeting.id }, updateData);
+    const response = await meetingController.updateMeeting(mockContext as any);
+
+    // Then
+    expect((response as any).data.success).toBe(true);
+    expect((response as any).data.data.title).toBe('更新された会議');
+    expect((response as any).data.data.isImportant).toBe(true);
+    expect((response as any).data.message).toBe('Meeting updated successfully');
+    expect((response as any).status).toBe(200);
+  });
+
+  test('updateMeeting - 存在しないIDの場合NotFoundExceptionを発生させる', async () => {
+    // Given - 存在しないMeeting ID
+    const updateData = {
+      title: '更新された会議',
+      startTime: '2025-01-15T14:00:00Z',
+      endTime: '2025-01-15T15:30:00Z'
+    };
+
+    // When & Then - NotFoundExceptionが発生することを確認
+    const mockContext = createMockContext({ id: 'non-existent-id' }, updateData);
+    await expect(meetingController.updateMeeting(mockContext as any))
+      .rejects
+      .toThrow('Meeting not found');
+  });
+
+  test('updateMeeting - 期間が15分未満の場合BadRequestExceptionを発生させる', async () => {
+    // Given - 既存の会議を作成
+    const existingMeeting = await prisma.meeting.create({
+      data: {
+        title: '既存会議',
+        startTime: new Date('2025-01-15T10:00:00Z'),
+        endTime: new Date('2025-01-15T11:00:00Z'),
+        isImportant: false,
+        ownerId: 'taro@example.com'
+      }
+    });
+
+    const updateData = {
+      title: '更新された会議',
+      startTime: '2025-01-15T14:00:00Z',
+      endTime: '2025-01-15T14:10:00Z'  // 10分間（15分未満）
+    };
+
+    // When & Then - BadRequestExceptionが発生することを確認
+    const mockContext = createMockContext({ id: existingMeeting.id }, updateData);
+    await expect(meetingController.updateMeeting(mockContext as any))
+      .rejects
+      .toThrow('会議は15分以上である必要があります');
+  });
 });

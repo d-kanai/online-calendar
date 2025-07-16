@@ -8,6 +8,13 @@ export interface CreateMeetingRequest {
   ownerId: string;
 }
 
+export interface UpdateMeetingRequest {
+  title?: string;
+  startTime?: string;
+  endTime?: string;
+  isImportant?: boolean;
+}
+
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
@@ -35,5 +42,18 @@ export const meetingApi = {
   async getAll(): Promise<ApiResponse> {
     const response = await fetch(`${API_BASE_URL}/meetings`);
     return response.json();
+  },
+  
+  async update(id: string, data: UpdateMeetingRequest): Promise<ApiResponse> {
+    const response = await fetch(`${API_BASE_URL}/meetings/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    
+    const result = await response.json();
+    return result;
   }
 };

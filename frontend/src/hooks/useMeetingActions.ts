@@ -28,22 +28,28 @@ export const useMeetingActions = ({
   const handleMeetingSubmit = async (meetingData: Omit<Meeting, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
       if (editingMeeting) {
-        // 更新
-        updateMeetings(prev => prev.map(meeting => 
-          meeting.id === editingMeeting.id 
-            ? { 
-                ...meetingData, 
-                id: editingMeeting.id, 
-                createdAt: editingMeeting.createdAt,
-                updatedAt: new Date() 
-              }
-            : meeting
-        ));
-        toast.success('会議が更新されました');
+        // 更新 - APIを呼び出す
+        const response = await meetingApi.update(editingMeeting.id, {
+          title: meetingData.title,
+          startTime: meetingData.startTime.toISOString(),
+          endTime: meetingData.endTime.toISOString(),
+          isImportant: meetingData.isImportant
+        });
         
-        // 参加者に通知を送信
-        if (meetingData.participants.length > 0) {
-          toast.info(`${meetingData.participants.length}名の参加者に変更通知を送信しました`);
+        if (response.success && response.data) {
+          // 会議更新後、全ての会議を再取得してUIを更新
+          await loadMeetings();
+          toast.success('会議が更新されました');
+          
+          // 参加者に通知を送信
+          if (meetingData.participants.length > 0) {
+            toast.info(`${meetingData.participants.length}名の参加者に変更通知を送信しました`);
+          }
+        } else {
+          // バックエンドからのエラーメッセージを表示
+          const errorMessage = response.error || '会議の更新に失敗しました';
+          toast.error(errorMessage);
+          throw new Error(errorMessage);
         }
       } else {
         // 新規作成 - APIを呼び出す

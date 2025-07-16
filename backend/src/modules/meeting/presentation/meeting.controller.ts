@@ -7,6 +7,18 @@ import { GetMeetingsByOwnerQuery } from '../application/queries/get-meetings-by-
 import { CreateMeetingCommand } from '../application/commands/create-meeting.command.js';
 import { UpdateMeetingCommand } from '../application/commands/update-meeting.command.js';
 import { DeleteMeetingCommand } from '../application/commands/delete-meeting.command.js';
+import { 
+  GetAllMeetingsOutput,
+  GetMeetingByIdOutput,
+  CreateMeetingOutput,
+  UpdateMeetingOutput,
+  GetMeetingsByOwnerOutput,
+  toGetAllMeetingsOutput,
+  toGetMeetingByIdOutput,
+  toCreateMeetingOutput,
+  toUpdateMeetingOutput,
+  toGetMeetingsByOwnerOutput
+} from './output.js';
 
 export class MeetingController {
   private getAllMeetingsQuery: GetAllMeetingsQuery;
@@ -25,11 +37,11 @@ export class MeetingController {
     this.deleteMeetingCommand = new DeleteMeetingCommand();
   }
 
-  async getAllMeetings(c: Context) {
+  async getAllMeetings(c: Context): Promise<Response> {
     const meetings = await this.getAllMeetingsQuery.run();
-    return c.json<ApiResponse>({
+    return c.json<ApiResponse<GetAllMeetingsOutput[]>>({
       success: true,
-      data: meetings
+      data: meetings.map(toGetAllMeetingsOutput)
     });
   }
 
@@ -37,9 +49,9 @@ export class MeetingController {
     const id = c.req.param('id');
     const meeting = await this.getMeetingByIdQuery.run(id);
 
-    return c.json<ApiResponse>({
+    return c.json<ApiResponse<GetMeetingByIdOutput>>({
       success: true,
-      data: meeting
+      data: toGetMeetingByIdOutput(meeting)
     });
   }
 
@@ -56,9 +68,9 @@ export class MeetingController {
 
     const meeting = await this.createMeetingCommand.run(meetingData);
 
-    return c.json<ApiResponse>({
+    return c.json<ApiResponse<CreateMeetingOutput>>({
       success: true,
-      data: meeting,
+      data: toCreateMeetingOutput(meeting),
       message: 'Meeting created successfully'
     }, 201);
   }
@@ -75,9 +87,9 @@ export class MeetingController {
 
     const meeting = await this.updateMeetingCommand.run(id, updateData);
 
-    return c.json<ApiResponse>({
+    return c.json<ApiResponse<UpdateMeetingOutput>>({
       success: true,
-      data: meeting,
+      data: toUpdateMeetingOutput(meeting),
       message: 'Meeting updated successfully'
     });
   }
@@ -96,9 +108,9 @@ export class MeetingController {
     const ownerId = c.req.param('ownerId');
     const meetings = await this.getMeetingsByOwnerQuery.run(ownerId);
 
-    return c.json<ApiResponse>({
+    return c.json<ApiResponse<GetMeetingsByOwnerOutput[]>>({
       success: true,
-      data: meetings
+      data: meetings.map(toGetMeetingsByOwnerOutput)
     });
   }
 }

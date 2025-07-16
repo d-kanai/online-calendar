@@ -4,7 +4,7 @@ Feature: 会議編集
   Rule: 会議編集可能項目
     オーナーは title と period を編集できる
 
-    @pending
+    @develop
     Scenario: オーナーがtitleとperiodを更新する
       Given オーナーが作成した未来の会議がある
       When オーナーが title と period を更新する
