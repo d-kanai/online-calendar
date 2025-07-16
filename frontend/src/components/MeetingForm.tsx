@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../lib/ui/dialog';
 import { Button } from '../lib/ui/button';
 import { Input } from '../lib/ui/input';
@@ -18,6 +19,29 @@ interface MeetingFormProps {
   existingMeetings: Meeting[];
   currentUser: string;
 }
+
+// Zodスキーマ定義（backendと同期）
+const MeetingFormSchema = z.object({
+  title: z.string()
+    .min(1, 'タイトルは必須項目です')
+    .trim(),
+  startTime: z.string()
+    .min(1, '開始時刻は必須項目です'),
+  endTime: z.string()
+    .min(1, '終了時刻は必須項目です'),
+  isImportant: z.boolean().optional().default(false)
+}).refine(
+  (data) => {
+    if (!data.startTime || !data.endTime) return true; // 基本バリデーションが先に実行される
+    const start = new Date(data.startTime);
+    const end = new Date(data.endTime);
+    return end > start;
+  },
+  {
+    message: '終了時刻は開始時刻より後に設定してください',
+    path: ['endTime']
+  }
+);
 
 export function MeetingForm({ 
   open, 
@@ -66,25 +90,27 @@ export function MeetingForm({
   const validateForm = () => {
     const newErrors: string[] = [];
     
-    if (!formData.title.trim()) {
-      newErrors.push('タイトルは必須項目です');
+    try {
+      // Zodスキーマによるバリデーション
+      MeetingFormSchema.parse({
+        title: formData.title,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        isImportant: formData.isImportant
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        // Zodのエラーメッセージを取得
+        error.issues.forEach(issue => {
+          newErrors.push(issue.message);
+        });
+      }
     }
     
-    if (!formData.startTime) {
-      newErrors.push('開始時刻は必須項目です');
-    }
-    
-    if (!formData.endTime) {
-      newErrors.push('終了時刻は必須項目です');
-    }
-    
+    // 追加のビジネスルールバリデーション（Zodでは表現困難なもの）
     if (formData.startTime && formData.endTime) {
       const start = new Date(formData.startTime);
       const end = new Date(formData.endTime);
-      
-      if (end <= start) {
-        newErrors.push('終了時刻は開始時刻より後に設定してください');
-      }
       
       // 開始済み会議の変更チェック
       if (meeting) {

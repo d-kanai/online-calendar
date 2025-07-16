@@ -120,6 +120,7 @@ yarn typecheck
 - **✅ 3つパス必須**: backend test + e2e test + typecheck の全てが成功するまで完了としない
 - **📊 継続確認**: 実装中も定期的にテスト実行して状態確認
 - **🔧 型安全優先**: TypeCheckエラーは他の作業より優先して修正
+- **🛡️ Validation二重チェック**: Frontend + Backend両方でvalidation実装必須
 
 このプロセスにより、品質の高い機能を確実に実装し、回帰バグを防止できる 🛡️
 
@@ -261,6 +262,204 @@ find src/lib/ui -name "*.tsx" -exec sed -i '' 's/@[0-9][^"]*//g' {} \;
   "exclude": ["node_modules", "figma-make-code"]
 }
 ```
+
+## 🛡️ Validation二重実装ルール
+
+### 🎯 基本原則
+- **✅ Frontend/Backend両方必須**: すべてのvalidationはFrontend + Backend の二重実装が必要
+- **⚡ Frontend**: UX向上のためのリアルタイムフィードバック
+- **🔒 Backend**: セキュリティとデータ整合性のための堅牢な最終防衛線
+- **🚫 片方のみ禁止**: どちらか一方だけの実装は絶対に禁止
+
+### 🎨 Frontend Validation責務
+- **👤 UX最適化**: ユーザーの即座フィードバックとエラー防止
+- **⚡ リアルタイム検証**: フォーム入力中の即座バリデーション
+- **🎯 UI状態管理**: エラー表示・非表示の制御
+- **📱 クライアント最適化**: ネットワーク通信削減
+
+#### Frontend実装パターン
+```typescript
+const validateForm = () => {
+  const newErrors: string[] = [];
+  
+  // 必須項目チェック
+  if (!formData.title.trim()) {
+    newErrors.push('タイトルは必須項目です');
+  }
+  
+  // 形式チェック
+  if (!formData.startTime) {
+    newErrors.push('開始時刻は必須項目です');
+  }
+  
+  // ビジネスルールチェック
+  if (formData.startTime && formData.endTime) {
+    if (new Date(formData.endTime) <= new Date(formData.startTime)) {
+      newErrors.push('終了時刻は開始時刻より後に設定してください');
+    }
+  }
+  
+  setErrors(newErrors);
+  return newErrors.length === 0;
+};
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  // ✅ Frontend validation必須実行
+  if (!validateForm()) {
+    return; // エラー時は送信しない
+  }
+  
+  try {
+    await onSubmit(meetingData);
+  } catch (error) {
+    // Backend validationエラーもハンドリング
+    setErrors([error.message]);
+  }
+};
+```
+
+### 🔒 Backend Validation責務  
+- **🛡️ セキュリティ防衛**: 悪意ある入力からの最終防護
+- **📊 データ整合性**: データベース制約の確実な維持
+- **🎭 ドメインルール**: ビジネス不変条件の絶対保証
+- **🔒 堅牢性**: Frontendバイパス攻撃からの保護
+
+#### Backend Domain実装パターン
+```typescript
+export const CreateMeetingDataSchema = z.object({
+  title: z.string()
+    .min(1, '会議タイトルは必須です')
+    .max(100, '会議タイトルは100文字以内で入力してください')
+    .trim(),
+  startTime: z.date({
+    message: '開始時刻は必須です'
+  }).refine(
+    (date) => !isNaN(date.getTime()),
+    { message: '開始時刻の形式が正しくありません' }
+  ),
+  endTime: z.date({
+    message: '終了時刻は必須です'
+  }).refine(
+    (date) => !isNaN(date.getTime()),
+    { message: '終了時刻の形式が正しくありません' }
+  ),
+  ownerId: z.string()
+    .min(1, 'オーナーIDは必須です')
+    .trim()
+}).refine(
+  (data) => data.startTime < data.endTime,
+  {
+    message: '開始時刻は終了時刻より前である必要があります',
+    path: ['startTime']
+  }
+).refine(
+  (data) => {
+    const duration = data.endTime.getTime() - data.startTime.getTime();
+    return duration >= 15 * 60 * 1000; // 15分以上
+  },
+  {
+    message: '会議は15分以上である必要があります',
+    path: ['endTime']
+  }
+);
+
+export class Meeting {
+  static create(data: CreateMeetingData): Meeting {
+    try {
+      // 🔒 Domain層での堅牢validation
+      const validatedData = CreateMeetingDataSchema.parse(data);
+      return new Meeting(/* validated data */);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const issues = error.issues;
+        if (issues && issues.length > 0) {
+          throw new Error(issues[0].message);
+        }
+        throw new Error('Validation failed');
+      }
+      throw error;
+    }
+  }
+}
+```
+
+### ⚖️ 責務分散原則
+- **Frontend**: ユーザビリティとパフォーマンス重視
+- **Backend**: セキュリティとデータ整合性重視
+- **両方同期**: 同じビジネスルールを両方で実装
+- **Backend最終**: 最終的な決定権はBackend Domain層
+
+### 🚨 重要な実装ルール
+- **🔄 ルール同期**: Frontend/Backendで同じvalidationルールを維持
+- **🎯 Backend厳格**: Backendは常にFrontendより厳格に実装
+- **💬 メッセージ統一**: エラーメッセージは可能な限り統一
+- **🧪 テスト必須**: Frontend/Backend両方でvalidationテストを実装
+- **📝 ドキュメント**: ビジネスルールの変更時は両方を同時更新
+
+## 🎨 Frontend Zodバリデーション実装パターン
+
+### 📝 基本構成
+Frontendでは以下のパターンでZodバリデーションを実装する：
+
+```typescript
+// Zodスキーマ定義（backendと同期）
+const MeetingFormSchema = z.object({
+  title: z.string()
+    .min(1, 'タイトルは必須項目です')
+    .trim(),
+  startTime: z.string()
+    .min(1, '開始時刻は必須項目です'),
+  endTime: z.string()
+    .min(1, '終了時刻は必須項目です'),
+  isImportant: z.boolean().optional().default(false)
+}).refine(
+  (data) => {
+    if (!data.startTime || !data.endTime) return true;
+    const start = new Date(data.startTime);
+    const end = new Date(data.endTime);
+    return end > start;
+  },
+  {
+    message: '終了時刻は開始時刻より後に設定してください',
+    path: ['endTime']
+  }
+);
+
+// バリデーション実行
+const validateForm = () => {
+  const newErrors: string[] = [];
+  
+  try {
+    // 🔒 Zodスキーマによるバリデーション
+    MeetingFormSchema.parse({
+      title: formData.title,
+      startTime: formData.startTime,
+      endTime: formData.endTime,
+      isImportant: formData.isImportant
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      error.issues.forEach(issue => {
+        newErrors.push(issue.message);
+      });
+    }
+  }
+  
+  // 追加のビジネスルールバリデーション（Zodでは表現困難なもの）
+  // 時間重複チェック、開始済み会議チェック等
+  
+  setErrors(newErrors);
+  return newErrors.length === 0;
+};
+```
+
+### 🎯 Frontend Zodパターンの特徴
+- **📊 フォーム特化**: HTML input要素との連携に最適化
+- **⚡ リアルタイム**: ユーザー入力時の即座なフィードバック
+- **🔗 Backend同期**: 基本ルールはBackend Zodスキーマと統一
+- **🧩 追加ルール**: Zodで表現困難なビジネスルールは個別実装
 
 # 🏗️ アーキテクチャ
 
@@ -510,14 +709,19 @@ export class Meeting {
   // ... その他のgetterメソッド
 }
 
-#### 🎯 Validation設計原則
+#### 🎯 Backend Domain Validation設計原則
 - **⚡ Zod使用必須**: すべてのvalidationはZodスキーマで実装
+- **🔒 セキュリティ最優先**: 悪意ある入力からの最終防護ライン
+- **📊 データ整合性保証**: データベース制約の確実な維持
+- **🎭 ビジネス不変条件**: ドメインルールの絶対的保証
 - **✅ 必須項目チェック**: `.min(1, 'エラーメッセージ')`で空文字検証
 - **📅 データ形式チェック**: `.date()`, `.number()`等の型安全検証  
 - **🎯 ビジネスルール検証**: `.refine()`でドメイン固有制約を実装
 - **🚫 Controller層での重複実装禁止**: validation責務はDomain層のみ
 - **💬 具体的エラーメッセージ**: 日本語でわかりやすいエラー文言
 - **🔄 統一エラーハンドリング**: ZodError → Error変換で一貫性確保
+- **🛡️ Frontend連携**: Frontendと同じルールを堅牢に実装
+- **🎯 Backend厳格ルール**: Frontendより厳格な制約で最終保証
 
 ### 🏭 Infra層（インフラ層）
 - **責務**: データベースアクセス、外部API連携
