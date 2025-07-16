@@ -54,4 +54,27 @@ describe('MeetingController', () => {
     expect((response as any).data.data).toHaveLength(2);
     expect((response as any).status).toBe(200);
   });
+
+  test('createMeeting - 必要項目をすべて入力して会議を作成する', async () => {
+    // Given - 会議作成リクエストデータを準備
+    const meetingData = {
+      title: '定例MTG',
+      startTime: '2025-01-15T10:00:00Z',
+      endTime: '2025-01-15T10:30:00Z',
+      isImportant: false,
+      ownerId: 'taro@example.com'
+    };
+
+    // When
+    const mockContext = createMockContext({}, meetingData);
+    const response = await meetingController.createMeeting(mockContext as any);
+
+    // Then
+    expect((response as any).data.success).toBe(true);
+    expect((response as any).data.data.title).toBe('定例MTG');
+    expect((response as any).data.data.isImportant).toBe(false);
+    expect((response as any).data.data.ownerId).toBe('taro@example.com');
+    expect((response as any).data.message).toBe('Meeting created successfully');
+    expect((response as any).status).toBe(201);
+  });
 });

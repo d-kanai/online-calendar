@@ -171,6 +171,7 @@ export function MeetingForm({
             <Label htmlFor="title">タイトル *</Label>
             <Input
               id="title"
+              data-testid="meeting-title-input"
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               placeholder="会議のタイトルを入力"
@@ -202,6 +203,7 @@ export function MeetingForm({
           <div className="flex items-center space-x-2">
             <Switch
               id="important"
+              data-testid="meeting-important-switch"
               checked={formData.isImportant}
               onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isImportant: checked }))}
             />
@@ -215,7 +217,7 @@ export function MeetingForm({
             <Button type="button" variant="outline" onClick={handleClose}>
               キャンセル
             </Button>
-            <Button type="submit">
+            <Button type="submit" data-testid="meeting-submit-button">
               {meeting ? '更新' : '作成'}
             </Button>
           </div>

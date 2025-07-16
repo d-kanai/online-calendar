@@ -6,6 +6,7 @@ import { MeetingForm } from '../components/MeetingForm';
 import { MeetingDetail } from '../components/MeetingDetail';
 import { toast, Toaster } from 'sonner';
 import { Meeting, Participant } from '../types/meeting';
+import { meetingApi } from '../lib/api';
 
 // モックデータ
 const CURRENT_USER = 'taro@example.com';
@@ -53,38 +54,61 @@ export default function Home() {
   const [showMeetingDetail, setShowMeetingDetail] = useState(false);
 
   // 会議作成・更新
-  const handleMeetingSubmit = (meetingData: Omit<Meeting, 'id' | 'createdAt' | 'updatedAt'>) => {
-    if (editingMeeting) {
-      // 更新
-      setMeetings(prev => prev.map(meeting => 
-        meeting.id === editingMeeting.id 
-          ? { 
-              ...meetingData, 
-              id: editingMeeting.id, 
-              createdAt: editingMeeting.createdAt,
-              updatedAt: new Date() 
-            }
-          : meeting
-      ));
-      toast.success('会議が更新されました');
-      
-      // 参加者に通知を送信
-      if (meetingData.participants.length > 0) {
-        toast.info(`${meetingData.participants.length}名の参加者に変更通知を送信しました`);
+  const handleMeetingSubmit = async (meetingData: Omit<Meeting, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      if (editingMeeting) {
+        // 更新
+        setMeetings(prev => prev.map(meeting => 
+          meeting.id === editingMeeting.id 
+            ? { 
+                ...meetingData, 
+                id: editingMeeting.id, 
+                createdAt: editingMeeting.createdAt,
+                updatedAt: new Date() 
+              }
+            : meeting
+        ));
+        toast.success('会議が更新されました');
+        
+        // 参加者に通知を送信
+        if (meetingData.participants.length > 0) {
+          toast.info(`${meetingData.participants.length}名の参加者に変更通知を送信しました`);
+        }
+      } else {
+        // 新規作成 - APIを呼び出す
+        const response = await meetingApi.create({
+          title: meetingData.title,
+          startTime: meetingData.startTime.toISOString(),
+          endTime: meetingData.endTime.toISOString(),
+          isImportant: meetingData.isImportant,
+          ownerId: meetingData.owner
+        });
+        
+        if (response.success && response.data) {
+          const newMeeting: Meeting = {
+            id: response.data.id,
+            title: response.data.title,
+            startTime: new Date(response.data.startTime),
+            endTime: new Date(response.data.endTime),
+            owner: response.data.ownerId,
+            participants: [],
+            isImportant: response.data.isImportant,
+            status: 'scheduled',
+            createdAt: new Date(response.data.createdAt),
+            updatedAt: new Date(response.data.updatedAt)
+          };
+          setMeetings(prev => [...prev, newMeeting]);
+          toast.success('会議が作成されました');
+        } else {
+          toast.error(response.error || '会議の作成に失敗しました');
+        }
       }
-    } else {
-      // 新規作成
-      const newMeeting: Meeting = {
-        ...meetingData,
-        id: Date.now().toString(),
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      setMeetings(prev => [...prev, newMeeting]);
-      toast.success('会議が作成されました');
+      
+      setEditingMeeting(undefined);
+    } catch (error) {
+      console.error('API Error:', error);
+      toast.error('会議の作成に失敗しました');
     }
-    
-    setEditingMeeting(undefined);
   };
 
   // 会議削除
