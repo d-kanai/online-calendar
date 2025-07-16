@@ -41,6 +41,18 @@ const MeetingFormSchema = z.object({
     message: '終了時刻は開始時刻より後に設定してください',
     path: ['endTime']
   }
+).refine(
+  (data) => {
+    if (!data.startTime || !data.endTime) return true;
+    const start = new Date(data.startTime);
+    const end = new Date(data.endTime);
+    const duration = end.getTime() - start.getTime();
+    return duration >= 15 * 60 * 1000; // 15分以上
+  },
+  {
+    message: '会議は15分以上で設定してください',
+    path: ['endTime']
+  }
 );
 
 export function MeetingForm({ 

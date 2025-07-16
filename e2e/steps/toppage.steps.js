@@ -1,32 +1,37 @@
 const { Given, When, Then } = require('@cucumber/cucumber');
 const { chromium, expect } = require('@playwright/test');
+const CalendarPage = require('../page-objects/CalendarPage');
 
 let browser;
 let page;
+let calendarPage;
 
 Given('ユーザーがブラウザを開いている', async function () {
   browser = await chromium.launch({ headless: false });
   page = await browser.newPage();
+  
+  // Page Objectインスタンスを作成
+  calendarPage = new CalendarPage(page);
 });
 
 When('トップページにアクセスする', async function () {
-  await page.goto('http://localhost:3000');
+  await calendarPage.navigate();
 });
 
 Then('ページタイトルに {string} が含まれている', async function (expectedTitle) {
-  await expect(page).toHaveTitle(new RegExp(expectedTitle));
+  await calendarPage.waitForTitle(expectedTitle);
 });
 
 Then('メインコンテンツが表示されている', async function () {
-  await expect(page.locator('body')).toBeVisible();
+  await calendarPage.waitForMainContentVisible();
 });
 
 Then('{string} ボタンが表示されている', async function (buttonText) {
-  await expect(page.locator(`text=${buttonText}`)).toBeVisible();
+  await calendarPage.waitForButtonVisible(buttonText);
 });
 
 Then('カレンダーが表示されている', async function () {
-  await expect(page.locator('[data-testid="calendar-view"]')).toBeVisible();
+  await calendarPage.waitForCalendarVisible();
 });
 
 // After hook to clean up

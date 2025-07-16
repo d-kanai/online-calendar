@@ -17,7 +17,7 @@ Feature: 会議登録
   Rule: 会議の最小期間制限
     会議の期間は15分以上である必要がある
 
-    @pending
+    @develop
     Scenario: 期間が15分未満の場合エラーになる
       Given オーナーがログインしている
       When period "10分" で会議を作成する

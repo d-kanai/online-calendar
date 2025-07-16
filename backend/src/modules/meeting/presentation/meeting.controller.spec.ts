@@ -109,7 +109,7 @@ describe('MeetingController', () => {
     const mockContext = createMockContext({}, meetingData);
     await expect(meetingController.createMeeting(mockContext as any))
       .rejects
-      .toThrow('Invalid input: expected date, received Date');
+      .toThrow('開始時刻は必須です');
   });
 
   test('createMeeting - endTimeが空の場合BadRequestExceptionを発生させる', async () => {
@@ -126,7 +126,7 @@ describe('MeetingController', () => {
     const mockContext = createMockContext({}, meetingData);
     await expect(meetingController.createMeeting(mockContext as any))
       .rejects
-      .toThrow('Invalid input: expected date, received Date');
+      .toThrow('終了時刻は必須です');
   });
 
   test('createMeeting - ownerIdが空の場合BadRequestExceptionを発生させる', async () => {
@@ -178,5 +178,22 @@ describe('MeetingController', () => {
     await expect(meetingController.createMeeting(mockContext as any))
       .rejects
       .toThrow('開始時刻は終了時刻より前である必要があります');
+  });
+
+  test('createMeeting - 期間が15分未満の場合BadRequestExceptionを発生させる', async () => {
+    // Given - 期間が10分（15分未満）のリクエストデータ
+    const meetingData = {
+      title: '定例MTG',
+      startTime: '2025-01-15T10:00:00Z',
+      endTime: '2025-01-15T10:10:00Z',  // 10分間
+      isImportant: false,
+      ownerId: 'taro@example.com'
+    };
+
+    // When & Then - BadRequestExceptionが発生することを確認
+    const mockContext = createMockContext({}, meetingData);
+    await expect(meetingController.createMeeting(mockContext as any))
+      .rejects
+      .toThrow('会議は15分以上である必要があります');
   });
 });

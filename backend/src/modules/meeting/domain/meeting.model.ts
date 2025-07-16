@@ -30,6 +30,15 @@ export const CreateMeetingDataSchema = z.object({
     message: '開始時刻は終了時刻より前である必要があります',
     path: ['startTime']
   }
+).refine(
+  (data) => {
+    const duration = data.endTime.getTime() - data.startTime.getTime();
+    return duration >= 15 * 60 * 1000; // 15分以上
+  },
+  {
+    message: '会議は15分以上である必要があります',
+    path: ['endTime']
+  }
 );
 
 export type CreateMeetingData = z.infer<typeof CreateMeetingDataSchema>;

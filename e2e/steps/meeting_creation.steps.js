@@ -1,6 +1,8 @@
 const { Given, When, Then, After, setDefaultTimeout } = require('@cucumber/cucumber');
 const { chromium, expect } = require('@playwright/test');
 const { PrismaClient } = require('@prisma/client');
+const CalendarPage = require('../page-objects/CalendarPage');
+const MeetingFormPage = require('../page-objects/MeetingFormPage');
 
 // タイムアウトを60秒に設定
 setDefaultTimeout(60000);
@@ -9,6 +11,8 @@ const prisma = new PrismaClient();
 
 let browser;
 let page;
+let calendarPage;
+let meetingFormPage;
 
 Given('オーナーがログインしている', async function () {
   // データベースリセット - 全テーブルをクリア
@@ -18,85 +22,39 @@ Given('オーナーがログインしている', async function () {
   browser = await chromium.launch({ headless: true });
   page = await browser.newPage();
   
+  // Page Objectインスタンスを作成
+  calendarPage = new CalendarPage(page);
+  meetingFormPage = new MeetingFormPage(page);
+  
   // トップページにアクセス（ログイン済み状態と仮定）
-  await page.goto('http://localhost:3000');
+  await calendarPage.navigate();
 });
 
 When('title {string}, period {string}, important flag {string} で会議を作成する', async function (title, period, importantFlag) {
-  // 会議を作成ボタンをクリック
-  await page.click('text=会議を作成');
-  
-  // フォームが表示されるまで待機
-  await page.waitForSelector('[data-testid="meeting-title-input"]');
-  
-  // タイトルを入力
-  await page.fill('[data-testid="meeting-title-input"]', title);
-  
-  // 開始時刻と終了時刻を設定（30分の期間の場合）
-  const now = new Date();
-  const startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0);
-  const endTime = new Date(startTime);
-  if (period === '30分') {
-    endTime.setMinutes(startTime.getMinutes() + 30);
-  }
-  
-  const startTimeString = startTime.toISOString().slice(0, 16);
-  const endTimeString = endTime.toISOString().slice(0, 16);
-  
-  await page.fill('#startTime', startTimeString);
-  await page.fill('#endTime', endTimeString);
-  
-  // 重要フラグを設定
-  const isImportant = importantFlag === 'true';
-  const switchElement = page.locator('[data-testid="meeting-important-switch"]');
-  const isChecked = await switchElement.getAttribute('aria-checked') === 'true';
-  
-  if (isImportant !== isChecked) {
-    await switchElement.click();
-  }
-  
-  // 作成ボタンをクリック
-  await page.click('[data-testid="meeting-submit-button"]');
-  
-  // フォームが閉じるまで待つ（処理完了の指標）
-  await page.waitForSelector('[data-testid="meeting-title-input"]', { state: 'hidden', timeout: 10000 });
+  // Page Objectを使用した会議作成フロー
+  await meetingFormPage.createMeeting(title, period, importantFlag);
+});
+
+When('period {string} で会議を作成する', async function (period) {
+  // Page Objectを使用した期間指定会議作成
+  await meetingFormPage.createMeetingWithPeriod(period);
 });
 
 Then('会議が正常に作成される', async function () {
-  // 成功トーストメッセージが表示されることを確認
-  await page.waitForSelector('text=会議が作成されました', { timeout: 10000 });
-  
-  // フォームが閉じていることを確認
-  await page.waitForSelector('[data-testid="meeting-title-input"]', { state: 'hidden' });
+  // Page Objectを使用した成功確認
+  await meetingFormPage.waitForSuccessMessage();
+  await meetingFormPage.waitForFormClosed();
 });
 
 When('title, period, important flag のいずれかが未入力で会議を作成する', async function () {
-  // 会議を作成ボタンをクリック
-  await page.click('text=会議を作成');
-  
-  // フォームが表示されるまで待機
-  await page.waitForSelector('[data-testid="meeting-title-input"]');
-  
-  // 必須項目を空のままにして作成ボタンをクリック
-  // タイトルは空のまま
-  // 開始時刻、終了時刻も空のまま
-  
-  // 作成ボタンをクリック
-  await page.click('[data-testid="meeting-submit-button"]');
+  // Page Objectを使用した空フィールド会議作成試行
+  await meetingFormPage.createMeetingWithEmptyFields();
 });
 
 Then('{string} エラーが表示される', async function (expectedErrorMessage) {
-  // エラーメッセージが表示されることを確認（Alertコンポーネント内）
-  await page.waitForSelector('[role="alert"]', { timeout: 10000 });
-  
-  // 期待するエラーメッセージが含まれているか確認
-  const alertContent = await page.textContent('[role="alert"]');
-  if (!alertContent.includes(expectedErrorMessage)) {
-    throw new Error(`Expected error message "${expectedErrorMessage}" not found. Actual content: "${alertContent}"`);
-  }
-  
-  // フォームがまだ開いていることを確認（エラーのため閉じない）
-  await page.waitForSelector('[data-testid="meeting-title-input"]', { state: 'visible' });
+  // Page Objectを使用したエラー確認
+  await meetingFormPage.waitForErrorMessage(expectedErrorMessage);
+  await meetingFormPage.waitForFormStillVisible();
 });
 
 // After hook to clean up
