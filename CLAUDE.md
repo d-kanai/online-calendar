@@ -14,6 +14,16 @@
 | **Design** | [./docs/figma_rule.md](./docs/figma_rule.md) | Figmaデザインルール |
 | **Workflow** | [./docs/development_workflow.md](./docs/development_workflow.md) | 開発ワークフロー |
 
+# for Claude Code import
+
+@import ./docs/git_rule.md
+@import ./docs/backend_architecture.md
+@import ./docs/frontend_architecture.md
+@import ./docs/e2e_spec_rule.md
+@import ./docs/test_strategy.md
+@import ./docs/figma_rule.md
+@import ./docs/development_workflow.md
+
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
 NEVER create files unless they're absolutely necessary for achieving your goal.
