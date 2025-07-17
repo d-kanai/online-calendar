@@ -22,7 +22,11 @@ export class MeetingFactory {
     this.counter++;
     
     const now = new Date();
-    const defaultStartTime = new Date(now);
+    // デフォルトは明日の日付を使用（開始済み会議のテストを避けるため）
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const defaultStartTime = new Date(tomorrow);
     defaultStartTime.setHours(14, 0, 0, 0);
     
     const defaultEndTime = new Date(defaultStartTime);
@@ -81,15 +85,17 @@ export class MeetingFactory {
 
   // 特定の期間の会議を作成
   static async createWithDuration(ownerId: string, minutes: number, options: Partial<MeetingFactoryOptions> = {}): Promise<Meeting> {
-    const startTime = new Date();
-    startTime.setHours(14, 0, 0, 0);
+    // デフォルトは明日の日付を使用
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(14, 0, 0, 0);
     
-    const endTime = new Date(startTime);
+    const endTime = new Date(tomorrow);
     endTime.setMinutes(endTime.getMinutes() + minutes);
 
     return this.create({
       ownerId,
-      startTime,
+      startTime: tomorrow,
       endTime,
       ...options
     });

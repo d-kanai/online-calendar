@@ -124,6 +124,12 @@ export class Meeting {
   }
 
   modifyDetails(data: UpdateMeetingData): void {
+    // 開始済み会議のチェック
+    const now = new Date();
+    if (this._startTime <= now) {
+      throw new Error('開始済みの会議は編集できません');
+    }
+
     if (data.title !== undefined) {
       this._title = data.title;
     }

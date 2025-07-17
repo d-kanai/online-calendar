@@ -174,7 +174,7 @@ export function MeetingForm({
       if (meeting) {
         const now = new Date();
         if (start <= now) {
-          newErrors.push('開始済みの会議は変更できません');
+          newErrors.push('開始済みの会議は編集できません');
         }
       }
       

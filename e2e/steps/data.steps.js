@@ -194,3 +194,28 @@ Given('他のユーザーが作成した会議がある', async function () {
   this.createdMeeting = meeting;
   this.meetingOwner = owner;
 });
+
+Given('オーナーが作成した開始済みの会議がある', async function () {
+  const owner = this.currentUser;
+  
+  // 1時間前に開始し、現在も進行中の会議を作成
+  const oneHourAgo = new Date();
+  oneHourAgo.setHours(oneHourAgo.getHours() - 1);
+  
+  const oneHourLater = new Date();
+  oneHourLater.setHours(oneHourLater.getHours() + 1);
+  
+  const meeting = await prisma.meeting.create({
+    data: {
+      title: '開始済みの会議',
+      startTime: oneHourAgo,
+      endTime: oneHourLater,
+      isImportant: false,
+      ownerId: owner.id
+    }
+  });
+  
+  
+  // 他のステップで使用するため保存
+  this.createdMeeting = meeting;
+});

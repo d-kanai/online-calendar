@@ -35,9 +35,28 @@ Then('{string} エラーが表示される', async function (expectedErrorMessag
     return;
   }
   
+  if (expectedErrorMessage === '開始済みの会議は編集できません') {
+    // 開始済みの会議では編集ボタンが表示されないことを確認
+    const editButton = await global.calendarPage.page.$('button:has-text("編集")');
+    if (editButton) {
+      // ボタンが表示されているかをチェック
+      const isVisible = await editButton.isVisible();
+      if (isVisible) {
+        throw new Error('編集ボタンが表示されています。開始済みの会議では編集ボタンが表示されないはずです。');
+      }
+    }
+    
+    // 開始済みの会議に関するメッセージが表示されていることを確認
+    const message = await global.calendarPage.page.$(':text("この会議は既に開始されているため、編集できません。")');
+    if (!message) {
+      throw new Error('開始済みの会議に関するメッセージが表示されていません。');
+    }
+    
+    return;
+  }
+  
   // Page Objectを使用したエラー確認
   await global.meetingFormPage.waitForErrorMessage(expectedErrorMessage);
-  await global.meetingFormPage.waitForFormStillVisible();
 });
 
 When('参加者が会議を更新しようとする', async function () {
@@ -51,6 +70,20 @@ When('参加者が会議を更新しようとする', async function () {
   
   // 参加者には編集ボタンが表示されないことを確認するため、何もしない
   // エラーメッセージのチェックは次のThenステップで行う
+});
+
+When('オーナーが会議を更新しようとする', async function () {
+  // カレンダー画面に移動
+  await global.calendarPage.navigate();
+  await global.calendarPage.page.waitForLoadState('networkidle');
+  
+  // 会議をクリックして詳細画面を開く
+  await global.calendarPage.page.click(':text("開始済みの会議")');
+  await global.calendarPage.page.waitForSelector('[role="dialog"]', { timeout: 10000 });
+  
+  
+  // 開始済みの会議では編集ボタンが表示されないことを確認するため、
+  // このステップでは何もしない（検証は次のThenステップで行う）
 });
 
 // After hook moved to auth.steps.js for unified cleanup

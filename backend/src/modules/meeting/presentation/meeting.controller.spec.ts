@@ -266,6 +266,41 @@ describe('MeetingController', () => {
       .toThrow('オーナーのみが会議を編集できます');
   });
 
+  test('updateMeeting - 開始済みの会議は編集できない', async () => {
+    // Given - オーナーユーザーを作成
+    const owner = await UserFactory.createWithName('owner');
+    
+    // 1時間前に開始し、現在も進行中の会議を作成
+    const oneHourAgo = new Date();
+    oneHourAgo.setHours(oneHourAgo.getHours() - 1);
+    
+    const oneHourLater = new Date();
+    oneHourLater.setHours(oneHourLater.getHours() + 1);
+    
+    const existingMeeting = await prisma.meeting.create({
+      data: {
+        title: '開始済みの会議',
+        startTime: oneHourAgo,
+        endTime: oneHourLater,
+        isImportant: false,
+        ownerId: owner.id
+      }
+    });
+
+    const updateData = {
+      title: '更新後のタイトル',
+      startTime: new Date(new Date().getTime() + 3600000).toISOString(), // 1時間後
+      endTime: new Date(new Date().getTime() + 7200000).toISOString(),   // 2時間後
+      isImportant: false
+    };
+
+    // When & Then - オーナーが開始済み会議を更新しようとしてエラーが発生することを確認
+    const mockContext = createMockContext({ id: existingMeeting.id }, updateData, owner.id);
+    await expect(meetingController.updateMeeting(mockContext as any))
+      .rejects
+      .toThrow('開始済みの会議は編集できません');
+  });
+
   test('addParticipant - オーナーが参加者を追加できる', async () => {
     // Given - オーナーユーザーを作成
     const owner = await UserFactory.createWithName('taro');
