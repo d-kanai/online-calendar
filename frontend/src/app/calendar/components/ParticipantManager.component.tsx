@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Button } from '../lib/ui/button';
-import { Input } from '../lib/ui/input';
-import { Label } from '../lib/ui/label';
-import { Badge } from '../lib/ui/badge';
-import { Alert, AlertDescription } from '../lib/ui/alert';
-import { Separator } from '../lib/ui/separator';
+import { Button } from '@/lib/ui/button';
+import { Input } from '@/lib/ui/input';
+import { Label } from '@/lib/ui/label';
+import { Badge } from '@/lib/ui/badge';
+import { Alert, AlertDescription } from '@/lib/ui/alert';
+import { Separator } from '@/lib/ui/separator';
 import {
   Dialog,
   DialogContent,
@@ -12,10 +12,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../lib/ui/dialog';
-import { Participant } from '../types/meeting';
+} from '@/lib/ui/dialog';
+import { Participant } from '@/types/meeting';
 import { Plus, X, Users, AlertCircle } from 'lucide-react';
-import { meetingApi } from '../app/calendar/apis/meeting.api';
+import { meetingApi } from '../apis/meeting.api';
 import { toast } from 'sonner';
 
 interface ParticipantManagerProps {

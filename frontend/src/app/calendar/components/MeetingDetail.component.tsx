@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Button } from '@/lib/ui/button';
 import { Badge } from '@/lib/ui/badge';
 import { Separator } from '@/lib/ui/separator';
-import { ParticipantManager } from '@/components/ParticipantManager';
+import { ParticipantManager } from './ParticipantManager.component';
 import { Meeting } from '@/types/meeting';
 import { Calendar, Clock, User, Star, Edit, Trash2 } from 'lucide-react';
 
