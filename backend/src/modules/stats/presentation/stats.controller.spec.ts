@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from 'vitest';
-import { StatsController } from '../src/modules/stats/presentation/stats.controller.js';
-import { prisma } from '../src/shared/database/prisma.js';
-import { UserFactory, MeetingFactory } from '../src/test/factories/index.js';
+import { StatsController } from './stats.controller.js';
+import { prisma } from '../../../shared/database/prisma.js';
+import { UserFactory, MeetingFactory } from '../../../test/factories/index.js';
 
 // Mock Hono Context
 const createMockContext = (params: Record<string, string> = {}, jsonBody = {}, loginUserId = 'test-user-id') => ({
@@ -103,7 +103,7 @@ describe('StatsController', () => {
       }
     });
     
-    const { DailyAverageStatCalculator } = await import('../src/modules/stats/domain/daily-average-calculator.js');
+    const { DailyAverageStatCalculator } = await import('../domain/daily-average-calculator.js');
     const calculator = new DailyAverageStatCalculator(meetings, startDate, endDate);
     const result = calculator.run();
 
@@ -167,7 +167,7 @@ describe('StatsController', () => {
       }
     });
     
-    const { DailyAverageStatCalculator } = await import('../src/modules/stats/domain/daily-average-calculator.js');
+    const { DailyAverageStatCalculator } = await import('../domain/daily-average-calculator.js');
     const calculator = new DailyAverageStatCalculator(meetings, queryStartDate, queryEndDate);
     const result = calculator.run();
 
@@ -222,7 +222,7 @@ describe('StatsController', () => {
       }
     });
     
-    const { DailyAverageStatCalculator } = await import('../src/modules/stats/domain/daily-average-calculator.js');
+    const { DailyAverageStatCalculator } = await import('../domain/daily-average-calculator.js');
     const calculator = new DailyAverageStatCalculator(meetings, queryStartDate, queryEndDate);
     const result = calculator.run();
 
