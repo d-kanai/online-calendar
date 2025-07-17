@@ -1,6 +1,6 @@
 // API Output Types - 1 API = 1 Output Type
 
-export interface ParticipantOutput {
+interface ParticipantOutput {
   id: string;
   email: string;
   name: string;

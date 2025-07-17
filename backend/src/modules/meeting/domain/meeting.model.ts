@@ -2,7 +2,7 @@ import { z, ZodError } from 'zod';
 import { MeetingParticipant } from './meeting-participant.model.js';
 import { User } from '../../user/domain/user.model.js';
 
-export const CreateMeetingDataSchema = z.object({
+const CreateMeetingDataSchema = z.object({
   title: z.string()
     .min(1, '会議タイトルは必須です')
     .trim(),

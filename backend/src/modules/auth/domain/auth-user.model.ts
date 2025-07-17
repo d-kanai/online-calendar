@@ -24,8 +24,8 @@ const SignUpDataSchema = z.object({
     .min(8, 'パスワードは8文字以上で入力してください')
 });
 
-export type AuthUserProps = z.infer<typeof AuthUserSchema>;
-export type SignUpData = z.infer<typeof SignUpDataSchema>;
+type AuthUserProps = z.infer<typeof AuthUserSchema>;
+type SignUpData = z.infer<typeof SignUpDataSchema>;
 
 export class AuthUser {
   private static readonly JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';

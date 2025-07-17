@@ -1,0 +1,50 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["e2e/**/*.js"],
+      "project": ["e2e/**/*.js"]
+    },
+    "backend": {
+      "entry": [
+        "src/**/*.spec.ts",
+        "tests/**/*.ts",
+        "vitest.config.ts"
+      ],
+      "project": ["src/**/*.ts", "tests/**/*.ts"],
+      "ignore": [
+        "dist/**",
+        "node_modules/**",
+        "prisma/migrations/**",
+        "src/lib/ui/.disabled/**"
+      ]
+    },
+    "frontend": {
+      "entry": [
+        "src/app/layout.tsx",
+        "src/app/page.tsx",
+        "src/app/**/page.tsx"
+      ],
+      "project": ["src/**/*.{ts,tsx}"],
+      "ignore": [
+        ".next/**",
+        "node_modules/**",
+        "dist/**",
+        "src/lib/ui/.disabled/**"
+      ]
+    }
+  },
+  "ignore": [
+    "**/*.d.ts",
+    "node_modules/**",
+    "**/dist/**",
+    "**/.next/**",
+    "**/src/lib/ui/.disabled/**"
+  ],
+  "ignoreDependencies": [
+    "@types/*",
+    "eslint*",
+    "tailwindcss",
+    "postcss"
+  ]
+}

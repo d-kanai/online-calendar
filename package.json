@@ -25,14 +25,19 @@
     "e2e:cucumber": "npx cucumber-js e2e/features --require e2e/steps --require e2e/support",
     "e2e:install": "npx playwright install",
     "e2e:ui": "npx playwright test --ui",
-    "ut": "yarn workspace online-calendar-backend test:run"
+    "ut": "yarn workspace online-calendar-backend test:run",
+    "dead-code": "knip",
+    "dead-code:backend": "knip --workspace backend",
+    "dead-code:frontend": "knip --workspace frontend",
+    "dead-code:e2e": "knip --workspace .",
+    "dead-code:fix": "knip --fix"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^12.0.0",
     "@playwright/test": "^1.54.1",
     "axios": "^1.10.0",
-    "playwright": "^1.54.1",
-    "yarn": "^1.22.19"
+    "knip": "^5.61.3",
+    "playwright": "^1.54.1"
   },
   "packageManager": "yarn@1.22.19"
 }

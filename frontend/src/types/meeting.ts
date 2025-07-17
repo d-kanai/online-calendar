@@ -17,7 +17,7 @@ export interface Meeting {
   updatedAt: Date;
 }
 
-export interface NotificationEvent {
+interface NotificationEvent {
   id: string;
   meetingId: string;
   type: 'reminder' | 'invitation' | 'rescheduled' | 'cancelled';

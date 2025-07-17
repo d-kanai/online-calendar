@@ -2,14 +2,14 @@ import { ApiMeeting, ApiResponse } from '../types/api';
 import { authService } from '../services/auth.service';
 import { API_BASE_URL } from './config';
 
-export interface CreateMeetingRequest {
+interface CreateMeetingRequest {
   title: string;
   startTime: string;
   endTime: string;
   isImportant?: boolean;
 }
 
-export interface UpdateMeetingRequest {
+interface UpdateMeetingRequest {
   title?: string;
   startTime?: string;
   endTime?: string;

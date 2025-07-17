@@ -1,5 +1,5 @@
 
-export interface UpdateUserData {
+interface UpdateUserData {
   name?: string;
 }
 

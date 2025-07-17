@@ -1,10 +1,6 @@
 import { Context, Next } from 'hono';
 import { AuthService } from '../modules/auth/domain/auth.service.js';
 
-export interface AuthContext {
-  loginUserId: string;
-  loginUserEmail: string;
-}
 
 export const authMiddleware = () => {
   const authService = new AuthService();

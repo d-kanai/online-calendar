@@ -1,7 +1,7 @@
 import { SignInData, SignUpData, User } from '../types/auth';
 import { API_BASE_URL } from '../lib/config';
 
-export interface AuthResponse {
+interface AuthResponse {
   token: string;
   user: User;
 }

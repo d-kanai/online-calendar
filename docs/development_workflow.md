@@ -55,14 +55,43 @@ yarn typecheck
 - **backend test** と **e2e test** 両方がパスするように実装を進める
 - 予期せぬfailした際はe2eデバッグルールに沿ってfixさせる
 
-**9.リファクタリング**
+**9. リファクタリング**
 - アーキテクチャルール・コード品質・設計原則を確認してリファクタリング
+
+**10. 🧹 Dead Code Detection（最終品質保証段階）**
+```bash
+yarn dead-code
+```
+- 未使用ファイル・exports・types・dependenciesを検出
+- リファクタリング完了後にコードベースをクリーンアップ
+- 保守性向上とバンドルサイズ最適化
+- 検出された不要コードは削除を検討
+
+#### 🔍 Dead Code Detection実行パターン
+```bash
+# 全体スキャン
+yarn dead-code
+
+# ワークスペース別詳細確認
+yarn dead-code:backend   # Backend専用
+yarn dead-code:frontend  # Frontend専用 
+yarn dead-code:e2e       # E2E関連
+
+# 自動修正（慎重に使用）
+yarn dead-code:fix
+```
+
+#### ⚠️ Dead Code Detection時の注意点
+- **📝 レビュー必須**: 削除前に未使用コードの影響を確認
+- **🔄 段階的削除**: 大量削除せず、少しずつクリーンアップ
+- **🧪 テスト実行**: 削除後は必ずテスト実行で動作確認
+- **💾 事前コミット**: 削除作業前は必ずgit commitで保存
 
 ### ⚠️ ATDD実施時の注意点
 
 - **🚫 実装ファーストの禁止**: テストなしでの実装は絶対に行わない
 - **🎯 一つずつ進める**: 複数シナリオを並行実装しない
-- **✅ 3つパス必須**: backend test + e2e test + typecheck の全てが成功するまで完了としない
+- **✅ 4つパス必須**: backend test + e2e test + typecheck + dead-code detection の全てが成功するまで完了としない
 - **📊 継続確認**: 実装中も定期的にテスト実行して状態確認
 - **🔧 型安全優先**: TypeCheckエラーは他の作業より優先して修正
 - **🛡️ Validation二重チェック**: Frontend + Backend両方でvalidation実装必須
@@ -113,11 +142,19 @@ yarn front:typecheck
 # 🔧 Frontend + Backend 統合型チェック
 yarn typecheck
 
+# 🧹 Dead Code Detection（未使用コード検出）
+yarn dead-code
+
 # 🔧 Backend のみ型チェック
 yarn back:typecheck
 
 # 🔧 Frontend のみ型チェック
 yarn front:typecheck
+
+# 🧹 ワークスペース別 Dead Code 検出
+yarn dead-code:backend   # Backend専用
+yarn dead-code:frontend  # Frontend専用
+yarn dead-code:e2e       # E2E関連
 ```
 
 ## 🛡️ Validation二重実装ルール
