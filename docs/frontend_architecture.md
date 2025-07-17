@@ -421,3 +421,499 @@ const validateForm = () => {
 - **⚡ リアルタイム**: ユーザー入力時の即座なフィードバック
 - **🔗 Backend同期**: 基本ルールはBackend Zodスキーマと統一
 - **🧩 追加ルール**: Zodで表現困難なビジネスルールは個別実装
+
+## 🛠️ React Hook Form統合パターン
+
+### 🎯 基本原則
+- **React Hook Form**: フォーム状態管理はuseFormフックを使用
+- **Zodバリデーション**: zodResolverでReact Hook FormとZodを連携
+- **型安全性**: TypeScriptとの完全な統合でコンパイル時エラー検出
+- **パフォーマンス**: 非制御コンポーネントによる最適化
+
+### 🏗️ 実装パターン
+```typescript
+// フォームコンポーネント実装例
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const MeetingForm = ({ meeting, onSubmit }) => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setError,
+    clearErrors,
+    setValue,
+    watch
+  } = useForm<FormData>({
+    resolver: zodResolver(MeetingFormSchema) as any, // Next.js互換性対応
+    defaultValues: {
+      title: meeting?.title || '',
+      startTime: meeting?.startTime || '',
+      endTime: meeting?.endTime || '',
+      isImportant: meeting?.isImportant || false
+    }
+  });
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <input {...register('title')} />
+      {errors.title && <span>{errors.title.message}</span>}
+    </form>
+  );
+};
+```
+
+### ✅ メリット
+- **フォーム再レンダリング最小化**: 非制御コンポーネントによる高パフォーマンス
+- **宣言的バリデーション**: Zodスキーマによる型安全なバリデーション
+- **開発効率**: ボイラープレート大幅削減
+- **統一性**: 全フォームで統一されたAPIとパターン
+
+## ⚡ TanStack Query データフェッチパターン
+
+### 🎯 基本原則
+- **サーバー状態管理**: TanStack Queryでサーバー状態を一元管理
+- **キャッシュ戦略**: Query Key factoryによる階層的キャッシュ管理
+- **楽観的更新**: 即座のUI反映でユーザー体験向上
+- **リアルタイム**: 自動的なデータ同期とキャッシュ無効化
+
+### 🏗️ Query Key Factory パターン
+```typescript
+// lib/query-keys.ts
+export const queryKeys = {
+  all: ['online-calendar'] as const,
+  meetings: () => [...queryKeys.all, 'meetings'] as const,
+  meetingsList: (filters?: { date?: Date; ownerId?: string }) => 
+    [...queryKeys.meetings(), 'list', filters] as const,
+  meetingDetail: (id: string) => 
+    [...queryKeys.meetings(), 'detail', id] as const,
+  users: () => [...queryKeys.all, 'users'] as const,
+  userDetail: (id: string) => [...queryKeys.users(), 'detail', id] as const,
+};
+
+// キャッシュヘルパー
+export const cacheHelpers = {
+  invalidateMeetings: (queryClient: QueryClient) => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.meetings() });
+  },
+  updateMeetingInAllCaches: (queryClient: QueryClient, id: string, updater: (old: Meeting) => Meeting) => {
+    // 個別詳細キャッシュ更新
+    queryClient.setQueryData(queryKeys.meetingDetail(id), updater);
+    
+    // リストキャッシュ更新
+    queryClient.setQueryData(queryKeys.meetingsList(), (old: Meeting[] = []) => 
+      old.map(meeting => meeting.id === id ? updater(meeting) : meeting)
+    );
+  }
+};
+```
+
+### 🔄 Optimistic Updates パターン
+```typescript
+// hooks/useMeetingsQuery.ts
+export const useUpdateMeeting = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: UpdateMeetingData }) => {
+      const response = await meetingApi.update(id, data);
+      if (!response.success) {
+        throw new Error(response.error || '会議の更新に失敗しました');
+      }
+      return response.data;
+    },
+    onMutate: async ({ id, data }) => {
+      // 楽観的更新前のキャンセル
+      await queryClient.cancelQueries({ queryKey: queryKeys.meetings() });
+      
+      // 前の状態をバックアップ
+      const previousMeeting = queryClient.getQueryData(queryKeys.meetingDetail(id));
+      const previousList = queryClient.getQueryData(queryKeys.meetingsList());
+      
+      // 楽観的更新実行
+      const updater = (old: Meeting) => ({
+        ...old,
+        ...data,
+        updatedAt: new Date()
+      });
+      
+      cacheHelpers.updateMeetingInAllCaches(queryClient, id, updater);
+      
+      return { previousMeeting, previousList };
+    },
+    onError: (err, { id }, context) => {
+      // エラー時はロールバック
+      if (context?.previousMeeting) {
+        queryClient.setQueryData(queryKeys.meetingDetail(id), context.previousMeeting);
+      }
+      if (context?.previousList) {
+        queryClient.setQueryData(queryKeys.meetingsList(), context.previousList);
+      }
+      toast.error(err instanceof Error ? err.message : '会議の更新に失敗しました');
+    },
+    onSettled: (data, error, { id }) => {
+      // 最終的にサーバーデータで同期
+      queryClient.invalidateQueries({ queryKey: queryKeys.meetingDetail(id) });
+    },
+    onSuccess: () => {
+      toast.success('会議が更新されました');
+    },
+  });
+};
+```
+
+### 📊 Suspense統合パターン
+```typescript
+// hooks/useMeetingsQuerySuspense.ts
+export const useMeetingsSuspense = () => {
+  const { data: meetings } = useSuspenseQuery({
+    queryKey: queryKeys.meetingsList(),
+    queryFn: async () => {
+      const response = await meetingApi.getAll();
+      if (!response.success) {
+        throw new Error(response.error || '会議の取得に失敗しました');
+      }
+      return response.data;
+    },
+    staleTime: 30 * 1000, // 30秒間は新鮮とみなす
+    gcTime: 5 * 60 * 1000, // 5分間ガベージコレクション猶予
+  });
+
+  return { meetings };
+};
+
+// コンポーネントでの使用
+function CalendarContent() {
+  const { meetings } = useMeetingsSuspense(); // Suspenseが自動的にローディング処理
+  
+  return <CalendarView meetings={meetings} />;
+}
+
+export function CalendarPage() {
+  return (
+    <ErrorBoundary FallbackComponent={CalendarError}>
+      <Suspense fallback={<CalendarLoading />}>
+        <CalendarContent />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+```
+
+### ✅ メリット
+- **自動キャッシュ**: 重複リクエスト削減とパフォーマンス向上
+- **リアルタイム同期**: バックグラウンド更新と自動invalidation
+- **楽観的更新**: 即座のUI反映でレスポンシブな操作感
+- **エラーハンドリング**: 一貫したエラー処理とロールバック機能
+- **開発体験**: React DevToolsとTanStack Query DevToolsでの可視化
+
+## 🔄 統一API クライアントパターン
+
+### 🎯 基本原則
+- **DRY原則**: 共通ヘッダーや設定の重複排除
+- **型安全性**: レスポンス型定義による静的型チェック
+- **エラーハンドリング**: 統一されたエラー処理とログ出力
+- **認証**: 自動的なトークン管理と更新
+
+### 🏗️ 実装パターン
+```typescript
+// lib/api-client.ts
+export class ApiClient {
+  private baseURL: string;
+  private timeout: number;
+
+  constructor(baseURL: string, timeout = 10000) {
+    this.baseURL = baseURL;
+    this.timeout = timeout;
+  }
+
+  private async getAuthHeaders(): Promise<Record<string, string>> {
+    const token = await getAuthToken();
+    return {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    };
+  }
+
+  private async request<T>(
+    method: HttpMethod,
+    endpoint: string,
+    options: RequestOptions = {}
+  ): Promise<ApiResponse<T>> {
+    const authHeaders = await this.getAuthHeaders();
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+    try {
+      const response = await fetch(`${this.baseURL}${endpoint}`, {
+        method,
+        headers: { ...authHeaders, ...options.headers },
+        body: options.body ? JSON.stringify(options.body) : undefined,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      // Backend APIResponse形式に対応
+      if (data && typeof data === 'object' && 'success' in data) {
+        return data as ApiResponse<T>;
+      }
+      
+      // 従来形式への互換性
+      return { success: true, data } as ApiResponse<T>;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('リクエストがタイムアウトしました');
+      }
+      
+      throw error;
+    }
+  }
+
+  async get<T>(endpoint: string, options?: RequestOptions): Promise<ApiResponse<T>> {
+    return this.request<T>('GET', endpoint, options);
+  }
+
+  async post<T>(endpoint: string, body: unknown, options?: RequestOptions): Promise<ApiResponse<T>> {
+    return this.request<T>('POST', endpoint, { ...options, body });
+  }
+
+  async put<T>(endpoint: string, body: unknown, options?: RequestOptions): Promise<ApiResponse<T>> {
+    return this.request<T>('PUT', endpoint, { ...options, body });
+  }
+
+  async delete<T>(endpoint: string, options?: RequestOptions): Promise<ApiResponse<T>> {
+    return this.request<T>('DELETE', endpoint, options);
+  }
+}
+
+// 使用例
+const apiClient = new ApiClient(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001');
+
+export const meetingApi = {
+  getAll: () => apiClient.get<Meeting[]>('/meetings'),
+  getById: (id: string) => apiClient.get<Meeting>(`/meetings/${id}`),
+  create: (data: CreateMeetingData) => apiClient.post<Meeting>('/meetings', data),
+  update: (id: string, data: UpdateMeetingData) => apiClient.put<Meeting>(`/meetings/${id}`, data),
+  delete: (id: string) => apiClient.delete<void>(`/meetings/${id}`),
+};
+```
+
+### ✅ メリット
+- **保守性**: 共通ロジックの一元管理
+- **型安全性**: TypeScriptによる静的型チェック
+- **一貫性**: 全APIで統一されたエラーハンドリング
+- **デバッグ**: 統一されたログ出力とエラー追跡
+
+## 🎨 Suspense & ErrorBoundary最適化パターン
+
+### 🎯 基本原則
+- **階層的制御**: グローバル、ページ、コンポーネントレベルでの適切な粒度
+- **ユーザー体験**: 段階的ローディングによる自然な待機体験
+- **エラー境界**: 適切なレベルでのエラーキャッチと復旧
+- **Next.js互換**: App RouterのServer/Client Component分離
+
+### 🏗️ 階層構造パターン
+```typescript
+// app/layout.tsx (RootLayout)
+// グローバルな基盤のみ、ErrorBoundaryは含めない
+export default function RootLayout({ children }) {
+  return (
+    <html lang="ja">
+      <body>
+        <QueryProvider>
+          <AuthProvider>
+            {children} // ページが責任を持つ
+            <Toaster />
+          </AuthProvider>
+        </QueryProvider>
+      </body>
+    </html>
+  );
+}
+
+// app/calendar/page.tsx (ページレベル)
+// ページ固有のSuspenseで細かい制御
+'use client';
+export default function CalendarPage() {
+  return (
+    <div className="h-screen bg-background flex flex-col">
+      <AppHeader currentScreen="calendar" onNavigate={handleNavigate} />
+      <CalendarSuspense currentUser={CURRENT_USER} />
+    </div>
+  );
+}
+
+// components/CalendarSuspense.tsx (コンポーネントレベル)
+// 具体的なローディング・エラー状態
+export function CalendarSuspense({ currentUser }) {
+  return (
+    <ErrorBoundary FallbackComponent={CalendarError}>
+      <Suspense fallback={<CalendarLoading />}>
+        <CalendarContent currentUser={currentUser} />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+
+// 細かい粒度でのSuspense（モーダル等）
+<Dialog open={open} onOpenChange={onClose}>
+  <DialogContent>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <Suspense fallback={<LoadingSpinner message="会議詳細を読み込んでいます..." />}>
+        <MeetingDetailContent {...props} />
+      </Suspense>
+    </ErrorBoundary>
+  </DialogContent>
+</Dialog>
+```
+
+### 📊 ローディング状態の設計
+```typescript
+// 専用ローディングコンポーネント
+function CalendarLoading() {
+  return (
+    <div className="h-full flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+        <p className="mt-4 text-muted-foreground">会議データを読み込んでいます...</p>
+      </div>
+    </div>
+  );
+}
+
+// 専用エラーコンポーネント
+function CalendarError({ error, resetErrorBoundary }) {
+  return (
+    <div className="h-full flex items-center justify-center">
+      <div className="text-center space-y-4">
+        <p className="text-destructive">エラーが発生しました</p>
+        <p className="text-muted-foreground">{error.message}</p>
+        <button onClick={resetErrorBoundary}>
+          再試行
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+### ✅ メリット
+- **段階的ローディング**: 全画面ローディングを回避し自然な体験
+- **適切な粒度**: エラーレベルに応じた適切な境界設定
+- **復旧機能**: ユーザーが自分でエラーから復旧可能
+- **開発体験**: Next.js App Routerとの完全な互換性
+
+## 🧪 E2Eテスト Suspense対応パターン
+
+### 🎯 基本原則
+- **非同期処理**: Suspenseローディングの完了を適切に待機
+- **要素特定**: data-testid等による確実な要素特定
+- **メッセージ検証**: 実装と一致するトーストメッセージの確認
+- **安定性**: タイミングに依存しない堅牢なテスト
+
+### 🏗️ 実装パターン
+```javascript
+// E2EテストでのSuspense待機
+Then('会議詳細画面に {string} と表示される', async function (expectedTime) {
+  // モーダルが表示されるまで待機
+  await global.calendarPage.page.waitForSelector('[role="dialog"]', { timeout: 10000 });
+  
+  // Suspenseローディングが完了するまで待機
+  try {
+    await global.calendarPage.page.waitForSelector('text=会議詳細を読み込んでいます...', { 
+      state: 'hidden', 
+      timeout: 10000 
+    });
+  } catch (e) {
+    // ローディングスピナーがすでに消えている場合は続行
+  }
+  
+  // 具体的な要素が表示されるまで待機
+  await global.calendarPage.page.waitForSelector('[data-testid="meeting-time-display"]', { 
+    timeout: 10000 
+  });
+  
+  // 内容を検証
+  const timeText = await global.calendarPage.page.textContent('[data-testid="meeting-time-display"]');
+  expect(timeText).toContain(expectedTime);
+});
+
+// 参加者削除の正しいメッセージ待機
+When('オーナーが参加者を削除する', async function () {
+  // 削除確認ダイアログの「削除する」ボタンをクリック
+  await page.click('button:has-text("削除する")');
+  
+  // 正しい成功メッセージ（実装に合わせて）を待機
+  await page.waitForSelector('text=参加者が更新されました', { timeout: 10000 });
+  
+  // ネットワークの完了を待機
+  await page.waitForLoadState('networkidle');
+});
+```
+
+### ✅ メリット
+- **信頼性**: Suspenseローディングを考慮した安定したテスト
+- **保守性**: 実装変更に追従しやすいテスト設計
+- **デバッグ**: 適切な待機によりテスト失敗の原因特定が容易
+
+## 📊 統計・分析に最適化されたテストパターン
+
+### 🎯 基本原則
+- **日付非依存**: 実行日に関係なく一貫した結果
+- **固定データ**: テスト用の決定論的データセット
+- **計算検証**: ビジネスロジックの数値計算を正確に検証
+- **環境隔離**: テスト間での状態汚染の防止
+
+### 🏗️ 実装パターン
+```typescript
+// 日付固定のテストパターン
+test('getDailyAverage - 過去1週間の日次平均会議時間を正しく計算する', async () => {
+  const user = await UserFactory.create();
+  
+  // 固定された基準日を使用（実行日に依存しない）
+  const baseDate = new Date('2024-01-15'); // 月曜日
+  
+  // 決定論的なテストデータ作成
+  const meetings = [
+    { ownerId: user.id, startTime: new Date('2024-01-15T10:00:00.000Z'), 
+      endTime: new Date('2024-01-15T11:00:00.000Z') }, // 60分
+    { ownerId: user.id, startTime: new Date('2024-01-17T14:00:00.000Z'), 
+      endTime: new Date('2024-01-17T14:30:00.000Z') }, // 30分
+    { ownerId: user.id, startTime: new Date('2024-01-19T09:00:00.000Z'), 
+      endTime: new Date('2024-01-19T10:30:00.000Z') }, // 90分
+  ];
+  
+  for (const meeting of meetings) {
+    await MeetingFactory.create(meeting);
+  }
+
+  // 固定日付範囲で計算
+  const endDate = new Date('2024-01-21T23:59:59.999Z');
+  const startDate = new Date('2024-01-15T00:00:00.000Z');
+  
+  // 直接Calculatorをテスト（コントローラー経由ではなく）
+  const calculator = new DailyAverageStatCalculator(meetings, startDate, endDate);
+  const result = calculator.run();
+
+  // 明確な計算式での検証
+  // 計算: (60+0+30+0+90+0+0) ÷ 7 = 180 ÷ 7 = 25.7分
+  expect(result.averageDailyMinutes).toBeCloseTo(25.7, 1);
+});
+```
+
+### ✅ メリット
+- **決定論的**: 常に同じ結果が得られる信頼性の高いテスト
+- **保守性**: 実装変更時にテストの意図が明確
+- **デバッグ**: テスト失敗時の原因特定が容易
