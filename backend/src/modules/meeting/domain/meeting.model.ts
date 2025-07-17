@@ -215,18 +215,22 @@ export class Meeting {
     
     const participant = MeetingParticipant.create(user.id, user.name, user.email);
     this._participants.push(participant);
+    this._updatedAt = new Date();
   }
 
-  removeParticipant(userId: string, requesterId: string): void {
+  removeParticipant(participantId: string, requesterId: string): void {
     // 権限チェック: オーナーのみが参加者を削除可能
     if (this._ownerId !== requesterId) {
       throw new Error('参加者の削除はオーナーのみ可能です');
     }
 
-    const index = this._participants.findIndex(p => p.userId === userId);
-    if (index > -1) {
-      this._participants.splice(index, 1);
+    const index = this._participants.findIndex(p => p.id === participantId);
+    if (index === -1) {
+      throw new Error('Participant not found in this meeting');
     }
+    
+    this._participants.splice(index, 1);
+    this._updatedAt = new Date();
   }
 
 }

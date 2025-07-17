@@ -12,14 +12,8 @@ export class RemoveParticipantCommand {
       throw new NotFoundException('Meeting not found');
     }
     
-    // participantIdからuserIdを取得
-    const participant = meeting.participants.find(p => p.id === participantId);
-    if (!participant) {
-      throw new NotFoundException('Participant not found in this meeting');
-    }
-    
-    // 参加者削除（ドメインロジックで権限チェック）
-    meeting.removeParticipant(participant.userId, requesterId);
+    // 参加者削除（ドメインロジックで権限チェックと存在確認）
+    meeting.removeParticipant(participantId, requesterId);
     
     // 永続化
     return await this.repository.save(meeting);
