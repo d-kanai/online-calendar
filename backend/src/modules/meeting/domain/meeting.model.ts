@@ -123,7 +123,12 @@ export class Meeting {
     );
   }
 
-  modifyDetails(data: UpdateMeetingData): void {
+  modifyDetails(data: UpdateMeetingData, loginUserId: string): void {
+    // 権限チェック: オーナーのみが会議を編集可能
+    if (this._ownerId !== loginUserId) {
+      throw new Error('オーナーのみが会議を編集できます');
+    }
+
     // 開始済み会議のチェック
     const now = new Date();
     if (this._startTime <= now) {

@@ -1,6 +1,6 @@
 import { Meeting, UpdateMeetingData } from '../../domain/meeting.model.js';
 import { MeetingRepository } from '../../infra/meeting.repository.js';
-import { NotFoundException, ForbiddenException } from '../../../../shared/exceptions/http-exceptions.js';
+import { NotFoundException } from '../../../../shared/exceptions/http-exceptions.js';
 
 export class UpdateMeetingCommand {
   private meetingRepository: MeetingRepository;
@@ -15,12 +15,7 @@ export class UpdateMeetingCommand {
       throw new NotFoundException('Meeting not found');
     }
     
-    // 権限チェック: オーナーのみが会議を編集可能
-    if (meeting.ownerId !== loginUserId) {
-      throw new ForbiddenException('オーナーのみが会議を編集できます');
-    }
-    
-    meeting.modifyDetails(data);
+    meeting.modifyDetails(data, loginUserId);
     return this.meetingRepository.save(meeting);
   }
 }
