@@ -32,6 +32,7 @@ class MeetingFactory {
     return prisma.meeting.create({ data: meetingData });
   }
 
+  // 明日の会議を作成
   static async createTomorrow(ownerId, options = {}) {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -48,6 +49,7 @@ class MeetingFactory {
     });
   }
 
+  // 昨日の会議を作成
   static async createYesterday(ownerId, options = {}) {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
@@ -60,6 +62,31 @@ class MeetingFactory {
       ownerId,
       startTime: yesterday,
       endTime,
+      ...options
+    });
+  }
+
+  // 特定の期間の会議を作成
+  static async createWithDuration(ownerId, minutes, options = {}) {
+    const startTime = new Date();
+    startTime.setHours(14, 0, 0, 0);
+    
+    const endTime = new Date(startTime);
+    endTime.setMinutes(endTime.getMinutes() + minutes);
+
+    return this.create({
+      ownerId,
+      startTime,
+      endTime,
+      ...options
+    });
+  }
+
+  // 重要な会議を作成
+  static async createImportant(ownerId, options = {}) {
+    return this.create({
+      ownerId,
+      isImportant: true,
       ...options
     });
   }

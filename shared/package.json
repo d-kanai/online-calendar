@@ -1,0 +1,9 @@
+{
+  "name": "online-calendar-shared",
+  "version": "1.0.0",
+  "description": "Shared utilities for Online Calendar",
+  "dependencies": {
+    "@prisma/client": "*",
+    "bcryptjs": "^3.0.2"
+  }
+}

@@ -1,7 +1,2 @@
-const { UserFactory } = require('./user.factory');
-const { MeetingFactory } = require('./meeting.factory');
-
-module.exports = {
-  UserFactory,
-  MeetingFactory
-};
+// Re-export shared factories
+module.exports = require('../../../shared/test/factories');

@@ -49,7 +49,6 @@ class UserFactory {
 
   static async createForAuth(name) {
     // 認証テスト用のユーザーを作成（固定パスワード）
-    // password オプションを渡すと、create メソッド内で再度ハッシュ化される
     return this.create({
       name,
       email: `${name.toLowerCase()}@example.com`,
