@@ -1,14 +1,27 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from '@/lib/ui/button';
 import { Input } from '@/lib/ui/input';
 import { Label } from '@/lib/ui/label';
 import { Alert, AlertDescription } from '@/lib/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
-import { SignInData } from '@/types/auth';
 import { AlertCircle, Mail, Lock } from 'lucide-react';
+
+// Zodスキーマ定義
+const SignInSchema = z.object({
+  email: z.string()
+    .min(1, 'メールアドレスを入力してください')
+    .email('有効なメールアドレスを入力してください'),
+  password: z.string()
+    .min(1, 'パスワードを入力してください')
+});
+
+type FormData = z.infer<typeof SignInSchema>;
 
 interface SignInFormProps {
   onSwitchToSignUp?: () => void;
@@ -17,25 +30,32 @@ interface SignInFormProps {
 export function SignInForm({ onSwitchToSignUp }: SignInFormProps) {
   const router = useRouter();
   const { signIn, isLoading } = useAuth();
-  const [formData, setFormData] = useState<SignInData>({
-    email: '',
-    password: ''
-  });
-  const [error, setError] = useState('');
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    if (!formData.email || !formData.password) {
-      setError('すべての項目を入力してください');
-      return;
+  
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError
+  } = useForm<FormData>({
+    resolver: zodResolver(SignInSchema),
+    defaultValues: {
+      email: '',
+      password: ''
     }
+  });
 
+  const onSubmit = async (data: FormData) => {
     try {
-      await signIn(formData);
-    } catch {
-      // エラーはAuthContextでtoastとして表示される
+      await signIn(data);
+      // 成功時は自動的にリダイレクトされる
+    } catch (error) {
+      // APIエラーの場合、フォームエラーとして表示
+      if (error instanceof Error) {
+        setError('root', {
+          type: 'manual',
+          message: error.message || 'ログインに失敗しました'
+        });
+      }
     }
   };
 
@@ -48,14 +68,16 @@ export function SignInForm({ onSwitchToSignUp }: SignInFormProps) {
         </p>
       </div>
 
-      {error && (
+      {(errors.root || errors.email || errors.password) && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>
+            {errors.root?.message || errors.email?.message || errors.password?.message}
+          </AlertDescription>
         </Alert>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">メールアドレス</Label>
           <div className="relative">
@@ -64,8 +86,7 @@ export function SignInForm({ onSwitchToSignUp }: SignInFormProps) {
               id="email"
               type="email"
               placeholder="your@email.com"
-              value={formData.email}
-              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              {...register('email')}
               className="pl-10"
               disabled={isLoading}
             />
@@ -80,8 +101,7 @@ export function SignInForm({ onSwitchToSignUp }: SignInFormProps) {
               id="password"
               type="password"
               placeholder="パスワードを入力"
-              value={formData.password}
-              onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+              {...register('password')}
               className="pl-10"
               disabled={isLoading}
             />

@@ -1,14 +1,35 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from '@/lib/ui/button';
 import { Input } from '@/lib/ui/input';
 import { Label } from '@/lib/ui/label';
 import { Alert, AlertDescription } from '@/lib/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
-import { SignUpData } from '@/types/auth';
 import { AlertCircle, User, Mail, Lock } from 'lucide-react';
+
+// Zodスキーマ定義
+const SignUpSchema = z.object({
+  name: z.string()
+    .min(1, '名前は必須項目です')
+    .trim(),
+  email: z.string()
+    .min(1, 'メールアドレスは必須項目です')
+    .email('有効なメールアドレスを入力してください'),
+  password: z.string()
+    .min(6, 'パスワードは6文字以上で入力してください'),
+  confirmPassword: z.string()
+    .min(1, 'パスワード（確認）は必須項目です')
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'パスワードが一致しません',
+  path: ['confirmPassword']
+});
+
+type FormData = z.infer<typeof SignUpSchema>;
 
 interface SignUpFormProps {
   onSwitchToSignIn?: () => void;
@@ -17,52 +38,44 @@ interface SignUpFormProps {
 export function SignUpForm({ onSwitchToSignIn }: SignUpFormProps) {
   const router = useRouter();
   const { signUp, isLoading } = useAuth();
-  const [formData, setFormData] = useState<SignUpData>({
-    name: '',
-    email: '',
-    password: ''
+  
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setError
+  } = useForm<FormData>({
+    resolver: zodResolver(SignUpSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: ''
+    }
   });
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [errors, setErrors] = useState<string[]>([]);
 
-  const validateForm = () => {
-    const newErrors: string[] = [];
-
-    if (!formData.name.trim()) {
-      newErrors.push('名前は必須項目です');
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.push('メールアドレスは必須項目です');
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.push('有効なメールアドレスを入力してください');
-    }
-
-    if (!formData.password) {
-      newErrors.push('パスワードは必須項目です');
-    } else if (formData.password.length < 6) {
-      newErrors.push('パスワードは6文字以上で入力してください');
-    }
-
-    if (formData.password !== confirmPassword) {
-      newErrors.push('パスワードが一致しません');
-    }
-
-    setErrors(newErrors);
-    return newErrors.length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) return;
-
+  const onSubmit = async (data: FormData) => {
     try {
-      await signUp(formData);
-    } catch {
-      // エラーはAuthContextでtoastとして表示される
+      await signUp({
+        name: data.name,
+        email: data.email,
+        password: data.password
+      });
+      // 成功時は自動的にリダイレクトされる
+    } catch (error) {
+      // APIエラーの場合、該当フィールドにエラーを設定
+      if (error instanceof Error && error.message.includes('メールアドレス')) {
+        setError('email', {
+          type: 'manual',
+          message: error.message
+        });
+      }
     }
   };
+
+  // エラーメッセージを収集
+  const errorMessages = Object.values(errors).map(error => error?.message).filter(Boolean);
 
   return (
     <div className="w-full max-w-md space-y-6">
@@ -73,12 +86,12 @@ export function SignUpForm({ onSwitchToSignIn }: SignUpFormProps) {
         </p>
       </div>
 
-      {errors.length > 0 && (
+      {errorMessages.length > 0 && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             <ul className="list-disc list-inside space-y-1">
-              {errors.map((error, index) => (
+              {errorMessages.map((error, index) => (
                 <li key={index}>{error}</li>
               ))}
             </ul>
@@ -86,7 +99,7 @@ export function SignUpForm({ onSwitchToSignIn }: SignUpFormProps) {
         </Alert>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="name">名前</Label>
           <div className="relative">
@@ -95,8 +108,7 @@ export function SignUpForm({ onSwitchToSignIn }: SignUpFormProps) {
               id="name"
               type="text"
               placeholder="山田太郎"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              {...register('name')}
               className="pl-10"
               disabled={isLoading}
             />
@@ -111,8 +123,7 @@ export function SignUpForm({ onSwitchToSignIn }: SignUpFormProps) {
               id="email"
               type="email"
               placeholder="your@email.com"
-              value={formData.email}
-              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              {...register('email')}
               className="pl-10"
               disabled={isLoading}
             />
@@ -127,8 +138,7 @@ export function SignUpForm({ onSwitchToSignIn }: SignUpFormProps) {
               id="password"
               type="password"
               placeholder="6文字以上のパスワード"
-              value={formData.password}
-              onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+              {...register('password')}
               className="pl-10"
               disabled={isLoading}
             />
@@ -143,8 +153,7 @@ export function SignUpForm({ onSwitchToSignIn }: SignUpFormProps) {
               id="confirmPassword"
               type="password"
               placeholder="パスワードを再入力"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              {...register('confirmPassword')}
               className="pl-10"
               disabled={isLoading}
             />

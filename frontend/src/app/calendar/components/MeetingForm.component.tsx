@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/lib/ui/dialog';
 import { Button } from '@/lib/ui/button';
@@ -29,7 +31,7 @@ const MeetingFormSchema = z.object({
     .min(1, '開始時刻は必須項目です'),
   endTime: z.string()
     .min(1, '終了時刻は必須項目です'),
-  isImportant: z.boolean().optional().default(false)
+  isImportant: z.boolean().default(false)
 }).refine(
   (data) => {
     if (!data.startTime || !data.endTime) return true; // 基本バリデーションが先に実行される
@@ -55,6 +57,8 @@ const MeetingFormSchema = z.object({
   }
 );
 
+type FormData = z.infer<typeof MeetingFormSchema>;
+
 // ローカル時刻でフォームに設定するためのヘルパー関数
 const toLocalDateTimeString = (date: Date) => {
   const year = date.getFullYear();
@@ -74,26 +78,38 @@ export function MeetingForm({
   existingMeetings,
   currentUser 
 }: MeetingFormProps) {
-  const [formData, setFormData] = useState({
-    title: '',
-    startTime: '',
-    endTime: '',
-    isImportant: false,
-    description: ''
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setError,
+    clearErrors,
+    setValue,
+    watch
+  } = useForm<FormData>({
+    resolver: zodResolver(MeetingFormSchema) as any,
+    defaultValues: {
+      title: '',
+      startTime: '',
+      endTime: '',
+      isImportant: false
+    }
   });
-  const [errors, setErrors] = useState<string[]>([]);
+  
+  const watchedStartTime = watch('startTime');
+  const watchedEndTime = watch('endTime');
   
   useEffect(() => {
     if (!open) {
       // フォームが閉じているときは初期状態にリセット
-      setFormData({
+      reset({
         title: '',
         startTime: '',
         endTime: '',
-        isImportant: false,
-        description: ''
+        isImportant: false
       });
-      setErrors([]);
+      clearErrors();
       return;
     }
     
@@ -107,12 +123,11 @@ export function MeetingForm({
         ? meeting.endTime 
         : new Date(meeting.endTime);
       
-      setFormData({
+      reset({
         title: meeting.title,
         startTime: toLocalDateTimeString(startTime),
         endTime: toLocalDateTimeString(endTime),
-        isImportant: meeting.isImportant,
-        description: ''
+        isImportant: meeting.isImportant
       });
     } else if (selectedDate) {
       // 新規作成モード: デフォルト値をセット
@@ -121,12 +136,11 @@ export function MeetingForm({
       const defaultEnd = new Date(defaultStart);
       defaultEnd.setHours(11, 0, 0, 0);
       
-      setFormData({
+      reset({
         title: '',
         startTime: toLocalDateTimeString(defaultStart),
         endTime: toLocalDateTimeString(defaultEnd),
-        isImportant: false,
-        description: ''
+        isImportant: false
       });
     } else {
       // デフォルト: 現在時刻ベース
@@ -135,46 +149,32 @@ export function MeetingForm({
       const endTime = new Date(now);
       endTime.setHours(endTime.getHours() + 1);
       
-      setFormData({
+      reset({
         title: '',
         startTime: toLocalDateTimeString(now),
         endTime: toLocalDateTimeString(endTime),
-        isImportant: false,
-        description: ''
+        isImportant: false
       });
     }
-  }, [open, meeting, selectedDate]);
+  }, [open, meeting, selectedDate, reset, clearErrors]);
   
-  const validateForm = () => {
-    const newErrors: string[] = [];
-    
-    try {
-      // Zodスキーマによるバリデーション
-      MeetingFormSchema.parse({
-        title: formData.title,
-        startTime: formData.startTime,
-        endTime: formData.endTime,
-        isImportant: formData.isImportant
-      });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        // Zodのエラーメッセージを取得
-        error.issues.forEach(issue => {
-          newErrors.push(issue.message);
-        });
-      }
-    }
+  const validateBusinessRules = (data: FormData): boolean => {
+    let hasError = false;
     
     // 追加のビジネスルールバリデーション（Zodでは表現困難なもの）
-    if (formData.startTime && formData.endTime) {
-      const start = new Date(formData.startTime);
-      const end = new Date(formData.endTime);
+    if (data.startTime && data.endTime) {
+      const start = new Date(data.startTime);
+      const end = new Date(data.endTime);
       
       // 開始済み会議の変更チェック
       if (meeting) {
         const now = new Date();
         if (start <= now) {
-          newErrors.push('開始済みの会議は編集できません');
+          setError('startTime', {
+            type: 'manual',
+            message: '開始済みの会議は編集できません'
+          });
+          hasError = true;
         }
       }
       
@@ -189,30 +189,31 @@ export function MeetingForm({
       });
       
       if (hasConflict) {
-        newErrors.push('他の会議と時間が重複しています');
+        setError('startTime', {
+          type: 'manual',
+          message: '他の会議と時間が重複しています'
+        });
+        hasError = true;
       }
     }
     
-    setErrors(newErrors);
-    return newErrors.length === 0;
+    return !hasError;
   };
   
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // クライアントサイドバリデーション実行
-    if (!validateForm()) {
-      return; // バリデーションエラーがある場合は送信しない
+  const onFormSubmit = async (data: FormData) => {
+    // ビジネスルールのバリデーション
+    if (!validateBusinessRules(data)) {
+      return;
     }
     
     const meetingData: Omit<Meeting, 'id' | 'createdAt' | 'updatedAt'> = {
-      title: formData.title.trim(),
-      startTime: new Date(formData.startTime),
-      endTime: new Date(formData.endTime),
+      title: data.title.trim(),
+      startTime: new Date(data.startTime),
+      endTime: new Date(data.endTime),
       ownerId: currentUser,
       owner: currentUser,
       participants: meeting?.participants || [],
-      isImportant: formData.isImportant,
+      isImportant: data.isImportant,
       status: 'scheduled'
     };
     
@@ -226,14 +227,13 @@ export function MeetingForm({
   };
   
   const handleClose = () => {
-    setFormData({
+    reset({
       title: '',
       startTime: '',
       endTime: '',
-      isImportant: false,
-      description: ''
+      isImportant: false
     });
-    setErrors([]);
+    clearErrors();
     onClose();
   };
   
@@ -246,27 +246,26 @@ export function MeetingForm({
           </DialogTitle>
         </DialogHeader>
         
-        {errors.length > 0 && (
+        {(errors.title || errors.startTime || errors.endTime) && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               <ul className="list-disc list-inside space-y-1">
-                {errors.map((error, index) => (
-                  <li key={index}>{error}</li>
-                ))}
+                {errors.title && <li>{errors.title.message}</li>}
+                {errors.startTime && <li>{errors.startTime.message}</li>}
+                {errors.endTime && <li>{errors.endTime.message}</li>}
               </ul>
             </AlertDescription>
           </Alert>
         )}
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="title">タイトル *</Label>
             <Input
               id="title"
               data-testid="meeting-title-input"
-              value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              {...register('title')}
               placeholder="会議のタイトルを入力"
             />
           </div>
@@ -277,8 +276,7 @@ export function MeetingForm({
               <Input
                 id="startTime"
                 type="datetime-local"
-                value={formData.startTime}
-                onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
+                {...register('startTime')}
               />
             </div>
             
@@ -287,8 +285,7 @@ export function MeetingForm({
               <Input
                 id="endTime"
                 type="datetime-local"
-                value={formData.endTime}
-                onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
+                {...register('endTime')}
               />
             </div>
           </div>
@@ -297,8 +294,9 @@ export function MeetingForm({
             <Switch
               id="important"
               data-testid="meeting-important-switch"
-              checked={formData.isImportant}
-              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isImportant: checked }))}
+              {...register('isImportant')}
+              checked={watch('isImportant')}
+              onCheckedChange={(checked) => setValue('isImportant', checked)}
             />
             <Label htmlFor="important">重要な会議</Label>
             <span className="text-sm text-muted-foreground">
