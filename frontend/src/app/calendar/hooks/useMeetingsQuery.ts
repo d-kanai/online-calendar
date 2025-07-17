@@ -91,7 +91,7 @@ export const useCreateMeeting = () => {
       queryClient.setQueryData(QUERY_KEYS.lists(), (old: Meeting[] = []) => {
         return [...old, newMeeting];
       });
-      toast.success('会議を作成しました');
+      toast.success('会議が作成されました');
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : '会議の作成に失敗しました');
@@ -131,7 +131,7 @@ export const useUpdateMeeting = () => {
           meeting.id === updatedMeeting.id ? updatedMeeting : meeting
         );
       });
-      toast.success('会議を更新しました');
+      toast.success('会議が更新されました');
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : '会議の更新に失敗しました');
@@ -156,7 +156,7 @@ export const useDeleteMeeting = () => {
       queryClient.setQueryData(QUERY_KEYS.lists(), (old: Meeting[] = []) => {
         return old.filter(meeting => meeting.id !== deletedId);
       });
-      toast.success('会議を削除しました');
+      toast.success('会議が削除されました');
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : '会議の削除に失敗しました');
@@ -191,7 +191,7 @@ export const useAddParticipant = () => {
           return meeting;
         });
       });
-      toast.success('参加者を追加しました');
+      toast.success('参加者が更新されました');
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : '参加者の追加に失敗しました');
@@ -224,7 +224,7 @@ export const useRemoveParticipant = () => {
           return meeting;
         });
       });
-      toast.success('参加者を削除しました');
+      toast.success('参加者が更新されました');
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : '参加者の削除に失敗しました');
