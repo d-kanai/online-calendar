@@ -209,6 +209,7 @@ export function MeetingForm({
       title: formData.title.trim(),
       startTime: new Date(formData.startTime),
       endTime: new Date(formData.endTime),
+      ownerId: currentUser,
       owner: currentUser,
       participants: meeting?.participants || [],
       isImportant: formData.isImportant,

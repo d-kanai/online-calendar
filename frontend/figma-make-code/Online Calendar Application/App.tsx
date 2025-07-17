@@ -5,24 +5,30 @@ import { AppHeader } from './components/AppHeader';
 import { CalendarView } from './components/CalendarView';
 import { MeetingForm } from './components/MeetingForm';
 import { MeetingDetail } from './components/MeetingDetail';
+import { MeetingStats } from './components/MeetingStats';
 import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner@2.0.3';
 import { Meeting, Participant } from './types/meeting';
 
-// モックデータ
+// 画面タイプの定義
+type AppScreen = 'calendar' | 'stats';
+
+// モックデータ - 過去1週間のテストデータを含む
 const initialMeetings: Meeting[] = [
+  // 今週の会議
   {
     id: '1',
     title: '定例MTG',
-    startTime: new Date(2025, 3, 1, 10, 0), // 2025年4月1日 10:00
-    endTime: new Date(2025, 3, 1, 11, 0),   // 2025年4月1日 11:00
-    owner: 'taro@example.com',
+    startTime: new Date(2025, 6, 17, 10, 0), // 2025年7月17日 10:00 (今日)
+    endTime: new Date(2025, 6, 17, 11, 0),   // 2025年7月17日 11:00
+    owner: 'test@example.com',
     participants: [
       {
         id: '1',
         email: 'hanako@example.com',
         name: 'Hanako',
-        notificationChannels: { email: true, push: false }
+        notificationChannels: { email: true, push: false },
+        response: 'yes'
       }
     ],
     isImportant: false,
@@ -33,12 +39,113 @@ const initialMeetings: Meeting[] = [
   {
     id: '2',
     title: '重要会議',
-    startTime: new Date(2025, 3, 2, 14, 0), // 2025年4月2日 14:00
-    endTime: new Date(2025, 3, 2, 16, 0),   // 2025年4月2日 16:00
-    owner: 'taro@example.com',
+    startTime: new Date(2025, 6, 16, 14, 0), // 2025年7月16日 14:00 (昨日)
+    endTime: new Date(2025, 6, 16, 16, 0),   // 2025年7月16日 16:00
+    owner: 'test@example.com',
     participants: [],
     isImportant: true,
     status: 'scheduled',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  // 過去1週間のテストデータ
+  {
+    id: '3',
+    title: 'チーム会議',
+    startTime: new Date(2025, 6, 15, 9, 0),  // 2025年7月15日 9:00
+    endTime: new Date(2025, 6, 15, 10, 30),  // 2025年7月15日 10:30
+    owner: 'manager@example.com',
+    participants: [
+      {
+        id: '2',
+        email: 'test@example.com',
+        name: 'Test User',
+        notificationChannels: { email: true, push: true },
+        response: 'yes'
+      }
+    ],
+    isImportant: false,
+    status: 'completed',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    id: '4',
+    title: 'プロジェクト打ち合わせ',
+    startTime: new Date(2025, 6, 14, 13, 0), // 2025年7月14日 13:00
+    endTime: new Date(2025, 6, 14, 14, 0),   // 2025年7月14日 14:00
+    owner: 'test@example.com',
+    participants: [
+      {
+        id: '3',
+        email: 'client@example.com',
+        name: 'Client',
+        notificationChannels: { email: true, push: false },
+        response: 'yes'
+      }
+    ],
+    isImportant: true,
+    status: 'completed',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    id: '5',
+    title: '1on1ミーティング',
+    startTime: new Date(2025, 6, 13, 15, 0), // 2025年7月13日 15:00
+    endTime: new Date(2025, 6, 13, 15, 45),  // 2025年7月13日 15:45
+    owner: 'test@example.com',
+    participants: [
+      {
+        id: '4',
+        email: 'junior@example.com',
+        name: 'Junior',
+        notificationChannels: { email: true, push: true },
+        response: 'yes'
+      }
+    ],
+    isImportant: false,
+    status: 'completed',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    id: '6',
+    title: '参加辞退した会議',
+    startTime: new Date(2025, 6, 12, 16, 0), // 2025年7月12日 16:00
+    endTime: new Date(2025, 6, 12, 17, 0),   // 2025年7月12日 17:00
+    owner: 'other@example.com',
+    participants: [
+      {
+        id: '5',
+        email: 'test@example.com',
+        name: 'Test User',
+        notificationChannels: { email: true, push: false },
+        response: 'no'
+      }
+    ],
+    isImportant: false,
+    status: 'completed',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    id: '7',
+    title: '参加した長時間会議',
+    startTime: new Date(2025, 6, 11, 10, 0), // 2025年7月11日 10:00
+    endTime: new Date(2025, 6, 11, 12, 0),   // 2025年7月11日 12:00
+    owner: 'other@example.com',
+    participants: [
+      {
+        id: '6',
+        email: 'test@example.com',
+        name: 'Test User',
+        notificationChannels: { email: true, push: true },
+        response: 'yes'
+      }
+    ],
+    isImportant: true,
+    status: 'completed',
     createdAt: new Date(),
     updatedAt: new Date()
   }
@@ -46,6 +153,7 @@ const initialMeetings: Meeting[] = [
 
 function CalendarApp() {
   const { user } = useAuth();
+  const [currentScreen, setCurrentScreen] = useState<AppScreen>('calendar');
   const [meetings, setMeetings] = useState<Meeting[]>(initialMeetings);
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
   const [showMeetingForm, setShowMeetingForm] = useState(false);
@@ -172,17 +280,38 @@ function CalendarApp() {
     return () => clearInterval(interval);
   }, [meetings]);
 
+  const renderCurrentScreen = () => {
+    switch (currentScreen) {
+      case 'stats':
+        return (
+          <MeetingStats
+            meetings={meetings}
+            currentUser={currentUser}
+            onBack={() => setCurrentScreen('calendar')}
+          />
+        );
+      case 'calendar':
+      default:
+        return (
+          <CalendarView
+            meetings={meetings}
+            onDateSelect={handleDateSelect}
+            onMeetingSelect={handleMeetingSelect}
+            onCreateMeeting={handleCreateMeeting}
+          />
+        );
+    }
+  };
+
   return (
     <div className="h-screen bg-background flex flex-col">
-      <AppHeader />
+      <AppHeader 
+        currentScreen={currentScreen}
+        onNavigate={setCurrentScreen}
+      />
       
       <div className="flex-1 overflow-hidden">
-        <CalendarView
-          meetings={meetings}
-          onDateSelect={handleDateSelect}
-          onMeetingSelect={handleMeetingSelect}
-          onCreateMeeting={handleCreateMeeting}
-        />
+        {renderCurrentScreen()}
       </div>
       
       <MeetingForm

@@ -6,6 +6,7 @@ export interface Participant {
     email: boolean;
     push: boolean;
   };
+  response?: 'yes' | 'no' | 'pending'; // 参加者の回答状況を追加
 }
 
 export interface Meeting {
@@ -21,11 +22,13 @@ export interface Meeting {
   updatedAt: Date;
 }
 
-export interface NotificationEvent {
-  id: string;
-  meetingId: string;
-  type: 'reminder' | 'invitation' | 'rescheduled' | 'cancelled';
-  scheduledTime: Date;
-  recipients: string[];
-  status: 'pending' | 'sent' | 'failed';
+export interface MeetingStats {
+  totalMeetingsOwned: number;
+  totalMeetingsParticipated: number;
+  averageDailyMinutes: number;
+  weeklyData: {
+    date: string;
+    dayName: string;
+    totalMinutes: number;
+  }[];
 }

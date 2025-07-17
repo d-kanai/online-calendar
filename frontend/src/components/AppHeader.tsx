@@ -1,13 +1,14 @@
 import React from 'react';
-import { Button } from './ui/button';
-import { useAuth } from '../contexts/AuthContext';
+import { Button } from '@/lib/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 import { Calendar, LogOut, User, BarChart3, ArrowLeft } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from './ui/dropdown-menu';
+} from '@/lib/ui/dropdown-menu';
 
 type AppScreen = 'calendar' | 'stats';
 
@@ -19,6 +20,7 @@ interface AppHeaderProps {
 export const AppHeader = React.forwardRef<HTMLDivElement, AppHeaderProps>(
   ({ currentScreen, onNavigate }, ref) => {
     const { user, signOut } = useAuth();
+    const router = useRouter();
 
     const getPageTitle = () => {
       switch (currentScreen) {
@@ -31,6 +33,11 @@ export const AppHeader = React.forwardRef<HTMLDivElement, AppHeaderProps>(
     };
 
     const showBackButton = currentScreen !== 'calendar';
+
+    const handleSignOut = async () => {
+      await signOut();
+      router.push('/signin');
+    };
 
     return (
       <header ref={ref} className="bg-background border-b border-border">
@@ -82,7 +89,7 @@ export const AppHeader = React.forwardRef<HTMLDivElement, AppHeaderProps>(
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={signOut} className="gap-2">
+                <DropdownMenuItem onClick={handleSignOut} className="gap-2">
                   <LogOut className="h-4 w-4" />
                   ログアウト
                 </DropdownMenuItem>
