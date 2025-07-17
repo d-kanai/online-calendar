@@ -165,6 +165,148 @@ export default function MeetingPage() {
 
 この設計により、コンポーネントの可読性・保守性・テスタビリティが大幅に向上し、チーム開発での品質が確保される 🎯
 
+## 🛣️ Next.js App Router によるページ構造
+
+### 🎯 基本原則
+- **page.tsx必須**: 全てのルートは`page.tsx`ファイルで定義
+- **機能別ディレクトリ**: 各機能・画面ごとにディレクトリを作成
+- **コンポーネント分離**: ページロジックとUIコンポーネントを明確に分離
+- **型安全なルーティング**: Next.js App Routerの型システムを最大限活用
+
+### 📂 ディレクトリ構造
+```
+src/app/
+├── page.tsx                    # ルートページ（認証状態によるリダイレクト）
+├── signin/
+│   └── page.tsx               # サインインページ
+├── signup/
+│   └── page.tsx               # サインアップページ  
+├── calendar/
+│   └── page.tsx               # カレンダー画面
+├── stats/
+│   └── page.tsx               # 統計画面
+├── meeting/
+│   └── [id]/
+│       └── page.tsx           # 会議詳細画面（動的ルーティング）
+└── layout.tsx                 # ルートレイアウト
+```
+
+### 🏗️ page.tsx 実装パターン
+
+#### ✅ 推奨パターン
+```typescript
+// app/calendar/page.tsx
+'use client';
+
+import React from 'react';
+import { useRouter } from 'next/navigation';
+import { CalendarView } from '@/components/CalendarView';
+import { AppHeader } from '@/components/AppHeader';
+import { useMeetings } from '@/hooks/useMeetings';
+import { useMeetingModals } from '@/hooks/useMeetingModals';
+import { useMeetingActions } from '@/hooks/useMeetingActions';
+
+export default function CalendarPage() {
+  const router = useRouter();
+  
+  // Custom Hooks でビジネスロジックを分離
+  const { meetings, loadMeetings, updateMeetings } = useMeetings();
+  const modals = useMeetingModals();
+  const actions = useMeetingActions({ meetings, updateMeetings, loadMeetings, ...modals });
+  
+  // ナビゲーションハンドラー
+  const handleNavigate = (screen: 'calendar' | 'stats') => {
+    if (screen === 'stats') {
+      router.push('/stats');
+    }
+  };
+
+  return (
+    <div className="h-screen bg-background flex flex-col">
+      <AppHeader currentScreen="calendar" onNavigate={handleNavigate} />
+      <div className="flex-1 overflow-hidden">
+        <CalendarView {...props} />
+      </div>
+    </div>
+  );
+}
+```
+
+#### ❌ 避けるべきパターン
+```typescript
+// ❌ 複雑なロジックをページ内に直接記述
+export default function CalendarPage() {
+  // 大量のuseState、useEffect、イベントハンドラーが混在
+  const [meetings, setMeetings] = useState([]);
+  const [loading, setLoading] = useState(false);
+  
+  // 長いビジネスロジック（100行以上）
+  const handleMeetingSubmit = async (data) => {
+    // 複雑な処理...
+  };
+  
+  // JSXも複雑になる
+  return <div>{/* 複雑なJSX */}</div>;
+}
+```
+
+### 🔄 ルーティング規約
+
+#### 🎯 ページ間遷移
+- **プログラマティック遷移**: `useRouter().push()`を使用
+- **宣言的遷移**: `<Link>`コンポーネントを使用
+- **条件分岐**: 認証状態に基づく適切なリダイレクト
+
+```typescript
+// ナビゲーション例
+const handleNavigate = (screen: 'calendar' | 'stats') => {
+  if (screen === 'stats') {
+    router.push('/stats');
+  } else if (screen === 'calendar') {
+    router.push('/calendar');
+  }
+};
+
+// 認証状態による自動リダイレクト
+useEffect(() => {
+  if (isAuthenticated) {
+    router.push('/calendar');
+  } else {
+    router.push('/signin');
+  }
+}, [isAuthenticated, router]);
+```
+
+#### 🔒 認証保護
+- **未認証時**: `/signin`へリダイレクト
+- **認証済み時**: `/calendar`へリダイレクト
+- **ルートページ**: 認証状態に応じた適切なページへの振り分け
+
+### 📱 レスポンシブ対応
+- **モバイルファースト**: 小さな画面から設計
+- **ブレークポイント**: Tailwind CSSの標準ブレークポイントを使用
+- **タッチ対応**: モバイルデバイスでの操作性を考慮
+
+### 🧩 コンポーネント連携
+- **共通ヘッダー**: `AppHeader`コンポーネントでナビゲーション統一
+- **レイアウト**: `layout.tsx`で共通レイアウト定義
+- **プロバイダー**: 認証・テーマ等のコンテキストを適切に配置
+
+### 🎯 SEO & パフォーマンス
+- **メタデータ**: Next.js 13+の`metadata`APIを活用
+- **動的インポート**: 必要に応じてコンポーネントの遅延読み込み
+- **Client Components**: `'use client'`を適切に使用
+
+### 📋 実装チェックリスト
+- [ ] 各ルートに`page.tsx`を作成
+- [ ] Custom Hooksでビジネスロジックを分離
+- [ ] 適切な認証ガード実装
+- [ ] ナビゲーション機能の実装
+- [ ] レスポンシブデザインの確認
+- [ ] 型安全性の確保
+
+この構造により、Next.js App Routerの利点を最大限活用し、保守性の高いフロントエンドアーキテクチャを実現する 🚀
+
 ## 🎨 Frontend Zodバリデーション実装パターン
 
 ### 📝 基本構成
