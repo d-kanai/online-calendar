@@ -14,15 +14,13 @@ export class SignUpCommand {
       throw new Error('このメールアドレスは既に登録されています');
     }
 
-    const authUser = await AuthUser.signup({
+    const { authUser, authToken } = await AuthUser.signup({
       email: dto.email,
       name: dto.name,
       password: dto.password
     });
 
     await this.authRepository.save(authUser);
-
-    const authToken = authUser.generateToken();
 
     return { authToken, authUser };
   }

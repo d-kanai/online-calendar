@@ -24,7 +24,7 @@ export class AuthUser {
     email: string;
     name: string;
     password: string;
-  }): Promise<AuthUser> {
+  }): Promise<{ authUser: AuthUser; authToken: AuthToken }> {
     const hashedPassword = await bcrypt.hash(data.password, 10);
     const now = new Date();
     
@@ -37,7 +37,10 @@ export class AuthUser {
       updatedAt: now
     });
 
-    return new AuthUser(props);
+    const authUser = new AuthUser(props);
+    const authToken = authUser.generateToken();
+    
+    return { authUser, authToken };
   }
 
   static fromPersistence(props: AuthUserProps): AuthUser {
