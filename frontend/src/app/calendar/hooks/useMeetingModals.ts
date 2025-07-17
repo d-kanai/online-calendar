@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Meeting } from '../types/meeting';
+import { Meeting } from '../../../types/meeting';
 
 export const useMeetingModals = () => {
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);

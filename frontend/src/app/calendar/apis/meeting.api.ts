@@ -1,6 +1,6 @@
-import { ApiMeeting, ApiResponse } from '../types/api';
-import { authService } from '../services/auth.service';
-import { API_BASE_URL } from './config';
+import { ApiMeeting, ApiResponse } from '../../../types/api';
+import { authService } from '../../auth/apis/auth.service';
+import { API_BASE_URL } from '../../../lib/config';
 
 interface CreateMeetingRequest {
   title: string;

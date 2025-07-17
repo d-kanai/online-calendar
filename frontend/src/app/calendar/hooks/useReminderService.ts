@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { toast } from 'sonner';
-import { Meeting } from '../types/meeting';
+import { Meeting } from '../../../types/meeting';
 
 interface UseReminderServiceProps {
   meetings: Meeting[];

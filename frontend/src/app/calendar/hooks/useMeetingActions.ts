@@ -1,6 +1,6 @@
 import { toast } from 'sonner';
-import { Meeting, Participant } from '../types/meeting';
-import { meetingApi } from '../lib/api';
+import { Meeting, Participant } from '../../../types/meeting';
+import { meetingApi } from '../apis/meeting.api';
 
 interface UseMeetingActionsProps {
   meetings: Meeting[];

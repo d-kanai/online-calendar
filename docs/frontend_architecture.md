@@ -84,13 +84,28 @@ export const useReminderService = ({ meetings }) => {
 ```
 src/
 ├── app/
-│   └── page.tsx              # 80-100行程度（フック呼び出し+JSX）
-├── hooks/
-│   ├── use{Entity}s.ts       # データ管理
-│   ├── use{Entity}Actions.ts # 操作ロジック
-│   ├── use{Feature}Modals.ts # UI状態管理
-│   └── use{Service}.ts       # 副作用・サービス
-├── components/
+│   ├── auth/
+│   │   ├── hooks/            # 認証関連フック
+│   │   │   └── useAuth.ts
+│   │   ├── apis/             # 認証関連API
+│   │   │   └── auth.service.ts
+│   │   └── components/       # 認証関連コンポーネント
+│   ├── calendar/
+│   │   ├── hooks/            # カレンダー関連フック
+│   │   │   ├── useMeetings.ts
+│   │   │   ├── useMeetingActions.ts
+│   │   │   ├── useMeetingModals.ts
+│   │   │   └── useReminderService.ts
+│   │   ├── apis/             # カレンダー関連API
+│   │   │   └── meeting.api.ts
+│   │   ├── components/       # カレンダー関連コンポーネント
+│   │   └── page.tsx          # 80-100行程度（フック呼び出し+JSX）
+│   └── stats/
+│       ├── hooks/            # 統計関連フック
+│       ├── apis/             # 統計関連API
+│       ├── components/       # 統計関連コンポーネント
+│       └── page.tsx
+├── components/               # 共通コンポーネント
 │   └── {...}                 # UIコンポーネント
 └── types/
     └── {...}                 # 型定義
@@ -224,9 +239,9 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { CalendarView } from '@/components/CalendarView';
 import { AppHeader } from '@/components/AppHeader';
-import { useMeetings } from '@/hooks/useMeetings';
-import { useMeetingModals } from '@/hooks/useMeetingModals';
-import { useMeetingActions } from '@/hooks/useMeetingActions';
+import { useMeetings } from './hooks/useMeetings';
+import { useMeetingModals } from './hooks/useMeetingModals';
+import { useMeetingActions } from './hooks/useMeetingActions';
 
 export default function CalendarPage() {
   const router = useRouter();

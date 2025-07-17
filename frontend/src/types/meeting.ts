@@ -19,11 +19,3 @@ export interface Meeting {
   updatedAt: Date;
 }
 
-interface NotificationEvent {
-  id: string;
-  meetingId: string;
-  type: 'reminder' | 'invitation' | 'rescheduled' | 'cancelled';
-  scheduledTime: Date;
-  recipients: string[];
-  status: 'pending' | 'sent' | 'failed';
-}

@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { User, AuthState, SignUpData, SignInData } from '../types/auth';
 import { toast } from 'sonner';
-import { authService } from '../services/auth.service';
+import { authService } from '../app/auth/apis/auth.service';
 
 interface AuthContextType extends AuthState {
   signUp: (data: SignUpData) => Promise<void>;

@@ -7,10 +7,10 @@ import { MeetingForm } from './components/MeetingForm.component';
 import { MeetingDetail } from './components/MeetingDetail.component';
 import { AppHeader } from '@/components/AppHeader';
 import { Toaster } from 'sonner';
-import { useMeetings } from '@/hooks/useMeetings';
-import { useMeetingModals } from '@/hooks/useMeetingModals';
-import { useMeetingActions } from '@/hooks/useMeetingActions';
-import { useReminderService } from '@/hooks/useReminderService';
+import { useMeetings } from './hooks/useMeetings';
+import { useMeetingModals } from './hooks/useMeetingModals';
+import { useMeetingActions } from './hooks/useMeetingActions';
+import { useReminderService } from './hooks/useReminderService';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function CalendarPage() {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Meeting } from '../types/meeting';
-import { ApiMeeting, ApiParticipant } from '../types/api';
-import { meetingApi } from '../lib/api';
+import { Meeting } from '../../../types/meeting';
+import { ApiMeeting, ApiParticipant } from '../../../types/api';
+import { meetingApi } from '../apis/meeting.api';
 
 export const useMeetings = () => {
   const [meetings, setMeetings] = useState<Meeting[]>([]);

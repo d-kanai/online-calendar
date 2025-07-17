@@ -1,5 +1,5 @@
-import { SignInData, SignUpData, User } from '../types/auth';
-import { API_BASE_URL } from '../lib/config';
+import { SignInData, SignUpData, User } from '../../../types/auth';
+import { API_BASE_URL } from '../../../lib/config';
 
 interface AuthResponse {
   token: string;
