@@ -28,11 +28,15 @@
   "dependencies": {
     "@hono/node-server": "^1.8.0",
     "@prisma/client": "^5.0.0",
+    "bcryptjs": "^3.0.2",
     "hono": "^4.0.0",
+    "jsonwebtoken": "^9.0.2",
     "zod": "^4.0.5"
   },
   "devDependencies": {
     "@quramy/prisma-fabbrica": "^2.0.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",

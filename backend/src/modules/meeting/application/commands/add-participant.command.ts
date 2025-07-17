@@ -9,7 +9,7 @@ interface AddParticipantData {
   meetingId: string;
   email: string;
   name: string;
-  requesterId: string;
+  requesterId: string; // User ID
 }
 
 export class AddParticipantCommand {
@@ -26,19 +26,8 @@ export class AddParticipantCommand {
       throw new NotFoundException('Meeting not found');
     }
     
-    // Get requester user
-    let requesterUser = await this.userRepository.findByEmail(data.requesterId);
-    if (!requesterUser) {
-      // Create user if not exists
-      requesterUser = User.create({
-        email: data.requesterId,
-        name: data.requesterId.split('@')[0]
-      });
-      requesterUser = await this.userRepository.create(requesterUser);
-    }
-    
-    // オーナーチェック
-    if (meeting.ownerId !== requesterUser.id) {
+    // オーナーチェック (requesterIdはユーザーID)
+    if (meeting.ownerId !== data.requesterId) {
       throw new ForbiddenException('参加者の追加はオーナーのみ可能です');
     }
     

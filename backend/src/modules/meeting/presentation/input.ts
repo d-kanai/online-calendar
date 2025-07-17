@@ -3,7 +3,6 @@ export interface CreateMeetingRequest {
   startTime: string; // ISO string
   endTime: string;   // ISO string
   isImportant?: boolean;
-  ownerId: string;
 }
 
 export interface UpdateMeetingRequest {

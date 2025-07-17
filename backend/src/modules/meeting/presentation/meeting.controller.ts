@@ -70,13 +70,14 @@ export class MeetingController {
 
   async createMeeting(c: Context) {
     const body = await c.req.json<CreateMeetingRequest>();
+    const loginUserId = c.get('loginUserId') as string;
     
     const meetingData = {
       title: body.title,
       startTime: new Date(body.startTime),
       endTime: new Date(body.endTime),
       isImportant: body.isImportant ?? false,
-      ownerId: body.ownerId
+      ownerId: loginUserId
     };
 
     const meeting = await this.createMeetingCommand.run(meetingData);
@@ -131,13 +132,14 @@ export class MeetingController {
 
   async addParticipant(c: Context) {
     const id = c.req.param('id');
-    const body = await c.req.json<{ email: string, name: string, requesterId: string }>();
+    const body = await c.req.json<{ email: string, name: string }>();
+    const loginUserId = c.get('loginUserId') as string;
     
     const meeting = await this.addParticipantCommand.run({
       meetingId: id,
       email: body.email,
       name: body.name,
-      requesterId: body.requesterId
+      requesterId: loginUserId
     });
     const meetingWithOwner = await this.helper.getMeetingWithOwner(meeting);
 
@@ -151,9 +153,9 @@ export class MeetingController {
   async removeParticipant(c: Context) {
     const meetingId = c.req.param('id');
     const participantId = c.req.param('participantId');
-    const body = await c.req.json<{ requesterId: string }>();
+    const loginUserId = c.get('loginUserId') as string;
     
-    await this.removeParticipantCommand.run(meetingId, participantId, body.requesterId);
+    await this.removeParticipantCommand.run(meetingId, participantId, loginUserId);
 
     return c.json<ApiResponse>({
       success: true,

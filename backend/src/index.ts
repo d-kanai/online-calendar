@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { meetingRoutes } from './modules/meeting/meeting.routes.js';
+import { authRoutes } from './modules/auth/auth.routes.js';
 
 const app = new Hono();
 
@@ -25,6 +26,7 @@ app.get('/api/v1', (c) => {
 });
 
 // Module routes
+app.route('/api/v1/auth', authRoutes);
 app.route('/api/v1/meetings', meetingRoutes);
 
 // 404 handler

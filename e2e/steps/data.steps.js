@@ -103,7 +103,8 @@ Given('会議 {string} に参加者 {string} を追加済み', async function (m
     participant = await prisma.user.create({
       data: {
         email: participantEmail,
-        name: participantEmail.split('@')[0]
+        name: participantEmail.split('@')[0],
+        password: 'hashedpassword' // E2E用のダミーパスワード
       }
     });
   }
@@ -167,7 +168,8 @@ Given('参加者がいる会議がある', async function () {
   const participant = await prisma.user.create({
     data: {
       email: 'participant@example.com',
-      name: 'participant'
+      name: 'participant',
+      password: 'hashedpassword' // E2E用のダミーパスワード
     }
   });
   

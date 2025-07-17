@@ -11,7 +11,6 @@ export interface ApiMeeting {
   startTime: string; // ISO string
   endTime: string; // ISO string
   isImportant: boolean;
-  ownerId: string;
   owner: string;
   participants: ApiParticipant[];
   createdAt: string; // ISO string

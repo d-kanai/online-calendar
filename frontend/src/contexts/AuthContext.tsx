@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { User, AuthState, SignUpData, SignInData } from '../types/auth';
 import { toast } from 'sonner';
+import { authService } from '../services/auth.service';
 
 interface AuthContextType extends AuthState {
   signUp: (data: SignUpData) => Promise<void>;
@@ -38,22 +39,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   }
 };
 
-// モックユーザーデータベース（実際のアプリではAPIを使用）
-const USERS_KEY = 'calendar_app_users';
 const CURRENT_USER_KEY = 'calendar_app_current_user';
-
-const getStoredUsers = (): User[] => {
-  try {
-    const stored = localStorage.getItem(USERS_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-};
-
-const storeUsers = (users: User[]) => {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-};
 
 const getCurrentUser = (): User | null => {
   try {
@@ -79,12 +65,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: false
   });
 
-  // 初期化時に保存されたユーザー情報をチェック
+  // 初期化時に保存されたユーザー情報とトークンをチェック
   useEffect(() => {
     const currentUser = getCurrentUser();
-    if (currentUser) {
+    const token = authService.getToken();
+    
+    if (currentUser && token) {
       dispatch({ type: 'SIGN_IN', payload: currentUser });
     } else {
+      // トークンがない場合はユーザー情報もクリア
+      storeCurrentUser(null);
       dispatch({ type: 'LOADING', payload: false });
     }
   }, []);
@@ -93,27 +83,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'LOADING', payload: true });
 
     try {
-      const users = getStoredUsers();
+      const response = await authService.signUp(data);
       
-      // 既存ユーザーチェック
-      if (users.some(user => user.email === data.email)) {
-        throw new Error('このメールアドレスは既に登録されています');
-      }
+      // トークンとユーザー情報を保存
+      authService.setToken(response.token);
+      storeCurrentUser(response.user);
 
-      // 新しいユーザーを作成
-      const newUser: User = {
-        id: Date.now().toString(),
-        email: data.email,
-        name: data.name,
-        createdAt: new Date()
-      };
-
-      // ストレージに保存
-      const updatedUsers = [...users, newUser];
-      storeUsers(updatedUsers);
-      storeCurrentUser(newUser);
-
-      dispatch({ type: 'SIGN_IN', payload: newUser });
+      dispatch({ type: 'SIGN_IN', payload: response.user });
       toast.success('アカウントが作成されました');
     } catch (error) {
       dispatch({ type: 'LOADING', payload: false });
@@ -126,18 +102,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'LOADING', payload: true });
 
     try {
-      const users = getStoredUsers();
-      const user = users.find(u => u.email === data.email);
+      const response = await authService.signIn(data);
+      
+      // トークンとユーザー情報を保存
+      authService.setToken(response.token);
+      storeCurrentUser(response.user);
 
-      if (!user) {
-        throw new Error('メールアドレスまたはパスワードが間違っています');
-      }
-
-      // 実際のアプリではパスワードの検証を行う
-      // ここではシンプルにするため、メールアドレスの存在のみチェック
-
-      storeCurrentUser(user);
-      dispatch({ type: 'SIGN_IN', payload: user });
+      dispatch({ type: 'SIGN_IN', payload: response.user });
       toast.success('ログインしました');
     } catch (error) {
       dispatch({ type: 'LOADING', payload: false });
@@ -147,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = () => {
+    authService.removeToken();
     storeCurrentUser(null);
     dispatch({ type: 'SIGN_OUT' });
     toast.success('ログアウトしました');

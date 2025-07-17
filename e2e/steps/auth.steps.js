@@ -1,5 +1,6 @@
 const { Given } = require('@cucumber/cucumber');
 const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
@@ -9,11 +10,13 @@ Given('ユーザー{string}でログイン', async function (userName) {
   await prisma.meeting.deleteMany();
   await prisma.user.deleteMany();
   
-  // ユーザー作成
+  // ユーザー作成 (パスワードをハッシュ化)
+  const hashedPassword = await bcrypt.hash('password123', 10);
   const user = await prisma.user.create({
     data: {
       email: `${userName.toLowerCase()}@example.com`,
-      name: userName
+      name: userName,
+      password: hashedPassword
     }
   });
   
@@ -27,19 +30,35 @@ Given('ユーザー{string}でログイン', async function (userName) {
     // ページが読み込まれるまで待機
     await global.calendarPage.page.waitForLoadState('networkidle');
     
-    // ログイン状態をlocalStorageに設定
-    await global.calendarPage.page.evaluate((userData) => {
-      // ユーザー一覧をlocalStorageに保存
-      const users = [userData];
-      localStorage.setItem('calendar_app_users', JSON.stringify(users));
+    // APIでサインインしてJWTトークンを取得
+    const response = await fetch('http://localhost:3001/api/v1/auth/signin', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: user.email,
+        password: 'password123'
+      })
+    });
+    
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error('Failed to sign in');
+    }
+    
+    const { token, user: authUser } = result.data;
+    
+    // JWTトークンとユーザー情報をlocalStorageに設定
+    await global.calendarPage.page.evaluate(({ token, user }) => {
+      // JWTトークンを保存
+      localStorage.setItem('calendar_app_token', token);
       
       // 現在のユーザーをlocalStorageに保存
-      localStorage.setItem('calendar_app_current_user', JSON.stringify(userData));
+      localStorage.setItem('calendar_app_current_user', JSON.stringify(user));
     }, {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      createdAt: new Date(user.createdAt)
+      token,
+      user: authUser
     });
     
     // ページをリロードして認証状態を反映
@@ -57,11 +76,13 @@ Given('ユーザー{string}でログイン', async function (userName) {
 // フック関連のコードはhook.steps.jsに移動
 
 Given('ユーザー{string}でログインしてページにアクセス', async function (userName) {
-  // ユーザー作成
+  // ユーザー作成 (パスワードをハッシュ化)
+  const hashedPassword = await bcrypt.hash('password123', 10);
   const user = await prisma.user.create({
     data: {
       email: `${userName.toLowerCase()}@example.com`,
-      name: userName
+      name: userName,
+      password: hashedPassword
     }
   });
   
@@ -74,19 +95,35 @@ Given('ユーザー{string}でログインしてページにアクセス', async
   // ページが読み込まれるまで待機
   await global.calendarPage.page.waitForLoadState('networkidle');
   
-  // ログイン状態をlocalStorageに設定
-  await global.calendarPage.page.evaluate((userData) => {
-    // ユーザー一覧をlocalStorageに保存
-    const users = [userData];
-    localStorage.setItem('calendar_app_users', JSON.stringify(users));
+  // APIでサインインしてJWTトークンを取得
+  const response = await fetch('http://localhost:3001/api/v1/auth/signin', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: user.email,
+      password: 'password123'
+    })
+  });
+  
+  const result = await response.json();
+  if (!result.success) {
+    throw new Error('Failed to sign in');
+  }
+  
+  const { token, user: authUser } = result.data;
+  
+  // JWTトークンとユーザー情報をlocalStorageに設定
+  await global.calendarPage.page.evaluate(({ token, user }) => {
+    // JWTトークンを保存
+    localStorage.setItem('calendar_app_token', token);
     
     // 現在のユーザーをlocalStorageに保存
-    localStorage.setItem('calendar_app_current_user', JSON.stringify(userData));
+    localStorage.setItem('calendar_app_current_user', JSON.stringify(user));
   }, {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    createdAt: new Date(user.createdAt)
+    token,
+    user: authUser
   });
   
   // ページをリロードして認証状態を反映

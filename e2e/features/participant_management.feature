@@ -16,7 +16,6 @@ Feature: 参加者管理
   Rule: 参加者削除
     オーナーは参加者を削除できる
 
-    @develop
     Scenario: オーナーが参加者を削除する
       Given 参加者がいる会議がある
       When オーナーが参加者を削除する

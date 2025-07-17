@@ -57,8 +57,7 @@ export const useMeetingActions = ({
           title: meetingData.title,
           startTime: meetingData.startTime.toISOString(),
           endTime: meetingData.endTime.toISOString(),
-          isImportant: meetingData.isImportant,
-          ownerId: meetingData.owner
+          isImportant: meetingData.isImportant
         });
         
         if (response.success && response.data) {

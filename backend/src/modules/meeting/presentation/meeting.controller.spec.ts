@@ -3,7 +3,7 @@ import { MeetingController } from './meeting.controller.js';
 import { prisma } from '../../../shared/database/prisma.js';
 
 // Mock Hono Context
-const createMockContext = (params: Record<string, string> = {}, jsonBody = {}) => ({
+const createMockContext = (params: Record<string, string> = {}, jsonBody = {}, loginUserId = 'test-user-id') => ({
   req: {
     param: (key: string) => params[key] || '',
     json: async () => jsonBody
@@ -13,6 +13,11 @@ const createMockContext = (params: Record<string, string> = {}, jsonBody = {}) =
       data,
       status: status || 200
     };
+  },
+  get: (key: string) => {
+    if (key === 'loginUserId') return loginUserId;
+    if (key === 'loginUserEmail') return 'test@example.com';
+    return null;
   }
 });
 
@@ -31,13 +36,15 @@ describe('MeetingController', () => {
     const user1 = await prisma.user.create({
       data: {
         email: 'user123@example.com',
-        name: 'user123'
+        name: 'user123',
+        password: 'hashedpassword1'
       }
     });
     const user2 = await prisma.user.create({
       data: {
         email: 'user456@example.com',
-        name: 'user456'
+        name: 'user456',
+        password: 'hashedpassword2'
       }
     });
     
@@ -72,17 +79,25 @@ describe('MeetingController', () => {
   });
 
   test('createMeeting - 必要項目をすべて入力して会議を作成する', async () => {
-    // Given - 会議作成リクエストデータを準備
+    // Given - オーナーユーザーを作成
+    const owner = await prisma.user.create({
+      data: {
+        email: 'taro@example.com',
+        name: 'taro',
+        password: 'hashedpassword'
+      }
+    });
+    
+    // 会議作成リクエストデータを準備
     const meetingData = {
       title: '定例MTG',
       startTime: '2025-01-15T10:00:00Z',
       endTime: '2025-01-15T10:30:00Z',
       isImportant: false,
-      ownerId: 'taro@example.com'
     };
 
     // When
-    const mockContext = createMockContext({}, meetingData);
+    const mockContext = createMockContext({}, meetingData, owner.id);
     const response = await meetingController.createMeeting(mockContext as any);
 
     // Then
@@ -101,7 +116,6 @@ describe('MeetingController', () => {
       startTime: '2025-01-15T10:00:00Z',
       endTime: '2025-01-15T10:30:00Z',
       isImportant: false,
-      ownerId: 'taro@example.com'
     };
 
     // When & Then - BadRequestExceptionが発生することを確認
@@ -118,7 +132,6 @@ describe('MeetingController', () => {
       startTime: '',
       endTime: '2025-01-15T10:30:00Z',
       isImportant: false,
-      ownerId: 'taro@example.com'
     };
 
     // When & Then - BadRequestExceptionが発生することを確認
@@ -135,7 +148,6 @@ describe('MeetingController', () => {
       startTime: '2025-01-15T10:00:00Z',
       endTime: '',
       isImportant: false,
-      ownerId: 'taro@example.com'
     };
 
     // When & Then - BadRequestExceptionが発生することを確認
@@ -145,22 +157,6 @@ describe('MeetingController', () => {
       .toThrow('終了時刻は必須です');
   });
 
-  test('createMeeting - ownerIdが空の場合BadRequestExceptionを発生させる', async () => {
-    // Given - ownerIdが空のリクエストデータ
-    const meetingData = {
-      title: '定例MTG',
-      startTime: '2025-01-15T10:00:00Z',
-      endTime: '2025-01-15T10:30:00Z',
-      isImportant: false,
-      ownerId: ''
-    };
-
-    // When & Then - BadRequestExceptionが発生することを確認
-    const mockContext = createMockContext({}, meetingData);
-    await expect(meetingController.createMeeting(mockContext as any))
-      .rejects
-      .toThrow('メールアドレスは必須です');
-  });
 
   test('createMeeting - 複数項目が未入力の場合BadRequestExceptionを発生させる', async () => {
     // Given - 複数項目が空のリクエストデータ
@@ -168,8 +164,7 @@ describe('MeetingController', () => {
       title: '',
       startTime: '',
       endTime: '',
-      isImportant: false,
-      ownerId: ''
+      isImportant: false
     };
 
     // When & Then - BadRequestExceptionが発生することを確認
@@ -186,7 +181,6 @@ describe('MeetingController', () => {
       startTime: '2025-01-15T11:00:00Z',
       endTime: '2025-01-15T10:00:00Z',
       isImportant: false,
-      ownerId: 'taro@example.com'
     };
 
     // When & Then - BadRequestExceptionが発生することを確認
@@ -203,7 +197,6 @@ describe('MeetingController', () => {
       startTime: '2025-01-15T10:00:00Z',
       endTime: '2025-01-15T10:10:00Z',  // 10分間
       isImportant: false,
-      ownerId: 'taro@example.com'
     };
 
     // When & Then - BadRequestExceptionが発生することを確認
@@ -218,7 +211,8 @@ describe('MeetingController', () => {
     const owner = await prisma.user.create({
       data: {
         email: 'taro@example.com',
-        name: 'taro'
+        name: 'taro',
+        password: 'hashedpassword'
       }
     });
     
@@ -272,7 +266,8 @@ describe('MeetingController', () => {
     const owner = await prisma.user.create({
       data: {
         email: 'taro@example.com',
-        name: 'taro'
+        name: 'taro',
+        password: 'hashedpassword'
       }
     });
     
@@ -305,7 +300,8 @@ describe('MeetingController', () => {
     const owner = await prisma.user.create({
       data: {
         email: 'taro@example.com',
-        name: 'taro'
+        name: 'taro',
+        password: 'hashedpassword'
       }
     });
     
@@ -323,11 +319,10 @@ describe('MeetingController', () => {
     const participantData = {
       email: 'hanako@example.com',
       name: 'hanako',
-      requesterId: 'taro@example.com' // オーナー自身のリクエスト
     };
 
     // When
-    const mockContext = createMockContext({ id: existingMeeting.id }, participantData);
+    const mockContext = createMockContext({ id: existingMeeting.id }, participantData, owner.id);
     const response = await meetingController.addParticipant(mockContext as any);
 
     // Then
@@ -352,7 +347,8 @@ describe('MeetingController', () => {
     const owner = await prisma.user.create({
       data: {
         email: 'other@example.com',
-        name: 'other'
+        name: 'other',
+        password: 'hashedpassword'
       }
     });
     
@@ -374,7 +370,7 @@ describe('MeetingController', () => {
     };
 
     // When & Then
-    const mockContext = createMockContext({ id: existingMeeting.id }, participantData);
+    const mockContext = createMockContext({ id: existingMeeting.id }, participantData, 'different-user-id');
     await expect(meetingController.addParticipant(mockContext as any))
       .rejects
       .toThrow('参加者の追加はオーナーのみ可能です');
@@ -385,7 +381,8 @@ describe('MeetingController', () => {
     const owner = await prisma.user.create({
       data: {
         email: 'taro@example.com',
-        name: 'taro'
+        name: 'taro',
+        password: 'hashedpassword'
       }
     });
     
@@ -405,7 +402,8 @@ describe('MeetingController', () => {
       const user = await prisma.user.create({
         data: {
           email: `user${i}@example.com`,
-          name: `user${i}`
+          name: `user${i}`,
+          password: 'hashedpassword'
         }
       });
       await prisma.meetingParticipant.create({
@@ -419,11 +417,10 @@ describe('MeetingController', () => {
     const participantData = {
       email: 'hanako@example.com',
       name: 'hanako',
-      requesterId: 'taro@example.com'
     };
 
     // When & Then
-    const mockContext = createMockContext({ id: existingMeeting.id }, participantData);
+    const mockContext = createMockContext({ id: existingMeeting.id }, participantData, owner.id);
     await expect(meetingController.addParticipant(mockContext as any))
       .rejects
       .toThrow('参加者は50名までです');
@@ -434,7 +431,8 @@ describe('MeetingController', () => {
     const owner = await prisma.user.create({
       data: {
         email: 'taro@example.com',
-        name: 'taro'
+        name: 'taro',
+        password: 'hashedpassword'
       }
     });
     
@@ -442,7 +440,8 @@ describe('MeetingController', () => {
     const participant = await prisma.user.create({
       data: {
         email: 'hanako@example.com',
-        name: 'hanako'
+        name: 'hanako',
+        password: 'hashedpassword'
       }
     });
     
@@ -468,11 +467,10 @@ describe('MeetingController', () => {
     const participantData = {
       email: 'hanako@example.com',
       name: 'hanako',
-      requesterId: 'taro@example.com'
     };
 
     // When & Then
-    const mockContext = createMockContext({ id: existingMeeting.id }, participantData);
+    const mockContext = createMockContext({ id: existingMeeting.id }, participantData, owner.id);
     await expect(meetingController.addParticipant(mockContext as any))
       .rejects
       .toThrow('この参加者は既に追加されています');
@@ -483,7 +481,8 @@ describe('MeetingController', () => {
     const owner = await prisma.user.create({
       data: {
         email: 'taro@example.com',
-        name: 'taro'
+        name: 'taro',
+        password: 'hashedpassword'
       }
     });
     
@@ -491,7 +490,8 @@ describe('MeetingController', () => {
     const participant = await prisma.user.create({
       data: {
         email: 'hanako@example.com',
-        name: 'hanako'
+        name: 'hanako',
+        password: 'hashedpassword'
       }
     });
     
@@ -515,11 +515,10 @@ describe('MeetingController', () => {
     });
 
     const removeData = {
-      requesterId: 'taro@example.com'
     };
 
     // When
-    const mockContext = createMockContext({ id: existingMeeting.id, participantId: meetingParticipant.id }, removeData);
+    const mockContext = createMockContext({ id: existingMeeting.id, participantId: meetingParticipant.id }, removeData, owner.id);
     const response = await meetingController.removeParticipant(mockContext as any);
 
     // Then
@@ -539,7 +538,8 @@ describe('MeetingController', () => {
     const owner = await prisma.user.create({
       data: {
         email: 'taro@example.com',
-        name: 'taro'
+        name: 'taro',
+        password: 'hashedpassword'
       }
     });
     
@@ -547,7 +547,8 @@ describe('MeetingController', () => {
     const participant = await prisma.user.create({
       data: {
         email: 'hanako@example.com',
-        name: 'hanako'
+        name: 'hanako',
+        password: 'hashedpassword'
       }
     });
     
@@ -570,12 +571,10 @@ describe('MeetingController', () => {
       }
     });
 
-    const removeData = {
-      requesterId: 'other@example.com' // オーナーではない
-    };
+    const removeData = {};
 
     // When & Then
-    const mockContext = createMockContext({ id: existingMeeting.id, participantId: meetingParticipant.id }, removeData);
+    const mockContext = createMockContext({ id: existingMeeting.id, participantId: meetingParticipant.id }, removeData, 'different-user-id');
     await expect(meetingController.removeParticipant(mockContext as any))
       .rejects
       .toThrow('Only the meeting owner can remove participants');
@@ -586,7 +585,8 @@ describe('MeetingController', () => {
     const owner = await prisma.user.create({
       data: {
         email: 'taro@example.com',
-        name: 'taro'
+        name: 'taro',
+        password: 'hashedpassword'
       }
     });
     
@@ -602,11 +602,10 @@ describe('MeetingController', () => {
     });
 
     const removeData = {
-      requesterId: 'taro@example.com'
     };
 
     // When & Then
-    const mockContext = createMockContext({ id: existingMeeting.id, participantId: 'non-existent-id' }, removeData);
+    const mockContext = createMockContext({ id: existingMeeting.id, participantId: 'non-existent-id' }, removeData, owner.id);
     await expect(meetingController.removeParticipant(mockContext as any))
       .rejects
       .toThrow('Participant not found in this meeting');

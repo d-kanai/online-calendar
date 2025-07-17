@@ -1,9 +1,13 @@
 import { Hono } from 'hono';
 import { MeetingController } from './presentation/meeting.controller.js';
 import { errorHandler } from '../../shared/middleware/error-handler.js';
+import { authMiddleware } from '../../middlewares/auth.middleware.js';
 
 const meetingRoutes = new Hono();
 const meetingController = new MeetingController();
+
+// Apply authentication middleware to all routes
+meetingRoutes.use('*', authMiddleware());
 
 // Error handler
 meetingRoutes.onError(errorHandler);

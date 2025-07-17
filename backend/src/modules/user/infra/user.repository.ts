@@ -37,6 +37,7 @@ export class UserRepository {
     id: string;
     email: string;
     name: string;
+    password: string;
     createdAt: Date;
     updatedAt: Date;
   } {
@@ -44,6 +45,7 @@ export class UserRepository {
       id: user.id,
       email: user.email,
       name: user.name,
+      password: 'temporary-password', // 一時的なパスワード（User modelにpasswordがないため）
       createdAt: user.createdAt,
       updatedAt: user.updatedAt
     };

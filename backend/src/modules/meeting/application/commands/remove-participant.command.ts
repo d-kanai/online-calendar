@@ -18,12 +18,8 @@ export class RemoveParticipantCommand {
       throw new NotFoundException('Meeting not found');
     }
 
-    // リクエスト者が会議のオーナーか確認（emailで比較）
-    const ownerUser = await this.prisma.user.findUnique({
-      where: { id: meeting.ownerId }
-    });
-    
-    if (!ownerUser || ownerUser.email !== requesterId) {
+    // リクエスト者が会議のオーナーか確認（userIdで比較）
+    if (meeting.ownerId !== requesterId) {
       throw new BadRequestException('Only the meeting owner can remove participants');
     }
 

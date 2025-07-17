@@ -1,13 +1,12 @@
 import { ApiMeeting, ApiResponse } from '../types/api';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+import { authService } from '../services/auth.service';
+import { API_BASE_URL } from './config';
 
 export interface CreateMeetingRequest {
   title: string;
   startTime: string;
   endTime: string;
   isImportant?: boolean;
-  ownerId: string;
 }
 
 export interface UpdateMeetingRequest {
@@ -19,10 +18,12 @@ export interface UpdateMeetingRequest {
 
 export const meetingApi = {
   async create(data: CreateMeetingRequest): Promise<ApiResponse<ApiMeeting>> {
+    const token = authService.getToken();
     const response = await fetch(`${API_BASE_URL}/meetings`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify(data),
     });
@@ -35,15 +36,22 @@ export const meetingApi = {
   },
   
   async getAll(): Promise<ApiResponse<ApiMeeting[]>> {
-    const response = await fetch(`${API_BASE_URL}/meetings`);
+    const token = authService.getToken();
+    const response = await fetch(`${API_BASE_URL}/meetings`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
     return response.json();
   },
   
   async update(id: string, data: UpdateMeetingRequest): Promise<ApiResponse<ApiMeeting>> {
+    const token = authService.getToken();
     const response = await fetch(`${API_BASE_URL}/meetings/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify(data),
     });
@@ -52,11 +60,13 @@ export const meetingApi = {
     return result;
   },
 
-  async addParticipant(meetingId: string, data: { email: string; name: string; requesterId: string }): Promise<ApiResponse<ApiMeeting>> {
+  async addParticipant(meetingId: string, data: { email: string; name: string }): Promise<ApiResponse<ApiMeeting>> {
+    const token = authService.getToken();
     const response = await fetch(`${API_BASE_URL}/meetings/${meetingId}/participants`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify(data),
     });
@@ -65,13 +75,14 @@ export const meetingApi = {
     return result;
   },
 
-  async removeParticipant(meetingId: string, data: { participantId: string; requesterId: string }): Promise<ApiResponse<ApiMeeting>> {
-    const response = await fetch(`${API_BASE_URL}/meetings/${meetingId}/participants/${data.participantId}`, {
+  async removeParticipant(meetingId: string, participantId: string): Promise<ApiResponse<ApiMeeting>> {
+    const token = authService.getToken();
+    const response = await fetch(`${API_BASE_URL}/meetings/${meetingId}/participants/${participantId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({ requesterId: data.requesterId }),
     });
     
     const result = await response.json();

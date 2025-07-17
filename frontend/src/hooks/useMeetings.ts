@@ -20,7 +20,7 @@ export const useMeetings = () => {
           title: meeting.title,
           startTime: new Date(meeting.startTime),
           endTime: new Date(meeting.endTime),
-          owner: meeting.owner || meeting.ownerId,
+          owner: meeting.owner,
           participants: meeting.participants ? meeting.participants.map((p: ApiParticipant) => ({
             id: p.id,
             email: p.email,

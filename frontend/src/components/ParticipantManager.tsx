@@ -78,8 +78,7 @@ export function ParticipantManager({
       // Call backend API
       const response = await meetingApi.addParticipant(meetingId, {
         email,
-        name: email.split('@')[0],
-        requesterId: currentUser
+        name: email.split('@')[0]
       });
       
       if (response.success) {
@@ -116,10 +115,7 @@ export function ParticipantManager({
     
     try {
       // Call backend API
-      const response = await meetingApi.removeParticipant(meetingId, {
-        participantId: participantToDelete.id,
-        requesterId: currentUser
-      });
+      const response = await meetingApi.removeParticipant(meetingId, participantToDelete.id);
       
       if (response.success) {
         onParticipantsChange(participants.filter(p => p.id !== participantToDelete.id));
