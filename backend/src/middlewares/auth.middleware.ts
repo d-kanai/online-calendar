@@ -9,7 +9,7 @@ export interface AuthContext {
 export const authMiddleware = () => {
   const authService = new AuthService();
 
-  return async (c: Context, next: Next) => {
+  return async (c: Context, next: Next): Promise<Response | void> => {
     try {
       const authHeader = c.req.header('Authorization');
       

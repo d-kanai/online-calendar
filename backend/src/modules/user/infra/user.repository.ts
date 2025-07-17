@@ -16,19 +16,6 @@ export class UserRepository {
     return record ? User.fromPersistence(record) : null;
   }
 
-  async create(user: User): Promise<User> {
-    const { id, email, name, createdAt, updatedAt } = user;
-    const record = await prisma.user.create({
-      data: {
-        id,
-        email,
-        name,
-        createdAt,
-        updatedAt
-      }
-    });
-    return User.fromPersistence(record);
-  }
 
   async save(user: User): Promise<User> {
     const { email, name, updatedAt } = user;

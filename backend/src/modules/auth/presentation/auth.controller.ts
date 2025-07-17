@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { PrismaClient } from '@prisma/client';
-import { ApiResponse } from '../../../shared/types/api-response';
+import { ApiResponse } from '../../../shared/types/api';
 import { AuthRepository } from '../infra/auth.repository';
 import { SignInCommand } from '../application/commands/sign-in.command';
 import { SignUpCommand } from '../application/commands/sign-up.command';

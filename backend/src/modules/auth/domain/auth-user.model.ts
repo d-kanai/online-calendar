@@ -12,7 +12,20 @@ const AuthUserSchema = z.object({
   updatedAt: z.date()
 });
 
+const SignUpDataSchema = z.object({
+  email: z.string()
+    .min(1, 'メールアドレスは必須です')
+    .email('有効なメールアドレスを入力してください')
+    .trim(),
+  name: z.string()
+    .min(1, '名前は必須です')
+    .trim(),
+  password: z.string()
+    .min(8, 'パスワードは8文字以上で入力してください')
+});
+
 export type AuthUserProps = z.infer<typeof AuthUserSchema>;
+export type SignUpData = z.infer<typeof SignUpDataSchema>;
 
 export class AuthUser {
   private static readonly JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
@@ -20,27 +33,36 @@ export class AuthUser {
 
   private constructor(private props: AuthUserProps) {}
 
-  static async signup(data: {
-    email: string;
-    name: string;
-    password: string;
-  }): Promise<{ authUser: AuthUser; authToken: AuthToken }> {
-    const hashedPassword = await bcrypt.hash(data.password, 10);
-    const now = new Date();
-    
-    const props = AuthUserSchema.parse({
-      id: crypto.randomUUID(),
-      email: data.email,
-      name: data.name,
-      password: hashedPassword,
-      createdAt: now,
-      updatedAt: now
-    });
+  static async signup(data: SignUpData): Promise<{ authUser: AuthUser; authToken: AuthToken }> {
+    try {
+      const validatedData = SignUpDataSchema.parse(data);
+      
+      const hashedPassword = await bcrypt.hash(validatedData.password, 10);
+      const now = new Date();
+      
+      const props = AuthUserSchema.parse({
+        id: crypto.randomUUID(),
+        email: validatedData.email,
+        name: validatedData.name,
+        password: hashedPassword,
+        createdAt: now,
+        updatedAt: now
+      });
 
-    const authUser = new AuthUser(props);
-    const authToken = authUser.generateToken();
-    
-    return { authUser, authToken };
+      const authUser = new AuthUser(props);
+      const authToken = authUser.generateToken();
+      
+      return { authUser, authToken };
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const issues = error.issues;
+        if (issues && issues.length > 0) {
+          throw new Error(issues[0].message);
+        }
+        throw new Error('Validation failed');
+      }
+      throw error;
+    }
   }
 
   static fromPersistence(props: AuthUserProps): AuthUser {
