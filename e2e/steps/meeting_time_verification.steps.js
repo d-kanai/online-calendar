@@ -32,8 +32,18 @@ Then('会議詳細画面に {string} と表示される', async function (expect
   // 会議詳細モーダルが表示されるまで待機
   await global.calendarPage.page.waitForSelector('[role="dialog"]', { timeout: 10000 });
   
+  // Suspenseローディングが完了するまで待機
+  try {
+    await global.calendarPage.page.waitForSelector('text=会議詳細を読み込んでいます...', { state: 'hidden', timeout: 10000 });
+  } catch (e) {
+    // ローディングスピナーがすでに消えている場合は続行
+  }
+  
+  // 会議詳細の時刻表示要素が表示されるまで待機
+  await global.calendarPage.page.waitForSelector('[data-testid="meeting-time-display"]', { timeout: 10000 });
+  
   // 時刻表示を確認
-  const timeText = await global.calendarPage.page.textContent('[role="dialog"]');
+  const timeText = await global.calendarPage.page.textContent('[data-testid="meeting-time-display"]');
   expect(timeText).toContain(expectedTime);
 });
 
