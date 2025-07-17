@@ -24,40 +24,11 @@ When('title, period, important flag のいずれかが未入力で会議を作�
   await global.meetingFormPage.createMeetingWithEmptyFields();
 });
 
-Then('{string} エラーが表示される', async function (expectedErrorMessage) {
-  if (expectedErrorMessage === 'オーナーのみが会議を編集できます') {
-    // 参加者には編集ボタンが表示されないことを確認
-    const editButton = await global.calendarPage.page.$(':text("編集")');
-    if (editButton) {
-      throw new Error('編集ボタンが表示されています。参加者には編集ボタンが表示されないはずです。');
-    }
-    // 編集ボタンが存在しないことが確認できた
-    return;
-  }
-  
-  if (expectedErrorMessage === '開始済みの会議は編集できません') {
-    // 開始済みの会議では編集ボタンが表示されないことを確認
-    const editButton = await global.calendarPage.page.$('button:has-text("編集")');
-    if (editButton) {
-      // ボタンが表示されているかをチェック
-      const isVisible = await editButton.isVisible();
-      if (isVisible) {
-        throw new Error('編集ボタンが表示されています。開始済みの会議では編集ボタンが表示されないはずです。');
-      }
-    }
-    
-    // 開始済みの会議に関するメッセージが表示されていることを確認
-    const message = await global.calendarPage.page.$(':text("この会議は既に開始されているため、編集できません。")');
-    if (!message) {
-      throw new Error('開始済みの会議に関するメッセージが表示されていません。');
-    }
-    
-    return;
-  }
-  
-  // Page Objectを使用したエラー確認
+Then('フォームに {string} エラーが表示される', async function (expectedErrorMessage) {
+  // フォーム内のエラーメッセージ用
   await global.meetingFormPage.waitForErrorMessage(expectedErrorMessage);
 });
+
 
 When('参加者が会議を更新しようとする', async function () {
   // カレンダー画面に移動
