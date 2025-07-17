@@ -1,12 +1,12 @@
 import { SignInData, SignUpData, User } from '../../../types/auth';
 import { API_BASE_URL } from '../../../lib/config';
+import { getToken, setToken, removeToken, isAuthenticated } from '../../../lib/auth-token';
 
 interface AuthResponse {
   token: string;
   user: User;
 }
 
-const TOKEN_KEY = 'calendar_app_token';
 
 export const authService = {
   async signUp(data: SignUpData): Promise<AuthResponse> {
@@ -45,19 +45,8 @@ export const authService = {
     return result.data;
   },
 
-  getToken(): string | null {
-    return localStorage.getItem(TOKEN_KEY);
-  },
-
-  setToken(token: string): void {
-    localStorage.setItem(TOKEN_KEY, token);
-  },
-
-  removeToken(): void {
-    localStorage.removeItem(TOKEN_KEY);
-  },
-
-  isAuthenticated(): boolean {
-    return !!this.getToken();
-  }
+  getToken,
+  setToken,
+  removeToken,
+  isAuthenticated
 };
