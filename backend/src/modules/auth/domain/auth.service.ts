@@ -7,13 +7,6 @@ export interface TokenPayload {
 
 export class AuthService {
   private readonly JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
-  private readonly JWT_EXPIRES_IN = '24h';
-
-  generateToken(payload: TokenPayload): string {
-    return jwt.sign(payload, this.JWT_SECRET, {
-      expiresIn: this.JWT_EXPIRES_IN
-    });
-  }
 
   verifyToken(token: string): TokenPayload {
     try {

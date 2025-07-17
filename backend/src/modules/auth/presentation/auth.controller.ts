@@ -24,11 +24,14 @@ export class AuthController {
         const dto = SignInDtoSchema.parse(body);
 
         const signInCommand = new SignInCommand(this.authRepository);
-        const result = await signInCommand.execute(dto);
+        const { authToken, authUser } = await signInCommand.execute(dto);
 
-        const response: ApiResponse<typeof result> = {
+        const response: ApiResponse<{ token: string; user: any }> = {
           success: true,
-          data: result
+          data: {
+            token: authToken.value,
+            user: authUser.toJSON()
+          }
         };
 
         return c.json(response, 200);
@@ -47,11 +50,14 @@ export class AuthController {
         const dto = SignUpDtoSchema.parse(body);
 
         const signUpCommand = new SignUpCommand(this.authRepository);
-        const result = await signUpCommand.execute(dto);
+        const { authToken, authUser } = await signUpCommand.execute(dto);
 
-        const response: ApiResponse<typeof result> = {
+        const response: ApiResponse<{ token: string; user: any }> = {
           success: true,
-          data: result
+          data: {
+            token: authToken.value,
+            user: authUser.toJSON()
+          }
         };
 
         return c.json(response, 201);

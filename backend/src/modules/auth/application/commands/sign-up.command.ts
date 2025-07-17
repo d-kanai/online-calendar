@@ -1,5 +1,6 @@
 import { AuthRepository } from '../../infra/auth.repository';
 import { AuthUser } from '../../domain/auth-user.model';
+import { AuthToken } from '../../domain/auth-token.value-object';
 import { SignUpDto } from '../dtos/sign-up.dto';
 
 export class SignUpCommand {
@@ -7,7 +8,7 @@ export class SignUpCommand {
     private readonly authRepository: AuthRepository
   ) {}
 
-  async execute(dto: SignUpDto): Promise<{ token: string; user: any }> {
+  async execute(dto: SignUpDto): Promise<{ authToken: AuthToken; authUser: AuthUser }> {
     const existingUser = await this.authRepository.findByEmail(dto.email);
     if (existingUser) {
       throw new Error('このメールアドレスは既に登録されています');
@@ -21,11 +22,8 @@ export class SignUpCommand {
 
     await this.authRepository.save(authUser);
 
-    const token = authUser.generateToken();
+    const authToken = authUser.generateToken();
 
-    return {
-      token,
-      user: authUser.toJSON()
-    };
+    return { authToken, authUser };
   }
 }

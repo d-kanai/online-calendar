@@ -85,6 +85,42 @@ async getMeetingById(c: Context) {
   - ⚡ **単一責任**: 1つのクエリ/コマンドは1つの処理のみ実行
 - **依存**: Domain層とInfra層のRepositoryのみ
 
+#### 🎯 Application層の返却値ルール
+- **✅ ドメインオブジェクトをそのまま返却**: Application層はドメインモデルや値オブジェクトを直接返す
+- **🚫 DTOへの変換禁止**: toJSON()などのマッピング処理はPresentation層の責務
+- **📦 返却値の例**:
+  ```typescript
+  // ✅ 推奨：ドメインオブジェクトを返却
+  class SignInCommand {
+    async execute(dto): Promise<{ authToken: AuthToken; authUser: AuthUser }> {
+      const authUser = await repo.findByEmail(dto.email);
+      const authToken = await authUser.signin(dto.password);
+      return { authToken, authUser };  // ドメインオブジェクトをそのまま返す
+    }
+  }
+  
+  // ❌ 避けるべき：Application層でDTO変換
+  class SignInCommand {
+    async execute(dto): Promise<{ token: string; user: any }> {
+      const authUser = await repo.findByEmail(dto.email);
+      const authToken = await authUser.signin(dto.password);
+      return { 
+        token: authToken.value,      // NG: マッピング処理
+        user: authUser.toJSON()      // NG: DTO変換
+      };
+    }
+  }
+  ```
+- **🎪 Presentation層の役割**: ドメインオブジェクトからAPIレスポンス形式への変換
+  ```typescript
+  // Presentation層でのマッピング
+  const { authToken, authUser } = await command.execute(dto);
+  const response = {
+    token: authToken.value,
+    user: authUser.toJSON()
+  };
+  ```
+
 #### 🚨 Application層エラーハンドリング
 - **🎯 Exception駆動**: 適切なHTTPExceptionを発生させる
 - **🚫 null返却の禁止**: Query/Commandはnullを返さない

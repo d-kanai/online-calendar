@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { AuthToken } from './auth-token.value-object';
 
 const AuthUserSchema = z.object({
   id: z.string(),
@@ -43,7 +44,7 @@ export class AuthUser {
     return new AuthUser(AuthUserSchema.parse(props));
   }
 
-  async signin(password: string): Promise<string> {
+  async signin(password: string): Promise<AuthToken> {
     const isValid = await bcrypt.compare(password, this.props.password);
     if (!isValid) {
       throw new Error('メールアドレスまたはパスワードが正しくありません');
@@ -51,12 +52,28 @@ export class AuthUser {
     return this.generateToken();
   }
 
-  generateToken(): string {
-    return jwt.sign(
+  generateToken(): AuthToken {
+    const token = jwt.sign(
       { id: this.props.id, email: this.props.email },
       AuthUser.JWT_SECRET,
       { expiresIn: AuthUser.JWT_EXPIRES_IN }
     );
+    
+    // JWT_EXPIRES_INをパースして有効期限を計算
+    const expiresAt = new Date();
+    const match = AuthUser.JWT_EXPIRES_IN.match(/(\d+)([dhms])/);
+    if (match) {
+      const value = parseInt(match[1]);
+      const unit = match[2];
+      switch (unit) {
+        case 'd': expiresAt.setDate(expiresAt.getDate() + value); break;
+        case 'h': expiresAt.setHours(expiresAt.getHours() + value); break;
+        case 'm': expiresAt.setMinutes(expiresAt.getMinutes() + value); break;
+        case 's': expiresAt.setSeconds(expiresAt.getSeconds() + value); break;
+      }
+    }
+    
+    return AuthToken.create(token, expiresAt);
   }
 
   get id(): string {
