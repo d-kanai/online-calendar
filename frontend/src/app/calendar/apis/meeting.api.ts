@@ -45,6 +45,16 @@ export const meetingApi = {
     return response.json();
   },
   
+  async getById(id: string): Promise<ApiResponse<ApiMeeting>> {
+    const token = authService.getToken();
+    const response = await fetch(`${API_BASE_URL}/meetings/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.json();
+  },
+  
   async update(id: string, data: UpdateMeetingRequest): Promise<ApiResponse<ApiMeeting>> {
     const token = authService.getToken();
     const response = await fetch(`${API_BASE_URL}/meetings/${id}`, {

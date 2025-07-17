@@ -7,7 +7,7 @@ import { Meeting } from '@/types/meeting';
 interface CalendarViewProps {
   meetings: Meeting[];
   onDateSelect: (date: Date) => void;
-  onMeetingSelect: (meeting: Meeting) => void;
+  onMeetingSelect: (meetingId: string) => void;
   onCreateMeeting: () => void;
 }
 
@@ -124,7 +124,7 @@ export function CalendarView({ meetings, onDateSelect, onMeetingSelect, onCreate
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        onMeetingSelect(meeting);
+                        onMeetingSelect(meeting.id);
                       }}
                     >
                       {meeting.startTime.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })} {meeting.title}

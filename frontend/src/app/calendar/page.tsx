@@ -4,11 +4,11 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { CalendarView } from './components/CalendarView.component';
 import { MeetingForm } from './components/MeetingForm.component';
-import { MeetingDetail } from './components/MeetingDetail.component';
+import { MeetingDetailQuery } from './components/MeetingDetailQuery.component';
 import { AppHeader } from '@/components/AppHeader';
 import { Toaster } from 'sonner';
 import { useMeetings } from './hooks/useMeetingsQuery';
-import { useMeetingModals } from './hooks/useMeetingModals';
+import { useCalendarState } from './hooks/useCalendarState';
 import { useMeetingActions } from './hooks/useMeetingActionsQuery';
 import { useReminderService } from './hooks/useReminderService';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,36 +21,31 @@ export default function CalendarPage() {
   // TanStack Query Hooks
   const { meetings, isLoading, error } = useMeetings();
   
+  // 統合されたカレンダー状態管理
   const {
-    selectedMeeting,
+    selectedMeetingId,
     showMeetingForm,
     editingMeeting,
     selectedDate,
     showMeetingDetail,
-    setSelectedMeeting,
-    setEditingMeeting,
-    setShowMeetingDetail,
     handleDateSelect,
     handleMeetingSelect,
     handleCreateMeeting,
     handleEditMeeting,
     handleCloseForm,
-    handleCloseDetail
-  } = useMeetingModals();
+    handleCloseDetail,
+  } = useCalendarState();
 
   const {
     handleMeetingSubmit,
     handleMeetingDelete,
     handleParticipantsChange,
-    isCreating,
-    isUpdating,
-    isDeleting
   } = useMeetingActions({
     editingMeeting,
-    setEditingMeeting,
-    selectedMeeting,
-    setSelectedMeeting,
-    setShowMeetingDetail
+    setEditingMeeting: () => {}, // もう必要ない
+    selectedMeeting: null, // MeetingDetailQueryで管理
+    setSelectedMeeting: () => {}, // もう必要ない
+    setShowMeetingDetail: () => {}, // もう必要ない
   });
 
   // リマインダーサービス
@@ -109,8 +104,8 @@ export default function CalendarPage() {
         currentUser={CURRENT_USER}
       />
       
-      <MeetingDetail
-        meeting={selectedMeeting}
+      <MeetingDetailQuery
+        meetingId={selectedMeetingId}
         open={showMeetingDetail}
         onClose={handleCloseDetail}
         onEdit={handleEditMeeting}

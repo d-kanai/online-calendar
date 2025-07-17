@@ -3,12 +3,7 @@ import { Meeting } from '../../../types/meeting';
 import { ApiMeeting, ApiParticipant } from '../../../types/api';
 import { meetingApi } from '../apis/meeting.api';
 import { toast } from 'sonner';
-
-// Query Keys
-const QUERY_KEYS = {
-  all: ['meetings'] as const,
-  lists: () => [...QUERY_KEYS.all, 'list'] as const,
-};
+import { queryKeys, invalidateHelpers, cacheHelpers } from '../../../lib/query-keys';
 
 // APIレスポンスをMeeting型に変換
 const mapApiToMeeting = (apiMeeting: ApiMeeting): Meeting => ({
@@ -30,15 +25,29 @@ const mapApiToMeeting = (apiMeeting: ApiMeeting): Meeting => ({
 });
 
 // 会議一覧の取得（既存のuseMeetingsと互換性を保つ）
-export const useMeetings = () => {
+export const useMeetings = (filters?: { date?: Date; ownerId?: string }) => {
   const queryClient = useQueryClient();
   
   const { data: meetings = [], isLoading, error } = useQuery({
-    queryKey: QUERY_KEYS.lists(),
+    queryKey: queryKeys.meetingsList(filters),
     queryFn: async () => {
       const response = await meetingApi.getAll();
       if (response.success && response.data) {
-        return response.data.map(mapApiToMeeting);
+        const allMeetings = response.data.map(mapApiToMeeting);
+        
+        // フィルタリング
+        let filtered = allMeetings;
+        if (filters?.date) {
+          const targetDate = filters.date.toDateString();
+          filtered = filtered.filter(m => 
+            new Date(m.startTime).toDateString() === targetDate
+          );
+        }
+        if (filters?.ownerId) {
+          filtered = filtered.filter(m => m.ownerId === filters.ownerId);
+        }
+        
+        return filtered;
       }
       throw new Error('Failed to fetch meetings');
     },
@@ -48,11 +57,11 @@ export const useMeetings = () => {
 
   // 既存のインターフェースとの互換性のため
   const loadMeetings = async () => {
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lists() });
+    await invalidateHelpers.invalidateAllMeetings(queryClient);
   };
 
   const updateMeetings = (updater: (prev: Meeting[]) => Meeting[]) => {
-    queryClient.setQueryData(QUERY_KEYS.lists(), updater);
+    queryClient.setQueryData(queryKeys.meetingsList(filters), updater);
   };
 
   return {
@@ -62,6 +71,32 @@ export const useMeetings = () => {
     loadMeetings,
     updateMeetings
   };
+};
+
+// 会議詳細の取得（新規）
+export const useMeetingDetail = (meetingId: string | null) => {
+  const queryClient = useQueryClient();
+  
+  return useQuery({
+    queryKey: queryKeys.meetingDetail(meetingId!),
+    queryFn: async () => {
+      // まずキャッシュから取得を試みる
+      const cachedMeeting = cacheHelpers.getMeetingFromList(queryClient, meetingId!);
+      if (cachedMeeting) {
+        return cachedMeeting;
+      }
+      
+      // キャッシュになければAPIから取得
+      const response = await meetingApi.getById(meetingId!);
+      if (response.success && response.data) {
+        return mapApiToMeeting(response.data);
+      }
+      throw new Error('Failed to fetch meeting detail');
+    },
+    enabled: !!meetingId,
+    staleTime: 60 * 1000, // 1分
+    gcTime: 10 * 60 * 1000, // 10分
+  });
 };
 
 // 会議作成のMutation
@@ -86,15 +121,42 @@ export const useCreateMeeting = () => {
       }
       throw new Error(response.error || '会議の作成に失敗しました');
     },
-    onSuccess: (newMeeting) => {
-      // キャッシュを更新
-      queryClient.setQueryData(QUERY_KEYS.lists(), (old: Meeting[] = []) => {
-        return [...old, newMeeting];
+    onMutate: async (newMeeting) => {
+      // 楽観的更新のための準備
+      await queryClient.cancelQueries({ queryKey: queryKeys.meetings() });
+      
+      const previousMeetings = queryClient.getQueryData(queryKeys.meetingsList());
+      
+      // 楽観的に追加
+      const optimisticMeeting: Meeting = {
+        id: `temp-${Date.now()}`,
+        ...newMeeting,
+        owner: newMeeting.ownerId,
+        participants: [],
+        status: 'scheduled',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      queryClient.setQueryData(queryKeys.meetingsList(), (old: Meeting[] = []) => {
+        return [...old, optimisticMeeting];
       });
-      toast.success('会議が作成されました');
+      
+      return { previousMeetings };
     },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : '会議の作成に失敗しました');
+    onError: (err, newMeeting, context) => {
+      // エラー時は元に戻す
+      if (context?.previousMeetings) {
+        queryClient.setQueryData(queryKeys.meetingsList(), context.previousMeetings);
+      }
+      toast.error(err instanceof Error ? err.message : '会議の作成に失敗しました');
+    },
+    onSettled: () => {
+      // 成功・失敗に関わらず最新データを取得
+      invalidateHelpers.invalidateAllMeetings(queryClient);
+    },
+    onSuccess: () => {
+      toast.success('会議が作成されました');
     },
   });
 };
@@ -124,17 +186,41 @@ export const useUpdateMeeting = () => {
       }
       throw new Error(response.error || '会議の更新に失敗しました');
     },
-    onSuccess: (updatedMeeting) => {
-      // キャッシュを更新
-      queryClient.setQueryData(QUERY_KEYS.lists(), (old: Meeting[] = []) => {
-        return old.map(meeting => 
-          meeting.id === updatedMeeting.id ? updatedMeeting : meeting
-        );
+    onMutate: async ({ id, data }) => {
+      // 楽観的更新
+      await queryClient.cancelQueries({ queryKey: queryKeys.meetingDetail(id) });
+      await queryClient.cancelQueries({ queryKey: queryKeys.meetingsList() });
+      
+      const previousMeeting = queryClient.getQueryData(queryKeys.meetingDetail(id));
+      const previousList = queryClient.getQueryData(queryKeys.meetingsList());
+      
+      // 楽観的に更新
+      const updater = (old: Meeting) => ({
+        ...old,
+        ...data,
+        updatedAt: new Date()
       });
-      toast.success('会議が更新されました');
+      
+      cacheHelpers.updateMeetingInAllCaches(queryClient, id, updater);
+      
+      return { previousMeeting, previousList };
     },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : '会議の更新に失敗しました');
+    onError: (err, { id }, context) => {
+      // エラー時は元に戻す
+      if (context?.previousMeeting) {
+        queryClient.setQueryData(queryKeys.meetingDetail(id), context.previousMeeting);
+      }
+      if (context?.previousList) {
+        queryClient.setQueryData(queryKeys.meetingsList(), context.previousList);
+      }
+      toast.error(err instanceof Error ? err.message : '会議の更新に失敗しました');
+    },
+    onSettled: (data, error, { id }) => {
+      // 成功・失敗に関わらず該当する会議を無効化
+      invalidateHelpers.invalidateMeeting(queryClient, id);
+    },
+    onSuccess: () => {
+      toast.success('会議が更新されました');
     },
   });
 };
@@ -151,15 +237,35 @@ export const useDeleteMeeting = () => {
       }
       return id;
     },
-    onSuccess: (deletedId) => {
-      // キャッシュから削除
-      queryClient.setQueryData(QUERY_KEYS.lists(), (old: Meeting[] = []) => {
-        return old.filter(meeting => meeting.id !== deletedId);
+    onMutate: async (meetingId) => {
+      // 楽観的削除
+      await queryClient.cancelQueries({ queryKey: queryKeys.meetings() });
+      
+      const previousList = queryClient.getQueryData(queryKeys.meetingsList());
+      
+      // 楽観的に削除
+      queryClient.setQueryData(queryKeys.meetingsList(), (old: Meeting[] = []) => {
+        return old.filter(meeting => meeting.id !== meetingId);
       });
-      toast.success('会議が削除されました');
+      
+      // 詳細キャッシュも削除
+      queryClient.removeQueries({ queryKey: queryKeys.meetingDetail(meetingId) });
+      
+      return { previousList };
     },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : '会議の削除に失敗しました');
+    onError: (err, meetingId, context) => {
+      // エラー時は元に戻す
+      if (context?.previousList) {
+        queryClient.setQueryData(queryKeys.meetingsList(), context.previousList);
+      }
+      toast.error(err instanceof Error ? err.message : '会議の削除に失敗しました');
+    },
+    onSettled: () => {
+      // 成功・失敗に関わらず最新データを取得
+      invalidateHelpers.invalidateAllMeetings(queryClient);
+    },
+    onSuccess: () => {
+      toast.success('会議が削除されました');
     },
   });
 };
@@ -174,27 +280,44 @@ export const useAddParticipant = () => {
       if (response.success && response.data) {
         const updatedMeeting = mapApiToMeeting(response.data);
         const addedParticipant = updatedMeeting.participants[updatedMeeting.participants.length - 1];
-        return { meetingId, participant: addedParticipant };
+        return { meetingId, participant: addedParticipant, updatedMeeting };
       }
       throw new Error(response.error || '参加者の追加に失敗しました');
     },
-    onSuccess: ({ meetingId, participant }) => {
-      // キャッシュを更新
-      queryClient.setQueryData(QUERY_KEYS.lists(), (old: Meeting[] = []) => {
-        return old.map(meeting => {
-          if (meeting.id === meetingId) {
-            return {
-              ...meeting,
-              participants: [...meeting.participants, participant]
-            };
-          }
-          return meeting;
-        });
-      });
-      toast.success('参加者が更新されました');
+    onMutate: async ({ meetingId, email }) => {
+      // 楽観的更新
+      await queryClient.cancelQueries({ queryKey: queryKeys.meetingDetail(meetingId) });
+      await queryClient.cancelQueries({ queryKey: queryKeys.meetingParticipants(meetingId) });
+      
+      const previousMeeting = queryClient.getQueryData(queryKeys.meetingDetail(meetingId));
+      
+      // 楽観的に参加者を追加
+      const optimisticParticipant = {
+        id: `temp-${Date.now()}`,
+        email,
+        name: email.split('@')[0]
+      };
+      
+      cacheHelpers.updateMeetingInAllCaches(queryClient, meetingId, (old: Meeting) => ({
+        ...old,
+        participants: [...old.participants, optimisticParticipant]
+      }));
+      
+      return { previousMeeting };
     },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : '参加者の追加に失敗しました');
+    onError: (err, { meetingId }, context) => {
+      // エラー時は元に戻す
+      if (context?.previousMeeting) {
+        cacheHelpers.updateMeetingInAllCaches(queryClient, meetingId, () => context.previousMeeting);
+      }
+      toast.error(err instanceof Error ? err.message : '参加者の追加に失敗しました');
+    },
+    onSettled: (data, error, { meetingId }) => {
+      // 成功・失敗に関わらず該当する会議を無効化
+      invalidateHelpers.invalidateMeeting(queryClient, meetingId);
+    },
+    onSuccess: () => {
+      toast.success('参加者が更新されました');
     },
   });
 };
@@ -211,23 +334,34 @@ export const useRemoveParticipant = () => {
       }
       return { meetingId, participantId };
     },
-    onSuccess: ({ meetingId, participantId }) => {
-      // キャッシュから削除
-      queryClient.setQueryData(QUERY_KEYS.lists(), (old: Meeting[] = []) => {
-        return old.map(meeting => {
-          if (meeting.id === meetingId) {
-            return {
-              ...meeting,
-              participants: meeting.participants.filter(p => p.id !== participantId)
-            };
-          }
-          return meeting;
-        });
-      });
-      toast.success('参加者が更新されました');
+    onMutate: async ({ meetingId, participantId }) => {
+      // 楽観的更新
+      await queryClient.cancelQueries({ queryKey: queryKeys.meetingDetail(meetingId) });
+      await queryClient.cancelQueries({ queryKey: queryKeys.meetingParticipants(meetingId) });
+      
+      const previousMeeting = queryClient.getQueryData(queryKeys.meetingDetail(meetingId));
+      
+      // 楽観的に参加者を削除
+      cacheHelpers.updateMeetingInAllCaches(queryClient, meetingId, (old: Meeting) => ({
+        ...old,
+        participants: old.participants.filter(p => p.id !== participantId)
+      }));
+      
+      return { previousMeeting };
     },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : '参加者の削除に失敗しました');
+    onError: (err, { meetingId }, context) => {
+      // エラー時は元に戻す
+      if (context?.previousMeeting) {
+        cacheHelpers.updateMeetingInAllCaches(queryClient, meetingId, () => context.previousMeeting);
+      }
+      toast.error(err instanceof Error ? err.message : '参加者の削除に失敗しました');
+    },
+    onSettled: (data, error, { meetingId }) => {
+      // 成功・失敗に関わらず該当する会議を無効化
+      invalidateHelpers.invalidateMeeting(queryClient, meetingId);
+    },
+    onSuccess: () => {
+      toast.success('参加者が更新されました');
     },
   });
 };
