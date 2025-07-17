@@ -197,7 +197,12 @@ export class Meeting {
     return [...this._participants];
   }
 
-  addParticipant(user: User): void {
+  addParticipant(user: User, requesterId: string): void {
+    // 権限チェック: オーナーのみが参加者を追加可能
+    if (this._ownerId !== requesterId) {
+      throw new Error('参加者の追加はオーナーのみ可能です');
+    }
+
     const MAX_PARTICIPANTS = 50;
     
     if (this._participants.length >= MAX_PARTICIPANTS) {
@@ -213,7 +218,12 @@ export class Meeting {
     this._updatedAt = new Date();
   }
 
-  removeParticipant(userId: string): void {
+  removeParticipant(userId: string, requesterId: string): void {
+    // 権限チェック: オーナーのみが参加者を削除可能
+    if (this._ownerId !== requesterId) {
+      throw new Error('参加者の削除はオーナーのみ可能です');
+    }
+
     const index = this._participants.findIndex(p => p.userId === userId);
     if (index > -1) {
       this._participants.splice(index, 1);

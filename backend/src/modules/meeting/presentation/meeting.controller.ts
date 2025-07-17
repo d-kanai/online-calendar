@@ -46,7 +46,7 @@ export class MeetingController {
     this.updateMeetingCommand = new UpdateMeetingCommand();
     this.deleteMeetingCommand = new DeleteMeetingCommand();
     this.addParticipantCommand = new AddParticipantCommand(repository);
-    this.removeParticipantCommand = new RemoveParticipantCommand();
+    this.removeParticipantCommand = new RemoveParticipantCommand(repository);
     this.helper = new MeetingWithOwnerHelper();
   }
 

@@ -1,45 +1,27 @@
 import { MeetingRepository } from '../../infra/meeting.repository.js';
-import { PrismaClient } from '@prisma/client';
-import { NotFoundException, BadRequestException } from '../../../../shared/exceptions/http-exceptions.js';
+import { Meeting } from '../../domain/meeting.model.js';
+import { NotFoundException } from '../../../../shared/exceptions/http-exceptions.js';
 
 export class RemoveParticipantCommand {
-  private meetingRepository: MeetingRepository;
-  private prisma: PrismaClient;
+  constructor(private readonly repository: MeetingRepository) {}
 
-  constructor() {
-    this.meetingRepository = new MeetingRepository();
-    this.prisma = new PrismaClient();
-  }
-
-  async run(meetingId: string, participantId: string, requesterId: string): Promise<void> {
-    // 会議が存在するか確認
-    const meeting = await this.meetingRepository.findById(meetingId);
+  async run(meetingId: string, participantId: string, requesterId: string): Promise<Meeting> {
+    const meeting = await this.repository.findById(meetingId);
+    
     if (!meeting) {
       throw new NotFoundException('Meeting not found');
     }
-
-    // リクエスト者が会議のオーナーか確認（userIdで比較）
-    if (meeting.ownerId !== requesterId) {
-      throw new BadRequestException('Only the meeting owner can remove participants');
-    }
-
-    // 参加者が存在するか確認
-    const participant = await this.prisma.meetingParticipant.findFirst({
-      where: { 
-        id: participantId,
-        meetingId: meetingId
-      }
-    });
-
+    
+    // participantIdからuserIdを取得
+    const participant = meeting.participants.find(p => p.id === participantId);
     if (!participant) {
       throw new NotFoundException('Participant not found in this meeting');
     }
-
-    // 参加者を削除
-    await this.prisma.meetingParticipant.delete({
-      where: { 
-        id: participantId
-      }
-    });
+    
+    // 参加者削除（ドメインロジックで権限チェック）
+    meeting.removeParticipant(participant.userId, requesterId);
+    
+    // 永続化
+    return await this.repository.save(meeting);
   }
 }

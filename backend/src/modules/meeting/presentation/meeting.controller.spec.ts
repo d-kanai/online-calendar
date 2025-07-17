@@ -343,6 +343,12 @@ describe('MeetingController', () => {
     // Given - オーナーユーザーを作成
     const owner = await UserFactory.createWithName('other');
     
+    // 追加しようとする参加者ユーザーを作成
+    const participant = await UserFactory.create({
+      email: 'hanako@example.com',
+      name: 'hanako'
+    });
+    
     // 他のユーザーが作成した会議
     const existingMeeting = await MeetingFactory.create({
       title: 'チームミーティング',
@@ -350,8 +356,8 @@ describe('MeetingController', () => {
     });
 
     const participantData = {
-      email: 'hanako@example.com',
-      name: 'hanako',
+      email: participant.email,
+      name: participant.name,
       requesterId: 'taro@example.com' // オーナーではない
     };
 
@@ -504,7 +510,7 @@ describe('MeetingController', () => {
     const mockContext = createMockContext({ id: existingMeeting.id, participantId: meetingParticipant.id }, removeData, 'different-user-id');
     await expect(meetingController.removeParticipant(mockContext as any))
       .rejects
-      .toThrow('Only the meeting owner can remove participants');
+      .toThrow('参加者の削除はオーナーのみ可能です');
   });
 
   test('removeParticipant - 存在しない参加者の削除でNotFoundExceptionが発生する', async () => {

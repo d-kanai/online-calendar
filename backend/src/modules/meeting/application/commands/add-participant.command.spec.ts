@@ -3,7 +3,7 @@ import { AddParticipantCommand } from './add-participant.command.js';
 import { MeetingRepository } from '../../infra/meeting.repository.js';
 import { prisma } from '../../../../shared/database/prisma.js';
 import { UserFactory, MeetingFactory } from '../../../../test/factories/index.js';
-import { NotFoundException, ForbiddenException } from '../../../../shared/exceptions/http-exceptions.js';
+import { NotFoundException } from '../../../../shared/exceptions/http-exceptions.js';
 
 describe('AddParticipantCommand', () => {
   let command: AddParticipantCommand;
@@ -75,7 +75,7 @@ describe('AddParticipantCommand', () => {
       email: participant.email,
       name: participant.name,
       requesterId: otherUser.id // オーナーではない
-    })).rejects.toThrow(ForbiddenException);
+    })).rejects.toThrow('参加者の追加はオーナーのみ可能です');
     
     await expect(command.run({
       meetingId: meeting.id,
