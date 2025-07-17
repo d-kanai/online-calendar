@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { z } from 'zod';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../lib/ui/dialog';
-import { Button } from '../lib/ui/button';
-import { Input } from '../lib/ui/input';
-import { Label } from '../lib/ui/label';
-// import { Textarea } from '../lib/ui/textarea'; // TODO: 将来的に説明フィールドで使用予定
-import { Switch } from '../lib/ui/switch';
-import { Alert, AlertDescription } from '../lib/ui/alert';
-import { Meeting } from '../types/meeting';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/lib/ui/dialog';
+import { Button } from '@/lib/ui/button';
+import { Input } from '@/lib/ui/input';
+import { Label } from '@/lib/ui/label';
+// import { Textarea } from '@/lib/ui/textarea'; // TODO: 将来的に説明フィールドで使用予定
+import { Switch } from '@/lib/ui/switch';
+import { Alert, AlertDescription } from '@/lib/ui/alert';
+import { Meeting } from '@/types/meeting';
 import { AlertCircle } from 'lucide-react';
 
 interface MeetingFormProps {

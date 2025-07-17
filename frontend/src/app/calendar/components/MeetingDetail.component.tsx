@@ -1,10 +1,10 @@
 import React from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../lib/ui/sheet';
-import { Button } from '../lib/ui/button';
-import { Badge } from '../lib/ui/badge';
-import { Separator } from '../lib/ui/separator';
-import { ParticipantManager } from './ParticipantManager';
-import { Meeting } from '../types/meeting';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/lib/ui/sheet';
+import { Button } from '@/lib/ui/button';
+import { Badge } from '@/lib/ui/badge';
+import { Separator } from '@/lib/ui/separator';
+import { ParticipantManager } from '@/components/ParticipantManager';
+import { Meeting } from '@/types/meeting';
 import { Calendar, Clock, User, Star, Edit, Trash2 } from 'lucide-react';
 
 interface MeetingDetailProps {

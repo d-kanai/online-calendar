@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import { SignUpForm } from '@/components/auth/SignUpForm';
+import { SignInForm } from '../components/SignInForm.component';
 import { Calendar } from 'lucide-react';
 
-export default function SignUpPage() {
+export default function SignInPage() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* 左側: ブランディング */}
@@ -33,7 +33,7 @@ export default function SignUpPage() {
             <span className="text-2xl">Awesome Calendar</span>
           </div>
 
-          <SignUpForm />
+          <SignInForm />
         </div>
       </div>
     </div>

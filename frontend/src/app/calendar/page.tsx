@@ -2,9 +2,9 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarView } from '@/components/CalendarView';
-import { MeetingForm } from '@/components/MeetingForm';
-import { MeetingDetail } from '@/components/MeetingDetail';
+import { CalendarView } from './components/CalendarView.component';
+import { MeetingForm } from './components/MeetingForm.component';
+import { MeetingDetail } from './components/MeetingDetail.component';
 import { AppHeader } from '@/components/AppHeader';
 import { Toaster } from 'sonner';
 import { useMeetings } from '@/hooks/useMeetings';

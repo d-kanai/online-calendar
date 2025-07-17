@@ -36,7 +36,7 @@ export const AppHeader = React.forwardRef<HTMLDivElement, AppHeaderProps>(
 
     const handleSignOut = async () => {
       await signOut();
-      router.push('/signin');
+      router.push('/auth/signin');
     };
 
     return (

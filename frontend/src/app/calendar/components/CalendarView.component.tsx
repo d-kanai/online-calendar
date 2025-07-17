@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
-import { Button } from '../lib/ui/button';
-import { Card } from '../lib/ui/card';
-import { Meeting } from '../types/meeting';
+import { Button } from '@/lib/ui/button';
+import { Card } from '@/lib/ui/card';
+import { Meeting } from '@/types/meeting';
 
 interface CalendarViewProps {
   meetings: Meeting[];

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { MeetingStats } from '@/components/MeetingStats';
+import { MeetingStats } from './components/MeetingStats.component';
 import { AppHeader } from '@/components/AppHeader';
 import { useMeetings } from '@/hooks/useMeetings';
 import { useAuth } from '@/contexts/AuthContext';

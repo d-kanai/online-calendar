@@ -169,26 +169,48 @@ export default function MeetingPage() {
 
 ### 🎯 基本原則
 - **page.tsx必須**: 全てのルートは`page.tsx`ファイルで定義
-- **機能別ディレクトリ**: 各機能・画面ごとにディレクトリを作成
+- **機能別モジュール**: 各機能ごとにディレクトリを作成し、関連するコンポーネントを集約
 - **コンポーネント分離**: ページロジックとUIコンポーネントを明確に分離
 - **型安全なルーティング**: Next.js App Routerの型システムを最大限活用
 
-### 📂 ディレクトリ構造
+### 🏗️ Modular Monolith設計
+- **機能の凝集性**: 関連するpage.tsx、components、typesを同一ディレクトリに配置
+- **依存関係の明確化**: 機能間の依存関係を最小限に抑制
+- **拡張性**: 新機能追加時は新しいモジュールディレクトリを作成
+- **保守性**: 機能単位でのコード管理により保守性を向上
+
+### 📂 Modular Monolith構造
 ```
 src/app/
 ├── page.tsx                    # ルートページ（認証状態によるリダイレクト）
-├── signin/
-│   └── page.tsx               # サインインページ
-├── signup/
-│   └── page.tsx               # サインアップページ  
-├── calendar/
-│   └── page.tsx               # カレンダー画面
-├── stats/
-│   └── page.tsx               # 統計画面
-├── meeting/
+├── auth/                       # 認証機能モジュール
+│   ├── signin/
+│   │   └── page.tsx           # サインインページ
+│   ├── signup/
+│   │   └── page.tsx           # サインアップページ
+│   └── components/
+│       ├── SignInForm.component.tsx
+│       └── SignUpForm.component.tsx
+├── calendar/                   # カレンダー機能モジュール
+│   ├── page.tsx               # カレンダー画面
+│   └── components/
+│       ├── CalendarView.component.tsx
+│       ├── MeetingForm.component.tsx
+│       └── MeetingDetail.component.tsx
+├── stats/                      # 統計機能モジュール
+│   ├── page.tsx               # 統計画面
+│   └── components/
+│       └── MeetingStats.component.tsx
+├── meeting/                    # 会議詳細機能モジュール
 │   └── [id]/
 │       └── page.tsx           # 会議詳細画面（動的ルーティング）
 └── layout.tsx                 # ルートレイアウト
+
+src/components/                 # 共通コンポーネント
+├── AppHeader.tsx              # アプリケーション共通ヘッダー
+├── ParticipantManager.tsx     # 参加者管理コンポーネント
+└── ui/                        # UIコンポーネント
+    └── ...
 ```
 
 ### 🏗️ page.tsx 実装パターン
@@ -297,15 +319,30 @@ useEffect(() => {
 - **動的インポート**: 必要に応じてコンポーネントの遅延読み込み
 - **Client Components**: `'use client'`を適切に使用
 
+### 🏷️ 命名規約
+- **機能コンポーネント**: `{ComponentName}.component.tsx`
+- **共通コンポーネント**: `{ComponentName}.tsx`
+- **相対インポート**: 同一機能内では相対パス（`./components/...`）
+- **絶対インポート**: 共通リソースには絶対パス（`@/components/...`）
+
 ### 📋 実装チェックリスト
 - [ ] 各ルートに`page.tsx`を作成
+- [ ] 機能別にcomponentsディレクトリを作成
 - [ ] Custom Hooksでビジネスロジックを分離
 - [ ] 適切な認証ガード実装
 - [ ] ナビゲーション機能の実装
 - [ ] レスポンシブデザインの確認
 - [ ] 型安全性の確保
+- [ ] コンポーネント命名規約の遵守
 
-この構造により、Next.js App Routerの利点を最大限活用し、保守性の高いフロントエンドアーキテクチャを実現する 🚀
+### 🚀 メリット
+- **開発効率**: 機能ごとに必要なファイルが集約され、開発効率が向上
+- **チーム開発**: 機能単位での作業分担が容易
+- **テスト**: 機能単位でのテストが書きやすい
+- **デプロイ**: 機能単位での段階的デプロイが可能
+- **拡張性**: 新機能追加時の影響範囲が明確
+
+この構造により、Next.js App Routerの利点を最大限活用し、保守性の高いModular Monolithアーキテクチャを実現する 🚀
 
 ## 🎨 Frontend Zodバリデーション実装パターン
 
