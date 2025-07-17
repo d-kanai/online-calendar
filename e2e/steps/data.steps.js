@@ -18,14 +18,6 @@ Given('会議 {string} を作成済み', async function (title) {
   
   const meeting = await MeetingFactory.createTomorrow(owner.id, { title });
   
-  // 参加者招待テスト用に hanako ユーザーを事前作成
-  if (title === 'チームミーティング') {
-    await UserFactory.create({
-      email: 'hanako@example.com',
-      name: 'hanako'
-    });
-  }
-  
   // 他のステップで使用するため保存
   this.createdMeeting = meeting;
 });
@@ -158,4 +150,15 @@ Given('参加者がいる会議がある', async function () {
   this.createdMeeting = meeting;
   this.createdParticipant = participant;
   this.createdMeetingParticipant = meetingParticipant;
+});
+
+Given('ユーザー {string} が登録済み', async function (email) {
+  // 指定されたメールアドレスのユーザーを作成
+  const user = await UserFactory.create({
+    email: email,
+    name: email.split('@')[0]
+  });
+  
+  // 他のステップで使用するため保存
+  this.inviteeUser = user;
 });
