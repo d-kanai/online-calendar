@@ -12,11 +12,15 @@ import { useCalendarState } from './hooks/useCalendarState';
 import { useMeetingActions } from './hooks/useMeetingActionsQuery';
 import { useReminderService } from './hooks/useReminderService';
 import { useAuth } from '@/contexts/AuthContext';
+import { useGlobalRealtimeSync } from './hooks/useRealtimeSync';
 
 export default function CalendarPage() {
   const router = useRouter();
   const { user } = useAuth();
   const CURRENT_USER = user?.email || 'unknown@example.com';
+  
+  // グローバルリアルタイム同期を有効化
+  useGlobalRealtimeSync();
   
   // TanStack Query Hooks
   const { meetings, isLoading, error } = useMeetings();

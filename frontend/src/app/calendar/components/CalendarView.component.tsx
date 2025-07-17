@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Button } from '@/lib/ui/button';
 import { Card } from '@/lib/ui/card';
 import { Meeting } from '@/types/meeting';
+import { usePrefetchMeetings } from '../hooks/usePrefetchMeetings';
 
 interface CalendarViewProps {
   meetings: Meeting[];
@@ -13,6 +14,7 @@ interface CalendarViewProps {
 
 export function CalendarView({ meetings, onDateSelect, onMeetingSelect, onCreateMeeting }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const { prefetchOnHover } = usePrefetchMeetings();
   
   const today = new Date();
   const year = currentDate.getFullYear();
@@ -126,6 +128,7 @@ export function CalendarView({ meetings, onDateSelect, onMeetingSelect, onCreate
                         e.stopPropagation();
                         onMeetingSelect(meeting.id);
                       }}
+                      onMouseEnter={() => prefetchOnHover(meeting.id)}
                     >
                       {meeting.startTime.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })} {meeting.title}
                     </div>
