@@ -134,7 +134,6 @@ Then('参加者が正常に削除される', async function () {
   const hasError = await page.locator('[role="alert"]').count();
   if (hasError > 0) {
     const errorText = await page.locator('[role="alert"]').first().textContent();
-    console.log('Error found:', errorText);
   }
   
   // 成功メッセージまたは参加者の削除を確認

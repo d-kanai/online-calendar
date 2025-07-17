@@ -9,7 +9,6 @@ Given('過去7日間の会議時間が以下の通りである:', async function
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
-  console.log('Test creating meetings based on today:', today.toISOString());
   
   // テーブルデータを処理
   const rows = dataTable.hashes();
@@ -30,7 +29,6 @@ Given('過去7日間の会議時間が以下の通りである:', async function
       const endTime = new Date(startTime);
       endTime.setMinutes(startTime.getMinutes() + minutes);
       
-      console.log(`Creating meeting ${daysAgo} days ago:`, startTime.toISOString());
       
       // 会議を作成
       await prisma.meeting.create({
@@ -47,7 +45,6 @@ Given('過去7日間の会議時間が以下の通りである:', async function
     }
   }
   
-  console.log('📊 Created meetings for statistics test');
 });
 
 When('会議統計画面を開く', async function () {
@@ -72,6 +69,5 @@ Then('1日あたりの平均会議時間は {string} と表示される', async 
       throw new Error(`Expected average: ${expectedAverage}, but got: ${displayedAverage}`);
     }
     
-    console.log(`✅ Daily average time correctly displayed: ${displayedAverage}`);
   }
 });
