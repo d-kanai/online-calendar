@@ -5,37 +5,8 @@ import { DailyAverageResponse } from '../apis/stats.api';
 import { useDailyAverage } from '../hooks/useStatsQuery';
 
 export function MeetingStats() {
-  // TanStack Query Hook
-  const { data: dailyAverageData, isLoading, error } = useDailyAverage();
-
-  // Show loading state first
-  if (isLoading) {
-    return (
-      <div className="flex-1 overflow-y-auto">
-        <div className="container mx-auto p-6 space-y-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-muted-foreground">読み込み中...</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error state  
-  if (error) {
-    return (
-      <div className="flex-1 overflow-y-auto">
-        <div className="container mx-auto p-6 space-y-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-destructive">エラーが発生しました: {error instanceof Error ? error.message : 'Unknown error'}</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Return early if no data
-  if (!dailyAverageData) return null;
+  // Suspense Query Hook（isLoading, errorは不要）
+  const { data: dailyAverageData } = useDailyAverage();
   
   const formatMinutes = (minutes: number): string => {
     const hours = Math.floor(minutes / 60);
