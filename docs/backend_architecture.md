@@ -19,8 +19,9 @@ backend/src/modules/{module}/
 │       └── delete-{entity}.command.ts
 ├── domain/              # 🎭 ドメイン層
 │   └── {entity}.model.ts
-└── infra/              # 🏭 インフラ層
-    └── {entity}.repository.ts
+├── infra/              # 🏭 インフラ層
+│   └── {entity}.repository.ts
+└── {module}.routes.ts   # 🛣️ ルート定義
 ```
 
 ## 🎯 層別責務
@@ -527,3 +528,81 @@ if (err instanceof HttpException) {
 ```
 
 この設計により、エラーハンドリングが統一され、Controller層が大幅に簡素化される 🎯
+
+## 🛣️ ルート定義設計
+
+### 🎯 基本原則
+- **📁 配置**: 各モジュールのルートに`{module}.routes.ts`ファイルを配置
+- **🔧 責務**: ルート定義、ミドルウェア適用、エラーハンドラー設定
+- **🚫 禁止事項**: Controller内でHonoインスタンスを作成しない
+
+### 🏗️ 実装パターン
+```typescript
+// ✅ 推奨：meeting.routes.ts
+import { Hono } from 'hono';
+import { MeetingController } from './presentation/meeting.controller.js';
+import { errorHandler } from '../../shared/middleware/error-handler.js';
+import { authMiddleware } from '../../middlewares/auth.middleware.js';
+
+const meetingRoutes = new Hono();
+const meetingController = new MeetingController();
+
+// ミドルウェア適用
+meetingRoutes.use('*', authMiddleware());
+
+// エラーハンドラー設定
+meetingRoutes.onError(errorHandler);
+
+// ルート定義
+meetingRoutes.get('/', (c) => meetingController.getAllMeetings(c));
+meetingRoutes.get('/:id', (c) => meetingController.getMeetingById(c));
+meetingRoutes.post('/', (c) => meetingController.createMeeting(c));
+
+export { meetingRoutes };
+```
+
+```typescript
+// ❌ 避けるべき：Controller内でルート定義
+export class AuthController {
+  private readonly app: Hono;
+  
+  constructor() {
+    this.app = new Hono();
+    this.setupRoutes();  // NG: Controller内でルート設定
+  }
+  
+  private setupRoutes(): void {
+    this.app.post('/signin', async (c) => { ... });
+  }
+  
+  getApp(): Hono {
+    return this.app;  // NG: Honoインスタンスを公開
+  }
+}
+```
+
+### 🎯 Controller設計
+- **純粋なクラス**: Honoに依存しない
+- **メソッド**: 各エンドポイントに対応するpublicメソッドのみ
+- **引数**: Honoの`Context`を受け取る
+- **返り値**: Honoの`Response`を返す
+
+```typescript
+export class MeetingController {
+  constructor() {
+    // 依存性注入のみ（Honoインスタンス作成なし）
+  }
+
+  async getAllMeetings(c: Context) {
+    // ビジネスロジック実行とレスポンス返却
+    const result = await this.getAllMeetingsQuery.run();
+    return c.json({ success: true, data: result });
+  }
+}
+```
+
+### 📋 メリット
+- **関心事の分離**: ルーティングとビジネスロジック処理を分離
+- **テスタビリティ**: Controllerを単体でテスト可能
+- **一貫性**: 全モジュールで同じパターンを使用
+- **柔軟性**: ミドルウェアやエラーハンドラーの管理が容易
