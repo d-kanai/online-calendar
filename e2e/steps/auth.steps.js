@@ -54,8 +54,8 @@ Given('ユーザー{string}でログイン', async function (userName) {
       user: authUser
     });
     
-    // ページをリロードして認証状態を反映
-    await global.calendarPage.page.reload();
+    // 認証情報を設定後、カレンダーページに直接移動
+    await global.calendarPage.page.goto('http://localhost:3000/calendar');
     
     // カレンダーが表示されるまで待機（認証完了を確認）
     await global.calendarPage.page.waitForSelector('[data-testid="calendar-view"]', { timeout: 10000 });
