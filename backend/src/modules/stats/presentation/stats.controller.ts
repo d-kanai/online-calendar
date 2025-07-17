@@ -1,5 +1,6 @@
 import { Context } from 'hono';
 import { GetDailyAverageQuery } from '../application/queries/get-daily-average.query.js';
+import { toDailyAverageOutput } from './output.js';
 
 export class StatsController {
   private getDailyAverageQuery: GetDailyAverageQuery;
@@ -9,28 +10,10 @@ export class StatsController {
   }
 
   async getDailyAverage(c: Context) {
-    try {
-      const loginUserId = c.get('loginUserId');
-      
-      if (!loginUserId) {
-        return c.json({
-          success: false,
-          error: 'Unauthorized'
-        }, 401);
-      }
-
-      const result = await this.getDailyAverageQuery.execute(loginUserId);
-
-      return c.json({
-        success: true,
-        data: result
-      }, 200);
-    } catch (error) {
-      console.error('getDailyAverage error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal Server Error'
-      }, 500);
-    }
+    const loginUserId = c.get('loginUserId');
+    const result = await this.getDailyAverageQuery.run(loginUserId);
+    const output = toDailyAverageOutput(result);
+    
+    return c.json(output, 200);
   }
 }

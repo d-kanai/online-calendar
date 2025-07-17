@@ -84,7 +84,9 @@ async getMeetingById(c: Context) {
   - 🏷️ **命名規約**: クラス名はユーザーアクション名とする
     - 例: `CreateMeetingCommand`, `GetAllMeetingsQuery`
   - ⚡ **単一責任**: 1つのクエリ/コマンドは1つの処理のみ実行
-- **依存**: Domain層とInfra層のRepositoryのみ
+- **依存**: 
+  - Command: Domain層とInfra層のRepositoryのみ
+  - Query: Prismaの直接使用可（Repository不要）
 
 #### 🎯 Application層の役割を最小化
 - **🚫 禁止事項**: Application層での以下の処理は厳禁
@@ -174,6 +176,43 @@ export class BadRequestException extends HttpException {
 export class NotFoundException extends HttpException {
   constructor(message: string = 'Not found') {
     super(404, message);
+  }
+}
+```
+
+#### 🧮 Query層の計算ロジック分離
+- **🎯 原則**: Queryのインフラ依存しない処理は専用クラスに切り出す
+- **📐 実装パターン**: `XxxCalculator`クラスで`run()`メソッド実行
+- **🚫 Query制約**: 
+  - Domain Modelを通さない（読み取り専用のため）
+  - Repositoryも不要（Prismaを直接使用可）
+  - 複雑な計算は専用Calculatorクラスへ委譲
+
+```typescript
+// ✅ 推奨：計算ロジックを分離
+export class GetDailyAverageQuery {
+  async run(userId: string): Promise<DailyAverageData> {
+    // Prismaを直接使用（Repository不要）
+    const meetings = await this.findMeetingsByDateRange(userId);
+    
+    // 計算ロジックは専用クラスへ委譲
+    const calculator = new DailyAverageStatCalculator(meetings);
+    return calculator.run();
+  }
+  
+  private async findMeetingsByDateRange(userId: string) {
+    return await prisma.meeting.findMany({
+      where: { /* ... */ }
+    });
+  }
+}
+
+// 計算専用クラス
+export class DailyAverageStatCalculator {
+  constructor(private readonly meetings: Meeting[]) {}
+  
+  run(): DailyAverageData {
+    // インフラ依存のない純粋な計算ロジック
   }
 }
 ```
@@ -776,3 +815,20 @@ export class MeetingController {
 - **テスタビリティ**: Controllerを単体でテスト可能
 - **一貫性**: 全モジュールで同じパターンを使用
 - **柔軟性**: ミドルウェアやエラーハンドラーの管理が容易
+
+## 📋 基本的なコーディングルール
+
+| 項目 | 制限値・ルール | 説明・理由 |
+|------|---------------|-----------|
+| **メソッド行数** | 30行以下 | 一つのメソッドは簡潔に保つ |
+| **引数の数** | 3個以下 | コンストラクタは例外 |
+| **クラス行数** | 150行以下 | importなど除く実質的な行数 |
+| **循環複雑度** | 10以下 | 条件分岐・ループの複雑さ |
+| **認知的複雑度** | 10以下 | 人間の理解しやすさ |
+| **ネスト数** | 2以下 | if文、for文の入れ子 |
+| **変数** | 基本的に`const`利用 | イミュータブルで安全 |
+| **ループ** | 宣言型推奨 | 宣言的スタイル |
+| **Data Class** | 避ける | ビジネスロジックを追加 |
+| **Feature Envy** | 避ける | 責務を適切に配置 |
+| **Tell Don't Ask** | 避ける | オブジェクトに処理を委譲 |
+| **Primitive Obsession** | 避ける | Value Objectを活用 |
