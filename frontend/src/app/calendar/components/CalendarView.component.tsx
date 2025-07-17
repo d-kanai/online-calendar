@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Button } from '@/lib/ui/button';
 import { Card } from '@/lib/ui/card';
 import { Meeting } from '@/types/meeting';
 import { usePrefetchMeetings } from '../hooks/usePrefetchMeetings';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { ErrorFallback } from '@/components/ErrorFallback';
 
 interface CalendarViewProps {
   meetings: Meeting[];

@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
+import { ErrorBoundary } from 'react-error-boundary';
 import { useAuth } from '../contexts/AuthContext';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { ErrorFallback } from '@/components/ErrorFallback';
 
-export default function Home() {
+function HomeContent() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   
@@ -21,7 +24,7 @@ export default function Home() {
   
   // ローディング中は何も表示しない
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">読み込み中...</div>;
+    return <LoadingSpinner message="読み込み中..." />;
   }
 
   return (
@@ -29,6 +32,18 @@ export default function Home() {
       <div className="text-center">
         <div className="text-lg text-muted-foreground">リダイレクト中...</div>
       </div>
+    </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Suspense fallback={<LoadingSpinner message="アプリケーションを読み込んでいます..." />}>
+          <HomeContent />
+        </Suspense>
+      </ErrorBoundary>
     </div>
   );
 }

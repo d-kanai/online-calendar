@@ -1,8 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 import { SignUpForm } from '../components/SignUpForm.component';
 import { Calendar } from 'lucide-react';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { ErrorFallback } from '@/components/ErrorFallback';
 
 export default function SignUpPage() {
   return (
@@ -33,7 +36,11 @@ export default function SignUpPage() {
             <span className="text-2xl">Awesome Calendar</span>
           </div>
 
-          <SignUpForm />
+          <ErrorBoundary FallbackComponent={ErrorFallback}>
+            <Suspense fallback={<LoadingSpinner message="読み込み中..." />}>
+              <SignUpForm />
+            </Suspense>
+          </ErrorBoundary>
         </div>
       </div>
     </div>
