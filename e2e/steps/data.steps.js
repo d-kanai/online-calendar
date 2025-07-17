@@ -18,6 +18,14 @@ Given('会議 {string} を作成済み', async function (title) {
   
   const meeting = await MeetingFactory.createTomorrow(owner.id, { title });
   
+  // 参加者招待テスト用に hanako ユーザーを事前作成
+  if (title === 'チームミーティング') {
+    await UserFactory.create({
+      email: 'hanako@example.com',
+      name: 'hanako'
+    });
+  }
+  
   // 他のステップで使用するため保存
   this.createdMeeting = meeting;
 });
