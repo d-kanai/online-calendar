@@ -86,6 +86,18 @@ async getMeetingById(c: Context) {
   - ⚡ **単一責任**: 1つのクエリ/コマンドは1つの処理のみ実行
 - **依存**: Domain層とInfra層のRepositoryのみ
 
+#### 🎯 Application層の役割を最小化
+- **🚫 禁止事項**: Application層での以下の処理は厳禁
+  - 権限チェック（例: if (meeting.ownerId !== requesterId)）
+  - ビジネスルール判定（例: 開始時刻のチェック、参加者数制限）
+  - 存在確認以外のバリデーション（例: 参加者の重複チェック）
+  - 状態遷移の判定（例: 会議が開始済みかどうか）
+- **✅ 許可される処理**: 
+  - Repositoryからのデータ取得
+  - ドメインメソッドの呼び出し（すべての判定はドメイン内で）
+  - NotFoundExceptionのスロー（データが見つからない場合のみ）
+  - トランザクション管理
+
 #### 🎯 Application層の返却値ルール
 - **✅ ドメインオブジェクトをそのまま返却**: Application層はドメインモデルや値オブジェクトを直接返す
 - **🚫 DTOへの変換禁止**: toJSON()などのマッピング処理はPresentation層の責務
@@ -167,12 +179,40 @@ export class NotFoundException extends HttpException {
 ```
 
 ### 🎭 Domain層（ドメイン層）
-- **責務**: ビジネスルールとドメインモデルの定義、データvalidation
+- **責務**: ビジネスルールとドメインモデルの定義、データvalidation、すべてのビジネス判定
 - **構成**: 
   - エンティティクラス定義
   - 作成用データ型（`CreateXxxData`）
   - 更新用データ型（`UpdateXxxData`）
 - **依存**: 他の層に依存しない（最も内側の層）
+
+#### 🛡️ ドメイン層への処理集約ルール
+- **🎯 すべての判定はドメイン層で**: ビジネスに関わるあらゆる判定をドメインメソッド内に配置
+- **👤 requesterIdパターン**: 権限が必要な操作はrequesterIdを引数に含める
+  ```typescript
+  // ✅ 権限チェックを含むドメインメソッド
+  modifyDetails(data: UpdateData, requesterId: string): void {
+    if (this._ownerId !== requesterId) {
+      throw new Error('オーナーのみが編集できます');
+    }
+    // その他のビジネスルールチェック
+  }
+  ```
+- **🔍 存在チェックもドメイン内で**: 関連エンティティの存在確認もドメインが担当
+  ```typescript
+  removeParticipant(participantId: string, requesterId: string): void {
+    // 権限チェック
+    if (this._ownerId !== requesterId) {
+      throw new Error('オーナーのみが削除可能');
+    }
+    // 存在チェック
+    const participant = this._participants.find(p => p.id === participantId);
+    if (!participant) {
+      throw new Error('参加者が見つかりません');
+    }
+    // 削除処理
+  }
+  ```
 
 #### 🏭 Domain Model設計原則
 - **📊 テーブル対応モデル**: データベーステーブルに対応するモデルクラスを基本的に作成
@@ -223,32 +263,44 @@ export class NotFoundException extends HttpException {
 - **🎯 Application層の役割を最小化**:
   ```typescript
   // ❌ 悪い例：トランザクションスクリプト
-  class SignInCommand {
-    async execute(dto) {
-      const user = await repo.findByEmail(dto.email);
-      if (!user) throw new Error();
-      const isValid = await bcrypt.compare(dto.password, user.password);
-      if (!isValid) throw new Error();
-      const token = jwt.sign({...});
-      return { token, user };
+  class UpdateMeetingCommand {
+    async run(id, data, requesterId) {
+      const meeting = await repo.findById(id);
+      if (!meeting) throw new NotFoundException();
+      
+      // ❌ Application層での権限チェック
+      if (meeting.ownerId !== requesterId) {
+        throw new Error('オーナーのみが編集可能');
+      }
+      
+      // ❌ Application層での状態チェック
+      if (meeting.startTime <= new Date()) {
+        throw new Error('開始済みの会議は編集不可');
+      }
+      
+      meeting.modifyDetails(data);
+      return repo.save(meeting);
     }
   }
 
   // ✅ 良い例：ドメイン層への集約
-  class SignInCommand {
-    async execute(dto) {
-      const authUser = await repo.findByEmail(dto.email);
-      if (!authUser) throw new Error();
-      const token = await authUser.signin(dto.password); // 全てドメイン層で処理
-      return { token, user: authUser.toJSON() };
+  class UpdateMeetingCommand {
+    async run(id, data, requesterId) {
+      const meeting = await repo.findById(id);
+      if (!meeting) throw new NotFoundException();
+      
+      // ✅ すべての判定はドメイン層で
+      meeting.modifyDetails(data, requesterId);
+      return repo.save(meeting);
     }
   }
   ```
 - **🔍 ドメイン層移行のチェックリスト**:
-  - パスワード検証 → ドメインモデルのメソッドへ
-  - トークン生成 → ドメインモデルのメソッドへ
+  - 権限チェック → ドメインメソッドの引数にrequesterIdを追加
+  - 存在チェック（参加者など） → ドメインメソッド内で実施
   - ビジネスルールの判定 → ドメインモデルのメソッドへ
   - 状態の変更 → ドメインモデルのメソッドへ
+  - エラーメッセージ → ドメイン層で具体的なメッセージをthrow
 
 ```typescript
 import { z, ZodError } from 'zod';
