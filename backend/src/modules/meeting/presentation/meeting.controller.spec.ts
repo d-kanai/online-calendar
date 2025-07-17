@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeEach } from 'vitest';
 import { MeetingController } from './meeting.controller.js';
 import { prisma } from '../../../shared/database/prisma.js';
+import { UserFactory, MeetingFactory } from '../../../test/factories/index.js';
 
 // Mock Hono Context
 const createMockContext = (params: Record<string, string> = {}, jsonBody = {}, loginUserId = 'test-user-id') => ({
@@ -33,40 +34,12 @@ describe('MeetingController', () => {
 
   test('getAllMeetings - 全ての会議を取得してJSONレスポンスを返す', async () => {
     // Given - ユーザーを作成
-    const user1 = await prisma.user.create({
-      data: {
-        email: 'user123@example.com',
-        name: 'user123',
-        password: 'hashedpassword1'
-      }
-    });
-    const user2 = await prisma.user.create({
-      data: {
-        email: 'user456@example.com',
-        name: 'user456',
-        password: 'hashedpassword2'
-      }
-    });
+    const user1 = await UserFactory.create();
+    const user2 = await UserFactory.create();
     
     // テストデータを作成（特定の値は不要）
-    await prisma.meeting.create({
-      data: {
-        title: 'テスト会議1',
-        startTime: new Date('2025-01-15T10:00:00Z'),
-        endTime: new Date('2025-01-15T11:00:00Z'),
-        isImportant: false,
-        ownerId: user1.id
-      }
-    });
-    await prisma.meeting.create({
-      data: {
-        title: 'テスト会議2',
-        startTime: new Date('2025-01-16T14:00:00Z'),
-        endTime: new Date('2025-01-16T15:30:00Z'),
-        isImportant: true,
-        ownerId: user2.id
-      }
-    });
+    await MeetingFactory.create({ ownerId: user1.id });
+    await MeetingFactory.createImportant(user2.id);
 
     // When
     const mockContext = createMockContext();
@@ -80,13 +53,7 @@ describe('MeetingController', () => {
 
   test('createMeeting - 必要項目をすべて入力して会議を作成する', async () => {
     // Given - オーナーユーザーを作成
-    const owner = await prisma.user.create({
-      data: {
-        email: 'taro@example.com',
-        name: 'taro',
-        password: 'hashedpassword'
-      }
-    });
+    const owner = await UserFactory.createWithName('taro');
     
     // 会議作成リクエストデータを準備
     const meetingData = {
@@ -208,23 +175,12 @@ describe('MeetingController', () => {
 
   test('updateMeeting - 会議のタイトルと時刻を正常に更新できる', async () => {
     // Given - ユーザーを作成
-    const owner = await prisma.user.create({
-      data: {
-        email: 'taro@example.com',
-        name: 'taro',
-        password: 'hashedpassword'
-      }
-    });
+    const owner = await UserFactory.createWithName('taro');
     
     // 既存の会議を作成
-    const existingMeeting = await prisma.meeting.create({
-      data: {
-        title: '既存会議',
-        startTime: new Date('2025-01-15T10:00:00Z'),
-        endTime: new Date('2025-01-15T11:00:00Z'),
-        isImportant: false,
-        ownerId: owner.id
-      }
+    const existingMeeting = await MeetingFactory.create({
+      title: '既存会議',
+      ownerId: owner.id
     });
 
     const updateData = {
@@ -263,23 +219,12 @@ describe('MeetingController', () => {
 
   test('updateMeeting - 期間が15分未満の場合BadRequestExceptionを発生させる', async () => {
     // Given - ユーザーを作成
-    const owner = await prisma.user.create({
-      data: {
-        email: 'taro@example.com',
-        name: 'taro',
-        password: 'hashedpassword'
-      }
-    });
+    const owner = await UserFactory.createWithName('taro');
     
     // 既存の会議を作成
-    const existingMeeting = await prisma.meeting.create({
-      data: {
-        title: '既存会議',
-        startTime: new Date('2025-01-15T10:00:00Z'),
-        endTime: new Date('2025-01-15T11:00:00Z'),
-        isImportant: false,
-        ownerId: owner.id
-      }
+    const existingMeeting = await MeetingFactory.create({
+      title: '既存会議',
+      ownerId: owner.id
     });
 
     const updateData = {
@@ -297,23 +242,12 @@ describe('MeetingController', () => {
 
   test('addParticipant - オーナーが参加者を追加できる', async () => {
     // Given - オーナーユーザーを作成
-    const owner = await prisma.user.create({
-      data: {
-        email: 'taro@example.com',
-        name: 'taro',
-        password: 'hashedpassword'
-      }
-    });
+    const owner = await UserFactory.createWithName('taro');
     
     // 会議が存在する
-    const existingMeeting = await prisma.meeting.create({
-      data: {
-        title: 'チームミーティング',
-        startTime: new Date('2025-01-15T14:00:00Z'),
-        endTime: new Date('2025-01-15T15:00:00Z'),
-        isImportant: false,
-        ownerId: owner.id
-      }
+    const existingMeeting = await MeetingFactory.create({
+      title: 'チームミーティング',
+      ownerId: owner.id
     });
 
     const participantData = {
@@ -344,23 +278,12 @@ describe('MeetingController', () => {
 
   test('addParticipant - オーナー以外は参加者を追加できない', async () => {
     // Given - オーナーユーザーを作成
-    const owner = await prisma.user.create({
-      data: {
-        email: 'other@example.com',
-        name: 'other',
-        password: 'hashedpassword'
-      }
-    });
+    const owner = await UserFactory.createWithName('other');
     
     // 他のユーザーが作成した会議
-    const existingMeeting = await prisma.meeting.create({
-      data: {
-        title: 'チームミーティング',
-        startTime: new Date('2025-01-15T14:00:00Z'),
-        endTime: new Date('2025-01-15T15:00:00Z'),
-        isImportant: false,
-        ownerId: owner.id
-      }
+    const existingMeeting = await MeetingFactory.create({
+      title: 'チームミーティング',
+      ownerId: owner.id
     });
 
     const participantData = {
@@ -378,33 +301,19 @@ describe('MeetingController', () => {
 
   test('addParticipant - 最大参加者数（50名）を超えて追加できない', async () => {
     // Given - オーナーユーザーを作成
-    const owner = await prisma.user.create({
-      data: {
-        email: 'taro@example.com',
-        name: 'taro',
-        password: 'hashedpassword'
-      }
-    });
+    const owner = await UserFactory.createWithName('taro');
     
     // 会議を作成
-    const existingMeeting = await prisma.meeting.create({
-      data: {
-        title: 'チームミーティング',
-        startTime: new Date('2025-01-15T14:00:00Z'),
-        endTime: new Date('2025-01-15T15:00:00Z'),
-        isImportant: false,
-        ownerId: owner.id
-      }
+    const existingMeeting = await MeetingFactory.create({
+      title: 'チームミーティング',
+      ownerId: owner.id
     });
     
     // 既に50名の参加者を追加
     for (let i = 0; i < 50; i++) {
-      const user = await prisma.user.create({
-        data: {
-          email: `user${i}@example.com`,
-          name: `user${i}`,
-          password: 'hashedpassword'
-        }
+      const user = await UserFactory.create({
+        email: `user${i}@example.com`,
+        name: `user${i}`
       });
       await prisma.meetingParticipant.create({
         data: {
@@ -428,32 +337,15 @@ describe('MeetingController', () => {
 
   test('addParticipant - 既に参加している人を重複して追加できない', async () => {
     // Given - オーナーユーザーを作成
-    const owner = await prisma.user.create({
-      data: {
-        email: 'taro@example.com',
-        name: 'taro',
-        password: 'hashedpassword'
-      }
-    });
+    const owner = await UserFactory.createWithName('taro');
     
     // 参加者ユーザーを作成
-    const participant = await prisma.user.create({
-      data: {
-        email: 'hanako@example.com',
-        name: 'hanako',
-        password: 'hashedpassword'
-      }
-    });
+    const participant = await UserFactory.createWithName('hanako');
     
     // 会議を作成
-    const existingMeeting = await prisma.meeting.create({
-      data: {
-        title: 'チームミーティング',
-        startTime: new Date('2025-01-15T14:00:00Z'),
-        endTime: new Date('2025-01-15T15:00:00Z'),
-        isImportant: false,
-        ownerId: owner.id
-      }
+    const existingMeeting = await MeetingFactory.create({
+      title: 'チームミーティング',
+      ownerId: owner.id
     });
     
     // 既に参加者を追加
@@ -478,32 +370,15 @@ describe('MeetingController', () => {
 
   test('removeParticipant - オーナーが参加者を削除できる', async () => {
     // Given - オーナーユーザーを作成
-    const owner = await prisma.user.create({
-      data: {
-        email: 'taro@example.com',
-        name: 'taro',
-        password: 'hashedpassword'
-      }
-    });
+    const owner = await UserFactory.createWithName('taro');
     
     // 参加者ユーザーを作成
-    const participant = await prisma.user.create({
-      data: {
-        email: 'hanako@example.com',
-        name: 'hanako',
-        password: 'hashedpassword'
-      }
-    });
+    const participant = await UserFactory.createWithName('hanako');
     
     // 会議を作成
-    const existingMeeting = await prisma.meeting.create({
-      data: {
-        title: 'チームミーティング',
-        startTime: new Date('2025-01-15T14:00:00Z'),
-        endTime: new Date('2025-01-15T15:00:00Z'),
-        isImportant: false,
-        ownerId: owner.id
-      }
+    const existingMeeting = await MeetingFactory.create({
+      title: 'チームミーティング',
+      ownerId: owner.id
     });
     
     // 参加者を追加
@@ -535,32 +410,15 @@ describe('MeetingController', () => {
 
   test('removeParticipant - オーナー以外は参加者を削除できない', async () => {
     // Given - オーナーユーザーを作成
-    const owner = await prisma.user.create({
-      data: {
-        email: 'taro@example.com',
-        name: 'taro',
-        password: 'hashedpassword'
-      }
-    });
+    const owner = await UserFactory.createWithName('taro');
     
     // 参加者ユーザーを作成
-    const participant = await prisma.user.create({
-      data: {
-        email: 'hanako@example.com',
-        name: 'hanako',
-        password: 'hashedpassword'
-      }
-    });
+    const participant = await UserFactory.createWithName('hanako');
     
     // 会議を作成
-    const existingMeeting = await prisma.meeting.create({
-      data: {
-        title: 'チームミーティング',
-        startTime: new Date('2025-01-15T14:00:00Z'),
-        endTime: new Date('2025-01-15T15:00:00Z'),
-        isImportant: false,
-        ownerId: owner.id
-      }
+    const existingMeeting = await MeetingFactory.create({
+      title: 'チームミーティング',
+      ownerId: owner.id
     });
     
     // 参加者を追加
@@ -582,23 +440,12 @@ describe('MeetingController', () => {
 
   test('removeParticipant - 存在しない参加者の削除でNotFoundExceptionが発生する', async () => {
     // Given - オーナーユーザーを作成
-    const owner = await prisma.user.create({
-      data: {
-        email: 'taro@example.com',
-        name: 'taro',
-        password: 'hashedpassword'
-      }
-    });
+    const owner = await UserFactory.createWithName('taro');
     
     // 会議を作成
-    const existingMeeting = await prisma.meeting.create({
-      data: {
-        title: 'チームミーティング',
-        startTime: new Date('2025-01-15T14:00:00Z'),
-        endTime: new Date('2025-01-15T15:00:00Z'),
-        isImportant: false,
-        ownerId: owner.id
-      }
+    const existingMeeting = await MeetingFactory.create({
+      title: 'チームミーティング',
+      ownerId: owner.id
     });
 
     const removeData = {

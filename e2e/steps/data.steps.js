@@ -1,5 +1,6 @@
 const { Given } = require('@cucumber/cucumber');
 const { PrismaClient } = require('@prisma/client');
+const { UserFactory, MeetingFactory } = require('../support/factories');
 
 const prisma = new PrismaClient();
 
@@ -15,15 +16,7 @@ Given('会議 {string} を作成済み', async function (title) {
   const endTime = new Date(tomorrow);
   endTime.setHours(15, 0, 0, 0);
   
-  const meeting = await prisma.meeting.create({
-    data: {
-      title: title,
-      startTime: tomorrow,
-      endTime: endTime,
-      isImportant: false,
-      ownerId: owner.id
-    }
-  });
+  const meeting = await MeetingFactory.createTomorrow(owner.id, { title });
   
   // 他のステップで使用するため保存
   this.createdMeeting = meeting;
@@ -70,14 +63,9 @@ Given('重要会議 {string} を作成済み', async function (title) {
   const endTime = new Date(tomorrow);
   endTime.setHours(17, 0, 0, 0);
   
-  const meeting = await prisma.meeting.create({
-    data: {
-      title: title,
-      startTime: tomorrow,
-      endTime: endTime,
-      isImportant: true,
-      ownerId: owner.id
-    }
+  const meeting = await MeetingFactory.createTomorrow(owner.id, { 
+    title,
+    isImportant: true 
   });
   
   // 他のステップで使用するため保存
@@ -100,12 +88,9 @@ Given('会議 {string} に参加者 {string} を追加済み', async function (m
   });
   
   if (!participant) {
-    participant = await prisma.user.create({
-      data: {
-        email: participantEmail,
-        name: participantEmail.split('@')[0],
-        password: 'hashedpassword' // E2E用のダミーパスワード
-      }
+    participant = await UserFactory.create({
+      email: participantEmail,
+      name: participantEmail.split('@')[0]
     });
   }
   
@@ -129,15 +114,7 @@ Given('昨日の会議 {string} を作成済み', async function (title) {
   const endTime = new Date(yesterday);
   endTime.setHours(15, 0, 0, 0);
   
-  const meeting = await prisma.meeting.create({
-    data: {
-      title: title,
-      startTime: yesterday,
-      endTime: endTime,
-      isImportant: false,
-      ownerId: owner.id
-    }
-  });
+  const meeting = await MeetingFactory.createYesterday(owner.id, { title });
   
   // 他のステップで使用するため保存
   this.createdMeeting = meeting;
@@ -154,24 +131,12 @@ Given('参加者がいる会議がある', async function () {
   const endTime = new Date(tomorrow);
   endTime.setHours(15, 0, 0, 0);
   
-  const meeting = await prisma.meeting.create({
-    data: {
-      title: '参加者がいる会議',
-      startTime: tomorrow,
-      endTime: endTime,
-      isImportant: false,
-      ownerId: owner.id
-    }
+  const meeting = await MeetingFactory.createTomorrow(owner.id, {
+    title: '参加者がいる会議'
   });
   
   // 参加者ユーザーを作成
-  const participant = await prisma.user.create({
-    data: {
-      email: 'participant@example.com',
-      name: 'participant',
-      password: 'hashedpassword' // E2E用のダミーパスワード
-    }
-  });
+  const participant = await UserFactory.createWithName('participant');
   
   // 参加者を会議に追加
   const meetingParticipant = await prisma.meetingParticipant.create({

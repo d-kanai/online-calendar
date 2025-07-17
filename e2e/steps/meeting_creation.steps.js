@@ -1,34 +1,7 @@
-const { Given, When, Then, After, setDefaultTimeout } = require('@cucumber/cucumber');
-const { chromium, expect } = require('@playwright/test');
-const { PrismaClient } = require('@prisma/client');
-const CalendarPage = require('../page-objects/CalendarPage');
-const MeetingFormPage = require('../page-objects/MeetingFormPage');
+const { When, Then, setDefaultTimeout } = require('@cucumber/cucumber');
 
 // タイムアウトを60秒に設定
 setDefaultTimeout(60000);
-
-const prisma = new PrismaClient();
-
-let browser;
-let page;
-let calendarPage;
-let meetingFormPage;
-
-Given('オーナーがログインしている', async function () {
-  // データベースリセット - 全テーブルをクリア
-  await prisma.meeting.deleteMany();
-  
-  // ブラウザとページを初期化
-  browser = await chromium.launch({ headless: true });
-  page = await browser.newPage();
-  
-  // Page Objectインスタンスを作成
-  calendarPage = new CalendarPage(page);
-  meetingFormPage = new MeetingFormPage(page);
-  
-  // トップページにアクセス（ログイン済み状態と仮定）
-  await calendarPage.navigate();
-});
 
 When('title {string}, period {string}, important flag {string} で会議を作成する', async function (title, period, importantFlag) {
   // Page Objectを使用した会議作成フロー

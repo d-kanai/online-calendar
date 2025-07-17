@@ -72,6 +72,31 @@ test('getAllMeetings - 複数の会議データが開始時刻順でソートさ
 
 ## 🚀 テスト共通ルール
 
+### 🏭 データ準備ルール
+- **Factory必須**: Given データ準備はUT（Unit Test）、AT（Acceptance Test）両方でFactoryを必ず利用すること
+- **直接のDB操作禁止**: `prisma.user.create()` などの直接的なDB操作は避け、必ずFactoryを経由する
+- **保守性向上**: スキーマ変更時の影響をFactoryに集約し、テストコードの保守性を高める
+
+```typescript
+// ❌ 悪い例 - 直接DB操作
+await prisma.user.create({
+  data: {
+    email: 'test@example.com',
+    name: 'Test User',
+    password: await bcrypt.hash('password', 10)
+  }
+});
+
+// ✅ 良い例 - Factory使用
+await UserFactory.create({
+  email: 'test@example.com',
+  name: 'Test User'
+});
+
+// ✅ より良い例 - ヘルパーメソッド使用
+await UserFactory.createWithName('Test User');
+```
+
 ### 📝 テストケース命名規約
 - **日本語で記述**: テストケース名は日本語で記述すること
 - **意図とWHYを込める**: テストの目的と検証したい理由を明確にする
