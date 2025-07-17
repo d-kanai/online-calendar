@@ -215,7 +215,6 @@ export class Meeting {
     
     const participant = MeetingParticipant.create(user.id, user.name, user.email);
     this._participants.push(participant);
-    this._updatedAt = new Date();
   }
 
   removeParticipant(userId: string, requesterId: string): void {
@@ -227,7 +226,6 @@ export class Meeting {
     const index = this._participants.findIndex(p => p.userId === userId);
     if (index > -1) {
       this._participants.splice(index, 1);
-      this._updatedAt = new Date();
     }
   }
 
