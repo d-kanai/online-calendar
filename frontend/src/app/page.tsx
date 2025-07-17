@@ -2,10 +2,8 @@
 
 import React, { useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import { ErrorBoundary } from 'react-error-boundary';
 import { useAuth } from '../contexts/AuthContext';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { ErrorFallback } from '@/components/ErrorFallback';
 
 function HomeContent() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -39,11 +37,9 @@ function HomeContent() {
 export default function Home() {
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <ErrorBoundary FallbackComponent={ErrorFallback}>
-        <Suspense fallback={<LoadingSpinner message="アプリケーションを読み込んでいます..." />}>
-          <HomeContent />
-        </Suspense>
-      </ErrorBoundary>
+      <Suspense fallback={<LoadingSpinner message="アプリケーションを読み込んでいます..." />}>
+        <HomeContent />
+      </Suspense>
     </div>
   );
 }

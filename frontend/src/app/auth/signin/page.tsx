@@ -1,11 +1,9 @@
 'use client';
 
 import React, { Suspense } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
 import { SignInForm } from '../components/SignInForm.component';
 import { Calendar } from 'lucide-react';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { ErrorFallback } from '@/components/ErrorFallback';
 
 export default function SignInPage() {
   return (
@@ -36,11 +34,9 @@ export default function SignInPage() {
             <span className="text-2xl">Awesome Calendar</span>
           </div>
 
-          <ErrorBoundary FallbackComponent={ErrorFallback}>
-            <Suspense fallback={<LoadingSpinner message="読み込み中..." />}>
-              <SignInForm />
-            </Suspense>
-          </ErrorBoundary>
+          <Suspense fallback={<LoadingSpinner message="読み込み中..." />}>
+            <SignInForm />
+          </Suspense>
         </div>
       </div>
     </div>
