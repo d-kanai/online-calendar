@@ -1,13 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
-import { SignInForm } from './SignInForm';
-import { SignUpForm } from './SignUpForm';
+import React from 'react';
+import { SignInForm } from '@/components/auth/SignInForm';
 import { Calendar } from 'lucide-react';
 
-export function AuthLayout() {
-  const [isSignUp, setIsSignUp] = useState(false);
-
+export default function SignInPage() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* 左側: ブランディング */}
@@ -36,11 +33,7 @@ export function AuthLayout() {
             <span className="text-2xl">Awesome Calendar</span>
           </div>
 
-          {isSignUp ? (
-            <SignUpForm onSwitchToSignIn={() => setIsSignUp(false)} />
-          ) : (
-            <SignInForm onSwitchToSignUp={() => setIsSignUp(true)} />
-          )}
+          <SignInForm />
         </div>
       </div>
     </div>

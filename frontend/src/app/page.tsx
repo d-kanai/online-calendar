@@ -2,7 +2,6 @@
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { AuthLayout } from '../components/auth/AuthLayout';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Home() {
@@ -13,16 +12,13 @@ export default function Home() {
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">読み込み中...</div>;
   }
-  
-  // 未認証の場合は認証画面を表示
-  if (!isAuthenticated) {
-    return <AuthLayout />;
-  }
 
-  // 認証済みの場合はカレンダーページにリダイレクト
+  // 認証状態に応じてリダイレクト
   useEffect(() => {
     if (isAuthenticated) {
       router.push('/calendar');
+    } else {
+      router.push('/signin');
     }
   }, [isAuthenticated, router]);
 

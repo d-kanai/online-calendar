@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '../../lib/ui/button';
 import { Input } from '../../lib/ui/input';
 import { Label } from '../../lib/ui/label';
@@ -10,10 +11,11 @@ import { SignInData } from '../../types/auth';
 import { AlertCircle, Mail, Lock } from 'lucide-react';
 
 interface SignInFormProps {
-  onSwitchToSignUp: () => void;
+  onSwitchToSignUp?: () => void;
 }
 
 export function SignInForm({ onSwitchToSignUp }: SignInFormProps) {
+  const router = useRouter();
   const { signIn, isLoading } = useAuth();
   const [formData, setFormData] = useState<SignInData>({
     email: '',
@@ -97,7 +99,7 @@ export function SignInForm({ onSwitchToSignUp }: SignInFormProps) {
         </p>
         <Button 
           variant="link" 
-          onClick={onSwitchToSignUp}
+          onClick={() => onSwitchToSignUp ? onSwitchToSignUp() : router.push('/signup')}
           className="p-0 h-auto"
           disabled={isLoading}
         >
