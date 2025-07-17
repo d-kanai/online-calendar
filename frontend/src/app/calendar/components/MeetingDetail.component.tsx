@@ -12,8 +12,8 @@ interface MeetingDetailProps {
   open: boolean;
   onClose: () => void;
   onEdit: (meeting: Meeting) => void;
-  onDelete: (meetingId: string) => void;
-  onParticipantsChange: (meetingId: string, participants: Meeting['participants']) => void;
+  onDelete: (meeting: Meeting) => void;
+  onParticipantsChange: (type: 'add' | 'remove', meetingId: string, data: { email?: string; participantId?: string }) => void;
   currentUser: string;
 }
 
@@ -84,7 +84,7 @@ export function MeetingDetail({
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => onDelete(meeting.id)}
+                  onClick={() => onDelete(meeting)}
                   className="text-destructive hover:text-destructive"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -144,7 +144,7 @@ export function MeetingDetail({
           <ParticipantManager
             meetingId={meeting.id}
             participants={meeting.participants}
-            onParticipantsChange={(participants) => onParticipantsChange(meeting.id, participants)}
+            onParticipantsChange={onParticipantsChange}
             owner={meeting.owner}
             currentUser={currentUser}
             isOwner={isOwner}

@@ -87,5 +87,22 @@ export const meetingApi = {
     
     const result = await response.json();
     return result;
+  },
+
+  async delete(id: string): Promise<ApiResponse<void>> {
+    const token = authService.getToken();
+    const response = await fetch(`${API_BASE_URL}/meetings/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    
+    if (response.ok) {
+      return { success: true, data: undefined };
+    }
+    
+    const result = await response.json();
+    return result;
   }
 };

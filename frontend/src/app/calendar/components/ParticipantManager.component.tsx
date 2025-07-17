@@ -21,7 +21,7 @@ import { toast } from 'sonner';
 interface ParticipantManagerProps {
   meetingId: string;
   participants: Participant[];
-  onParticipantsChange: (participants: Participant[]) => void;
+  onParticipantsChange: (type: 'add' | 'remove', meetingId: string, data: { email?: string; participantId?: string }) => void;
   owner: string;
   currentUser: string;
   isOwner: boolean;
@@ -74,30 +74,9 @@ export function ParticipantManager({
       return;
     }
     
-    try {
-      // Call backend API
-      const response = await meetingApi.addParticipant(meetingId, {
-        email,
-        name: email.split('@')[0]
-      });
-      
-      if (response.success) {
-        const newParticipant: Participant = {
-          id: Date.now().toString(),
-          email,
-          name: email.split('@')[0]
-        };
-        
-        onParticipantsChange([...participants, newParticipant]);
-        setNewParticipantEmail('');
-        toast.success(response.message || '参加者が追加されました');
-      } else {
-        setError(response.error || '参加者の追加に失敗しました');
-      }
-    } catch (error) {
-      console.error('API Error:', error);
-      setError('参加者の追加に失敗しました');
-    }
+    // API呼び出しは親コンポーネントでmutationを通じて実行
+    onParticipantsChange('add', meetingId, { email: email });
+    setNewParticipantEmail('');
   };
   
   const openDeleteDialog = (participant: Participant) => {
@@ -113,22 +92,10 @@ export function ParticipantManager({
   const removeParticipant = async () => {
     if (!participantToDelete) return;
     
-    try {
-      // Call backend API
-      const response = await meetingApi.removeParticipant(meetingId, participantToDelete.id);
-      
-      if (response.success) {
-        onParticipantsChange(participants.filter(p => p.id !== participantToDelete.id));
-        toast.success(response.message || '参加者が削除されました');
-        setDeleteDialogOpen(false);
-        setParticipantToDelete(null);
-      } else {
-        setError(response.error || '参加者の削除に失敗しました');
-      }
-    } catch (error) {
-      console.error('API Error:', error);
-      setError('参加者の削除に失敗しました');
-    }
+    // API呼び出しは親コンポーネントでmutationを通じて実行
+    onParticipantsChange('remove', meetingId, { participantId: participantToDelete.id });
+    setDeleteDialogOpen(false);
+    setParticipantToDelete(null);
   };
   
   // Notification toggle removed since notificationChannels is no longer part of Participant
@@ -221,8 +188,10 @@ export function ParticipantManager({
             className="w-full"
             onClick={() => {
               // 参加者が会議から退会する処理
-              const updatedParticipants = participants.filter(p => p.email !== currentUser);
-              onParticipantsChange(updatedParticipants);
+              const participant = participants.find(p => p.email === currentUser);
+              if (participant) {
+                onParticipantsChange('remove', meetingId, { participantId: participant.id });
+              }
             }}
           >
             会議から退会

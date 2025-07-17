@@ -1,33 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card } from '@/lib/ui/card';
 import { Clock, Calendar } from 'lucide-react';
-import { statsApi, DailyAverageResponse } from '../apis/stats.api';
+import { DailyAverageResponse } from '../apis/stats.api';
+import { useDailyAverage } from '../hooks/useStatsQuery';
 
 export function MeetingStats() {
-  const [dailyAverageData, setDailyAverageData] = useState<DailyAverageResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchDailyAverage = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const response = await statsApi.getDailyAverage();
-        if (response.success && response.data) {
-          setDailyAverageData(response.data);
-        } else {
-          setError(response.error || 'Failed to fetch daily average');
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchDailyAverage();
-  }, []);
+  // TanStack Query Hook
+  const { data: dailyAverageData, isLoading, error } = useDailyAverage();
 
   // Show loading state first
   if (isLoading) {
@@ -48,7 +27,7 @@ export function MeetingStats() {
       <div className="flex-1 overflow-y-auto">
         <div className="container mx-auto p-6 space-y-6">
           <div className="flex items-center justify-center h-64">
-            <div className="text-destructive">エラーが発生しました: {error}</div>
+            <div className="text-destructive">エラーが発生しました: {error instanceof Error ? error.message : 'Unknown error'}</div>
           </div>
         </div>
       </div>
