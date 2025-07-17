@@ -160,6 +160,59 @@ export class NotFoundException extends HttpException {
   - 例: `meeting.addParticipant(user)` （userIdではなくUserモデルを渡す）
   - ビジネスロジックの表現力と型安全性を向上
 
+#### 🎯 認証関連モデルの設計原則
+- **🔐 関心事の分離**: 認証用モデル（AuthUser）とビジネス用モデル（User）を分離
+  - AuthUser: 認証・認可に特化（パスワード管理、サインイン/サインアップ）
+  - User: ビジネスロジックに特化（パスワード情報を持たない）
+- **🎭 ビジネス的振る舞いの命名**: 
+  - `AuthUser.signup()`: 新規ユーザー登録（パスワードハッシュ化含む）
+  - `authUser.signin()`: ログイン認証（エラーもドメイン層で管理）
+  - 抽象的な`create`や`validatePassword`より具体的な振る舞いを表現
+- **🚨 エラーハンドリングの内包**: ビジネスルール違反はドメイン層でthrow
+  ```typescript
+  // AuthUser.signin()内で
+  if (!isValid) {
+    throw new Error('メールアドレスまたはパスワードが正しくありません');
+  }
+  ```
+
+#### 🚫 トランザクションスクリプトの回避とドメイン層への集約
+- **❌ Transaction Script反パターンの禁止**: 
+  - Application層に手続き的なビジネスロジックを書かない
+  - 複数の処理ステップをApplication層で組み立てるのを避ける
+- **✅ ドメイン層への責務集約**:
+  - インフラとのやり取り（Repository操作）以外は全てドメイン層へ
+  - ビジネスロジック、バリデーション、状態遷移はドメインモデルが担当
+- **🎯 Application層の役割を最小化**:
+  ```typescript
+  // ❌ 悪い例：トランザクションスクリプト
+  class SignInCommand {
+    async execute(dto) {
+      const user = await repo.findByEmail(dto.email);
+      if (!user) throw new Error();
+      const isValid = await bcrypt.compare(dto.password, user.password);
+      if (!isValid) throw new Error();
+      const token = jwt.sign({...});
+      return { token, user };
+    }
+  }
+
+  // ✅ 良い例：ドメイン層への集約
+  class SignInCommand {
+    async execute(dto) {
+      const authUser = await repo.findByEmail(dto.email);
+      if (!authUser) throw new Error();
+      const token = await authUser.signin(dto.password); // 全てドメイン層で処理
+      return { token, user: authUser.toJSON() };
+    }
+  }
+  ```
+- **🔍 ドメイン層移行のチェックリスト**:
+  - パスワード検証 → ドメインモデルのメソッドへ
+  - トークン生成 → ドメインモデルのメソッドへ
+  - ビジネスルールの判定 → ドメインモデルのメソッドへ
+  - 状態の変更 → ドメインモデルのメソッドへ
+
 ```typescript
 import { z, ZodError } from 'zod';
 

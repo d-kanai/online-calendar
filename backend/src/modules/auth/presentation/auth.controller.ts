@@ -2,7 +2,6 @@ import { Hono } from 'hono';
 import { PrismaClient } from '@prisma/client';
 import { ApiResponse } from '../../../shared/types/api-response';
 import { AuthRepository } from '../infra/auth.repository';
-import { AuthService } from '../domain/auth.service';
 import { SignInCommand } from '../application/commands/sign-in.command';
 import { SignUpCommand } from '../application/commands/sign-up.command';
 import { SignInDtoSchema } from '../application/dtos/sign-in.dto';
@@ -11,12 +10,10 @@ import { SignUpDtoSchema } from '../application/dtos/sign-up.dto';
 export class AuthController {
   private readonly app: Hono;
   private readonly authRepository: AuthRepository;
-  private readonly authService: AuthService;
 
   constructor(prisma: PrismaClient) {
     this.app = new Hono();
     this.authRepository = new AuthRepository(prisma);
-    this.authService = new AuthService();
     this.setupRoutes();
   }
 
@@ -26,7 +23,7 @@ export class AuthController {
         const body = await c.req.json();
         const dto = SignInDtoSchema.parse(body);
 
-        const signInCommand = new SignInCommand(this.authRepository, this.authService);
+        const signInCommand = new SignInCommand(this.authRepository);
         const result = await signInCommand.execute(dto);
 
         const response: ApiResponse<typeof result> = {
@@ -49,7 +46,7 @@ export class AuthController {
         const body = await c.req.json();
         const dto = SignUpDtoSchema.parse(body);
 
-        const signUpCommand = new SignUpCommand(this.authRepository, this.authService);
+        const signUpCommand = new SignUpCommand(this.authRepository);
         const result = await signUpCommand.execute(dto);
 
         const response: ApiResponse<typeof result> = {

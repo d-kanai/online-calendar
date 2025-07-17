@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 const AuthUserSchema = z.object({
   id: z.string(),
@@ -13,9 +14,12 @@ const AuthUserSchema = z.object({
 export type AuthUserProps = z.infer<typeof AuthUserSchema>;
 
 export class AuthUser {
+  private static readonly JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
+  private static readonly JWT_EXPIRES_IN = '24h';
+
   private constructor(private props: AuthUserProps) {}
 
-  static async create(data: {
+  static async signup(data: {
     email: string;
     name: string;
     password: string;
@@ -39,8 +43,20 @@ export class AuthUser {
     return new AuthUser(AuthUserSchema.parse(props));
   }
 
-  async validatePassword(password: string): Promise<boolean> {
-    return bcrypt.compare(password, this.props.password);
+  async signin(password: string): Promise<string> {
+    const isValid = await bcrypt.compare(password, this.props.password);
+    if (!isValid) {
+      throw new Error('メールアドレスまたはパスワードが正しくありません');
+    }
+    return this.generateToken();
+  }
+
+  generateToken(): string {
+    return jwt.sign(
+      { id: this.props.id, email: this.props.email },
+      AuthUser.JWT_SECRET,
+      { expiresIn: AuthUser.JWT_EXPIRES_IN }
+    );
   }
 
   get id(): string {

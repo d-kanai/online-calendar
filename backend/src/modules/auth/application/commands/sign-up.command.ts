@@ -1,12 +1,10 @@
 import { AuthRepository } from '../../infra/auth.repository';
-import { AuthService } from '../../domain/auth.service';
 import { AuthUser } from '../../domain/auth-user.model';
 import { SignUpDto } from '../dtos/sign-up.dto';
 
 export class SignUpCommand {
   constructor(
-    private readonly authRepository: AuthRepository,
-    private readonly authService: AuthService
+    private readonly authRepository: AuthRepository
   ) {}
 
   async execute(dto: SignUpDto): Promise<{ token: string; user: any }> {
@@ -15,7 +13,7 @@ export class SignUpCommand {
       throw new Error('このメールアドレスは既に登録されています');
     }
 
-    const authUser = await AuthUser.create({
+    const authUser = await AuthUser.signup({
       email: dto.email,
       name: dto.name,
       password: dto.password
@@ -23,10 +21,7 @@ export class SignUpCommand {
 
     await this.authRepository.save(authUser);
 
-    const token = this.authService.generateToken({
-      id: authUser.id,
-      email: authUser.email
-    });
+    const token = authUser.generateToken();
 
     return {
       token,
