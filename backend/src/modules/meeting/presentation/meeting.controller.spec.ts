@@ -27,15 +27,14 @@ describe('MeetingController', () => {
 
   beforeEach(async () => {
     meetingController = new MeetingController();
-    await prisma.meetingParticipant.deleteMany();
-    await prisma.meeting.deleteMany();
-    await prisma.user.deleteMany();
+    // setup.tsでクリーンアップされるので、ここでは不要
   });
 
   test('getAllMeetings - 全ての会議を取得してJSONレスポンスを返す', async () => {
     // Given - ユーザーを作成
     const user1 = await UserFactory.create();
     const user2 = await UserFactory.create();
+    
     
     // テストデータを作成（特定の値は不要）
     await MeetingFactory.create({ ownerId: user1.id });
@@ -244,6 +243,12 @@ describe('MeetingController', () => {
     // Given - オーナーユーザーを作成
     const owner = await UserFactory.createWithName('taro');
     
+    // 参加者ユーザーを事前に作成
+    const participant = await UserFactory.create({
+      email: 'hanako@example.com',
+      name: 'hanako'
+    });
+    
     // 会議が存在する
     const existingMeeting = await MeetingFactory.create({
       title: 'チームミーティング',
@@ -251,8 +256,8 @@ describe('MeetingController', () => {
     });
 
     const participantData = {
-      email: 'hanako@example.com',
-      name: 'hanako',
+      email: participant.email,
+      name: participant.name,
     };
 
     // When
@@ -269,11 +274,7 @@ describe('MeetingController', () => {
       where: { meetingId: existingMeeting.id }
     });
     expect(participants).toHaveLength(1);
-    
-    const participantUser = await prisma.user.findUnique({
-      where: { email: 'hanako@example.com' }
-    });
-    expect(participantUser).not.toBeNull();
+    expect(participants[0].userId).toBe(participant.id);
   });
 
   test('addParticipant - オーナー以外は参加者を追加できない', async () => {
@@ -323,9 +324,15 @@ describe('MeetingController', () => {
       });
     }
 
-    const participantData = {
+    // 新しい参加者を事前に作成
+    const newParticipant = await UserFactory.create({
       email: 'hanako@example.com',
-      name: 'hanako',
+      name: 'hanako'
+    });
+
+    const participantData = {
+      email: newParticipant.email,
+      name: newParticipant.name,
     };
 
     // When & Then

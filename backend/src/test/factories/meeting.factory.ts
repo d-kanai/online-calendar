@@ -1,11 +1,20 @@
-const { PrismaClient } = require('@prisma/client');
+import { Meeting } from '@prisma/client';
+import { prisma } from '../../shared/database/prisma.js';
 
-const prisma = new PrismaClient();
+interface MeetingFactoryOptions {
+  title?: string;
+  startTime?: Date;
+  endTime?: Date;
+  isImportant?: boolean;
+  ownerId?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
-class MeetingFactory {
+export class MeetingFactory {
   static counter = 0;
 
-  static async create(options = {}) {
+  static async create(options: MeetingFactoryOptions = {}): Promise<Meeting> {
     if (!options.ownerId) {
       throw new Error('ownerId is required for creating a meeting');
     }
@@ -37,7 +46,7 @@ class MeetingFactory {
   }
 
   // 明日の会議を作成
-  static async createTomorrow(ownerId, options = {}) {
+  static async createTomorrow(ownerId: string, options: Partial<MeetingFactoryOptions> = {}): Promise<Meeting> {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(14, 0, 0, 0);
@@ -54,7 +63,7 @@ class MeetingFactory {
   }
 
   // 昨日の会議を作成
-  static async createYesterday(ownerId, options = {}) {
+  static async createYesterday(ownerId: string, options: Partial<MeetingFactoryOptions> = {}): Promise<Meeting> {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     yesterday.setHours(14, 0, 0, 0);
@@ -71,7 +80,7 @@ class MeetingFactory {
   }
 
   // 特定の期間の会議を作成
-  static async createWithDuration(ownerId, minutes, options = {}) {
+  static async createWithDuration(ownerId: string, minutes: number, options: Partial<MeetingFactoryOptions> = {}): Promise<Meeting> {
     const startTime = new Date();
     startTime.setHours(14, 0, 0, 0);
     
@@ -87,7 +96,7 @@ class MeetingFactory {
   }
 
   // 重要な会議を作成
-  static async createImportant(ownerId, options = {}) {
+  static async createImportant(ownerId: string, options: Partial<MeetingFactoryOptions> = {}): Promise<Meeting> {
     return this.create({
       ownerId,
       isImportant: true,
@@ -95,5 +104,3 @@ class MeetingFactory {
     });
   }
 }
-
-module.exports = { MeetingFactory };

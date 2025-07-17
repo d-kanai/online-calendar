@@ -1,7 +1,6 @@
 import { MeetingRepository } from '../../infra/meeting.repository.js';
 import { UserRepository } from '../../../user/infra/user.repository.js';
 import { Meeting } from '../../domain/meeting.model.js';
-import { User } from '../../../user/domain/user.model.js';
 import { NotFoundException } from '../../../../shared/exceptions/http-exceptions.js';
 import { ForbiddenException } from '../../../../shared/exceptions/http-exceptions.js';
 
@@ -31,14 +30,10 @@ export class AddParticipantCommand {
       throw new ForbiddenException('参加者の追加はオーナーのみ可能です');
     }
     
-    // Find or create participant user
-    let participantUser = await this.userRepository.findByEmail(data.email);
+    // Find participant user
+    const participantUser = await this.userRepository.findByEmail(data.email);
     if (!participantUser) {
-      participantUser = User.create({
-        email: data.email,
-        name: data.name
-      });
-      participantUser = await this.userRepository.create(participantUser);
+      throw new NotFoundException('指定されたメールアドレスのユーザーが見つかりません');
     }
     
     // 参加者追加（ドメインロジックで重複・上限チェック）

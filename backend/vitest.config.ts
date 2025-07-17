@@ -8,6 +8,12 @@ export default defineConfig({
     testMatch: ['src/**/*.spec.ts', 'src/**/*.test.ts'],
     coverage: {
       reporter: ['text', 'json', 'html']
+    },
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true
+      }
     }
   }
 });

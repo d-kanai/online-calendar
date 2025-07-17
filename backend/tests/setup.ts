@@ -1,9 +1,6 @@
 import { beforeEach, beforeAll, afterAll } from 'vitest';
-import { PrismaClient } from '@prisma/client';
 import { resetSequence } from '@quramy/prisma-fabbrica';
-
-// テスト用のPrismaクライアント
-const prisma = new PrismaClient();
+import { prisma } from '../src/shared/database/prisma.js';
 
 // テスト開始前にデータベース接続確認
 beforeAll(async () => {
@@ -13,8 +10,10 @@ beforeAll(async () => {
 
 // 各テスト前にテーブルをクリア
 beforeEach(async () => {
-  // テーブルの全データを削除
+  // テーブルの全データを削除（外部キー制約順序に注意）
+  await prisma.meetingParticipant.deleteMany();
   await prisma.meeting.deleteMany();
+  await prisma.user.deleteMany();
   // ファクトリシーケンスをリセット
   resetSequence();
 });
@@ -24,4 +23,3 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-export { prisma };
