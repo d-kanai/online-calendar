@@ -162,3 +162,35 @@ Given('ユーザー {string} が登録済み', async function (email) {
   // 他のステップで使用するため保存
   this.inviteeUser = user;
 });
+
+Given('他のユーザーが作成した会議がある', async function () {
+  // 他のユーザー（オーナー）を作成
+  const owner = await UserFactory.create({
+    email: 'owner@example.com',
+    name: 'Owner'
+  });
+  
+  // 明日の14:00-15:00の会議を作成
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(14, 0, 0, 0);
+  
+  const endTime = new Date(tomorrow);
+  endTime.setHours(15, 0, 0, 0);
+  
+  const meeting = await MeetingFactory.createTomorrow(owner.id, {
+    title: '他のユーザーの会議'
+  });
+  
+  // 現在のユーザー（Daiki）を参加者として追加
+  await prisma.meetingParticipant.create({
+    data: {
+      meetingId: meeting.id,
+      userId: this.currentUser.id
+    }
+  });
+  
+  // 他のステップで使用するため保存
+  this.createdMeeting = meeting;
+  this.meetingOwner = owner;
+});

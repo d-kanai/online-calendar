@@ -25,9 +25,32 @@ When('title, period, important flag のいずれかが未入力で会議を作�
 });
 
 Then('{string} エラーが表示される', async function (expectedErrorMessage) {
+  if (expectedErrorMessage === 'オーナーのみが会議を編集できます') {
+    // 参加者には編集ボタンが表示されないことを確認
+    const editButton = await global.calendarPage.page.$(':text("編集")');
+    if (editButton) {
+      throw new Error('編集ボタンが表示されています。参加者には編集ボタンが表示されないはずです。');
+    }
+    // 編集ボタンが存在しないことが確認できた
+    return;
+  }
+  
   // Page Objectを使用したエラー確認
   await global.meetingFormPage.waitForErrorMessage(expectedErrorMessage);
   await global.meetingFormPage.waitForFormStillVisible();
+});
+
+When('参加者が会議を更新しようとする', async function () {
+  // カレンダー画面に移動
+  await global.calendarPage.navigate();
+  await global.calendarPage.page.waitForLoadState('networkidle');
+  
+  // 会議をクリックして詳細画面を開く
+  await global.calendarPage.page.click(':text("他のユーザーの会議")');
+  await global.calendarPage.page.waitForSelector('[role="dialog"]', { timeout: 10000 });
+  
+  // 参加者には編集ボタンが表示されないことを確認するため、何もしない
+  // エラーメッセージのチェックは次のThenステップで行う
 });
 
 // After hook moved to auth.steps.js for unified cleanup

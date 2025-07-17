@@ -93,6 +93,7 @@ export class MeetingController {
   async updateMeeting(c: Context) {
     const id = c.req.param('id');
     const body = await c.req.json<UpdateMeetingRequest>();
+    const loginUserId = c.get('loginUserId') as string;
 
     const updateData: any = {};
     if (body.title) updateData.title = body.title;
@@ -100,7 +101,7 @@ export class MeetingController {
     if (body.endTime) updateData.endTime = new Date(body.endTime);
     if (body.isImportant !== undefined) updateData.isImportant = body.isImportant;
 
-    const meeting = await this.updateMeetingCommand.run(id, updateData);
+    const meeting = await this.updateMeetingCommand.run(id, updateData, loginUserId);
     const meetingWithOwner = await this.helper.getMeetingWithOwner(meeting);
 
     return c.json<ApiResponse<UpdateMeetingOutput>>({

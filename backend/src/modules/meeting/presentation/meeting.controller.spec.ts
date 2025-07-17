@@ -190,7 +190,7 @@ describe('MeetingController', () => {
     };
 
     // When
-    const mockContext = createMockContext({ id: existingMeeting.id }, updateData);
+    const mockContext = createMockContext({ id: existingMeeting.id }, updateData, owner.id);
     const response = await meetingController.updateMeeting(mockContext as any);
 
     // Then
@@ -210,7 +210,7 @@ describe('MeetingController', () => {
     };
 
     // When & Then - NotFoundExceptionが発生することを確認
-    const mockContext = createMockContext({ id: 'non-existent-id' }, updateData);
+    const mockContext = createMockContext({ id: 'non-existent-id' }, updateData, 'any-user-id');
     await expect(meetingController.updateMeeting(mockContext as any))
       .rejects
       .toThrow('Meeting not found');
@@ -233,10 +233,37 @@ describe('MeetingController', () => {
     };
 
     // When & Then - BadRequestExceptionが発生することを確認
-    const mockContext = createMockContext({ id: existingMeeting.id }, updateData);
+    const mockContext = createMockContext({ id: existingMeeting.id }, updateData, owner.id);
     await expect(meetingController.updateMeeting(mockContext as any))
       .rejects
       .toThrow('会議は15分以上である必要があります');
+  });
+
+  test('updateMeeting - オーナー以外は会議を更新できない', async () => {
+    // Given - オーナーユーザーを作成
+    const owner = await UserFactory.createWithName('owner');
+    
+    // 他のユーザーを作成
+    const otherUser = await UserFactory.createWithName('participant');
+    
+    // オーナーが作成した既存の会議
+    const existingMeeting = await MeetingFactory.create({
+      title: '他のユーザーの会議',
+      ownerId: owner.id
+    });
+
+    const updateData = {
+      title: '参加者が変更した会議',
+      startTime: '2025-01-15T14:00:00Z',
+      endTime: '2025-01-15T15:30:00Z',
+      isImportant: false
+    };
+
+    // When & Then - オーナー以外がアクセスしてForbiddenExceptionが発生することを確認
+    const mockContext = createMockContext({ id: existingMeeting.id }, updateData, otherUser.id);
+    await expect(meetingController.updateMeeting(mockContext as any))
+      .rejects
+      .toThrow('オーナーのみが会議を編集できます');
   });
 
   test('addParticipant - オーナーが参加者を追加できる', async () => {
