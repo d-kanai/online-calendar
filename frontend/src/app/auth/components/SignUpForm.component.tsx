@@ -170,6 +170,7 @@ function SignInLink({ onSwitchToSignIn, isLoading }: { onSwitchToSignIn?: () => 
 
 // 🏗️ メインコンポーネント - 構造が一目瞭然
 export function SignUpForm({ onSwitchToSignIn }: SignUpFormProps) {
+  const router = useRouter();
   const { signUp, isLoading } = useAuth();
   
   const {
@@ -195,7 +196,8 @@ export function SignUpForm({ onSwitchToSignIn }: SignUpFormProps) {
         email: data.email,
         password: data.password
       });
-      // 成功時は自動的にリダイレクトされる
+      // 成功時はサインインページへリダイレクト
+      router.push('/auth/signin');
     } catch (error) {
       // APIエラーの場合、該当フィールドにエラーを設定
       if (error instanceof Error && error.message.includes('メールアドレス')) {
