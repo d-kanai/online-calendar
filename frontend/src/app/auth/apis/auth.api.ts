@@ -8,7 +8,7 @@ interface AuthResponse {
 }
 
 
-export const authService = {
+export const authApi = {
   async signUp(data: SignUpData): Promise<AuthResponse> {
     const response = await fetch(`${API_BASE_URL}/auth/signup`, {
       method: 'POST',

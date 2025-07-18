@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { User, AuthState, SignUpData, SignInData } from '../types/auth';
 import { toast } from 'sonner';
-import { authService } from '../app/auth/apis/auth.service';
+import { authApi } from '../app/auth/apis/auth.api';
 
 interface AuthContextType extends AuthState {
   signUp: (data: SignUpData) => Promise<void>;
@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // 初期化時に保存されたユーザー情報とトークンをチェック
   useEffect(() => {
     const currentUser = getCurrentUser();
-    const token = authService.getToken();
+    const token = authApi.getToken();
     
     if (currentUser && token) {
       dispatch({ type: 'SIGN_IN', payload: currentUser });
@@ -83,10 +83,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'LOADING', payload: true });
 
     try {
-      const response = await authService.signUp(data);
+      const response = await authApi.signUp(data);
       
       // トークンとユーザー情報を保存
-      authService.setToken(response.token);
+      authApi.setToken(response.token);
       storeCurrentUser(response.user);
 
       dispatch({ type: 'SIGN_IN', payload: response.user });
@@ -102,10 +102,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'LOADING', payload: true });
 
     try {
-      const response = await authService.signIn(data);
+      const response = await authApi.signIn(data);
       
       // トークンとユーザー情報を保存
-      authService.setToken(response.token);
+      authApi.setToken(response.token);
       storeCurrentUser(response.user);
 
       dispatch({ type: 'SIGN_IN', payload: response.user });
@@ -118,7 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = () => {
-    authService.removeToken();
+    authApi.removeToken();
     storeCurrentUser(null);
     dispatch({ type: 'SIGN_OUT' });
     toast.success('ログアウトしました');

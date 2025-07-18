@@ -1,5 +1,5 @@
 import { ApiMeeting, ApiResponse } from '../../../types/api';
-import { authService } from '../../auth/apis/auth.service';
+import { authApi } from '../../auth/apis/auth.api';
 import { API_BASE_URL } from '../../../lib/config';
 
 interface CreateMeetingRequest {
@@ -18,7 +18,7 @@ interface UpdateMeetingRequest {
 
 export const meetingApi = {
   async create(data: CreateMeetingRequest): Promise<ApiResponse<ApiMeeting>> {
-    const token = authService.getToken();
+    const token = authApi.getToken();
     const response = await fetch(`${API_BASE_URL}/meetings`, {
       method: 'POST',
       headers: {
@@ -36,7 +36,7 @@ export const meetingApi = {
   },
   
   async getAll(): Promise<ApiResponse<ApiMeeting[]>> {
-    const token = authService.getToken();
+    const token = authApi.getToken();
     const response = await fetch(`${API_BASE_URL}/meetings`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -46,7 +46,7 @@ export const meetingApi = {
   },
   
   async getById(id: string): Promise<ApiResponse<ApiMeeting>> {
-    const token = authService.getToken();
+    const token = authApi.getToken();
     const response = await fetch(`${API_BASE_URL}/meetings/${id}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -56,7 +56,7 @@ export const meetingApi = {
   },
   
   async update(id: string, data: UpdateMeetingRequest): Promise<ApiResponse<ApiMeeting>> {
-    const token = authService.getToken();
+    const token = authApi.getToken();
     const response = await fetch(`${API_BASE_URL}/meetings/${id}`, {
       method: 'PUT',
       headers: {
@@ -71,7 +71,7 @@ export const meetingApi = {
   },
 
   async addParticipant(meetingId: string, data: { email: string; name: string }): Promise<ApiResponse<ApiMeeting>> {
-    const token = authService.getToken();
+    const token = authApi.getToken();
     const response = await fetch(`${API_BASE_URL}/meetings/${meetingId}/participants`, {
       method: 'POST',
       headers: {
@@ -86,7 +86,7 @@ export const meetingApi = {
   },
 
   async removeParticipant(meetingId: string, participantId: string): Promise<ApiResponse<ApiMeeting>> {
-    const token = authService.getToken();
+    const token = authApi.getToken();
     const response = await fetch(`${API_BASE_URL}/meetings/${meetingId}/participants/${participantId}`, {
       method: 'DELETE',
       headers: {
@@ -100,7 +100,7 @@ export const meetingApi = {
   },
 
   async delete(id: string): Promise<ApiResponse<void>> {
-    const token = authService.getToken();
+    const token = authApi.getToken();
     const response = await fetch(`${API_BASE_URL}/meetings/${id}`, {
       method: 'DELETE',
       headers: {

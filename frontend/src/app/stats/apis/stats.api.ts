@@ -1,4 +1,4 @@
-import { authService } from '../../auth/apis/auth.service';
+import { authApi } from '../../auth/apis/auth.api';
 import { API_BASE_URL } from '../../../lib/config';
 
 interface DailyMeetingData {
@@ -20,7 +20,7 @@ interface StatsApiResponse {
 
 export const statsApi = {
   async getDailyAverage(): Promise<StatsApiResponse> {
-    const token = authService.getToken();
+    const token = authApi.getToken();
     
     if (!token) {
       throw new Error('No authentication token');
