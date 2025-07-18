@@ -81,57 +81,88 @@ export function AdvancedQueryDemo() {
     <div className="p-4 space-y-6">
       <h2 className="text-2xl font-bold">TanStack Query Advanced Patterns Demo</h2>
       
-      {/* 依存関係のあるクエリ */}
-      <section>
-        <h3 className="text-lg font-semibold">1. Dependent Queries</h3>
-        <p>User: {user?.name}</p>
-        <p>User Meetings: {userMeetings?.length || 0} meetings</p>
-      </section>
-
-      {/* 並列クエリ */}
-      <section>
-        <h3 className="text-lg font-semibold">2. Parallel Queries</h3>
-        <p>Fetched {meetingQueries.filter(q => q.isSuccess).length} of {meetingIds.length} meetings</p>
-      </section>
-
-      {/* 無限スクロール */}
-      <section>
-        <h3 className="text-lg font-semibold">3. Infinite Scroll</h3>
-        <div className="space-y-2">
-          {infiniteData?.pages.map((page, i) => (
-            <div key={i}>
-              Page {i + 1}: {page.meetings.length} meetings
-            </div>
-          ))}
-        </div>
-        {hasNextPage && (
-          <button
-            onClick={() => fetchNextPage()}
-            disabled={isFetchingNextPage}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded"
-          >
-            {isFetchingNextPage ? 'Loading...' : 'Load More'}
-          </button>
-        )}
-      </section>
-
-      {/* ポーリング */}
-      <section>
-        <h3 className="text-lg font-semibold">4. Polling (Auto-refresh every 5s)</h3>
-        <p>Live meeting count: {liveData?.data?.length || 0}</p>
-      </section>
-
-      {/* 条件付きフェッチ */}
-      <section>
-        <h3 className="text-lg font-semibold">5. Conditional Fetching</h3>
-        <button
-          onClick={() => setShouldFetch(!shouldFetch)}
-          className="px-4 py-2 bg-secondary text-secondary-foreground rounded"
-        >
-          {shouldFetch ? 'Stop Fetching' : 'Start Fetching'}
-        </button>
-        {conditionalData && <p>Fetched {conditionalData.data?.length || 0} meetings</p>}
-      </section>
+      <DependentQueriesSection user={user} userMeetings={userMeetings} />
+      <ParallelQueriesSection meetingQueries={meetingQueries} meetingIds={meetingIds} />
+      <InfiniteScrollSection 
+        infiniteData={infiniteData}
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        fetchNextPage={fetchNextPage}
+      />
+      <PollingSection liveData={liveData} />
+      <ConditionalFetchSection 
+        shouldFetch={shouldFetch}
+        setShouldFetch={setShouldFetch}
+        conditionalData={conditionalData}
+      />
     </div>
+  );
+}
+
+// 🎨 UIコンポーネント群
+function DependentQueriesSection({ user, userMeetings }: any) {
+  return (
+    <section>
+      <h3 className="text-lg font-semibold">1. Dependent Queries</h3>
+      <p>User: {user?.name}</p>
+      <p>User Meetings: {userMeetings?.length || 0} meetings</p>
+    </section>
+  );
+}
+
+function ParallelQueriesSection({ meetingQueries, meetingIds }: any) {
+  return (
+    <section>
+      <h3 className="text-lg font-semibold">2. Parallel Queries</h3>
+      <p>Fetched {meetingQueries.filter((q: any) => q.isSuccess).length} of {meetingIds.length} meetings</p>
+    </section>
+  );
+}
+
+function InfiniteScrollSection({ infiniteData, hasNextPage, isFetchingNextPage, fetchNextPage }: any) {
+  return (
+    <section>
+      <h3 className="text-lg font-semibold">3. Infinite Scroll</h3>
+      <div className="space-y-2">
+        {infiniteData?.pages.map((page: any, i: number) => (
+          <div key={i}>
+            Page {i + 1}: {page.meetings.length} meetings
+          </div>
+        ))}
+      </div>
+      {hasNextPage && (
+        <button
+          onClick={() => fetchNextPage()}
+          disabled={isFetchingNextPage}
+          className="px-4 py-2 bg-primary text-primary-foreground rounded"
+        >
+          {isFetchingNextPage ? 'Loading...' : 'Load More'}
+        </button>
+      )}
+    </section>
+  );
+}
+
+function PollingSection({ liveData }: any) {
+  return (
+    <section>
+      <h3 className="text-lg font-semibold">4. Polling (Auto-refresh every 5s)</h3>
+      <p>Live meeting count: {liveData?.data?.length || 0}</p>
+    </section>
+  );
+}
+
+function ConditionalFetchSection({ shouldFetch, setShouldFetch, conditionalData }: any) {
+  return (
+    <section>
+      <h3 className="text-lg font-semibold">5. Conditional Fetching</h3>
+      <button
+        onClick={() => setShouldFetch(!shouldFetch)}
+        className="px-4 py-2 bg-secondary text-secondary-foreground rounded"
+      >
+        {shouldFetch ? 'Stop Fetching' : 'Start Fetching'}
+      </button>
+      {conditionalData && <p>Fetched {conditionalData.data?.length || 0} meetings</p>}
+    </section>
   );
 }

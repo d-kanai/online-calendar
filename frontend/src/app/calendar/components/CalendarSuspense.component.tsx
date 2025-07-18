@@ -10,6 +10,7 @@ import { useMeetingsSuspense } from '../hooks/useMeetingsQuerySuspense';
 import { useCalendarState } from '../hooks/useCalendarState';
 import { useMeetingActions } from '../hooks/useMeetingActionsQuery';
 import { useReminderService } from '../hooks/useReminderService';
+import { Meeting } from '@/types/meeting';
 
 // Suspense対応のカレンダーコンテンツ
 function CalendarContent({ currentUser }: { currentUser: string }) {
@@ -48,20 +49,89 @@ function CalendarContent({ currentUser }: { currentUser: string }) {
 
   return (
     <>
-      <div className="flex-1 overflow-hidden">
-        <CalendarView
-          meetings={meetings}
-          onDateSelect={handleDateSelect}
-          onMeetingSelect={handleMeetingSelect}
-          onCreateMeeting={handleCreateMeeting}
-        />
-      </div>
+      <CalendarViewSection
+        meetings={meetings}
+        onDateSelect={handleDateSelect}
+        onMeetingSelect={handleMeetingSelect}
+        onCreateMeeting={handleCreateMeeting}
+      />
       
+      <CalendarModals
+        meetings={meetings}
+        currentUser={currentUser}
+        showMeetingForm={showMeetingForm}
+        editingMeeting={editingMeeting ?? null}
+        selectedDate={selectedDate}
+        showMeetingDetail={showMeetingDetail}
+        selectedMeetingId={selectedMeetingId}
+        onCloseForm={handleCloseForm}
+        onMeetingSubmit={handleMeetingSubmit}
+        onCloseDetail={handleCloseDetail}
+        onEditMeeting={handleEditMeeting}
+        onMeetingDelete={handleMeetingDelete}
+        onParticipantsChange={handleParticipantsChange}
+      />
+      
+      <Toaster />
+    </>
+  );
+}
+
+// 🎨 UIコンポーネント群
+function CalendarViewSection({ meetings, onDateSelect, onMeetingSelect, onCreateMeeting }: {
+  meetings: Meeting[];
+  onDateSelect: (date: Date) => void;
+  onMeetingSelect: (meetingId: string) => void;
+  onCreateMeeting: () => void;
+}) {
+  return (
+    <div className="flex-1 overflow-hidden">
+      <CalendarView
+        meetings={meetings}
+        onDateSelect={onDateSelect}
+        onMeetingSelect={onMeetingSelect}
+        onCreateMeeting={onCreateMeeting}
+      />
+    </div>
+  );
+}
+
+function CalendarModals({ 
+  meetings, 
+  currentUser,
+  showMeetingForm,
+  editingMeeting,
+  selectedDate,
+  showMeetingDetail,
+  selectedMeetingId,
+  onCloseForm,
+  onMeetingSubmit,
+  onCloseDetail,
+  onEditMeeting,
+  onMeetingDelete,
+  onParticipantsChange
+}: {
+  meetings: Meeting[];
+  currentUser: string;
+  showMeetingForm: boolean;
+  editingMeeting: Meeting | null;
+  selectedDate: Date | null;
+  showMeetingDetail: boolean;
+  selectedMeetingId: string | null;
+  onCloseForm: () => void;
+  onMeetingSubmit: (meeting: Omit<Meeting, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  onCloseDetail: () => void;
+  onEditMeeting: (meeting: Meeting) => void;
+  onMeetingDelete: (meeting: Meeting) => void;
+  onParticipantsChange: (type: 'add' | 'remove', meetingId: string, data: { email?: string; participantId?: string }) => void;
+}) {
+  return (
+    <>
       <MeetingForm
         open={showMeetingForm}
-        onClose={handleCloseForm}
-        onSubmit={handleMeetingSubmit}
-        meeting={editingMeeting}
+        onClose={onCloseForm}
+        onSubmit={onMeetingSubmit}
+        meeting={editingMeeting ?? undefined}
         selectedDate={selectedDate ?? undefined}
         existingMeetings={meetings}
         currentUser={currentUser}
@@ -70,14 +140,12 @@ function CalendarContent({ currentUser }: { currentUser: string }) {
       <MeetingDetailQuery
         meetingId={selectedMeetingId}
         open={showMeetingDetail}
-        onClose={handleCloseDetail}
-        onEdit={handleEditMeeting}
-        onDelete={handleMeetingDelete}
-        onParticipantsChange={handleParticipantsChange}
+        onClose={onCloseDetail}
+        onEdit={onEditMeeting}
+        onDelete={onMeetingDelete}
+        onParticipantsChange={onParticipantsChange}
         currentUser={currentUser}
       />
-      
-      <Toaster />
     </>
   );
 }
