@@ -5,7 +5,7 @@ import {
   useDeleteMeeting,
   useAddParticipant,
   useRemoveParticipant
-} from './useMeetingsQuery';
+} from './useMeetingMutations';
 
 interface UseMeetingActionsProps {
   editingMeeting?: Meeting;

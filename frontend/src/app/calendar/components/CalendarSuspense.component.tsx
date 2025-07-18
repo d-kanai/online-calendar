@@ -6,9 +6,9 @@ import { CalendarView } from './CalendarView.component';
 import { MeetingForm } from './MeetingForm.component';
 import { MeetingDetailQuery } from './MeetingDetailQuery.component';
 import { Toaster } from 'sonner';
-import { useMeetingsSuspense } from '../hooks/useMeetingsQuerySuspense';
+import { useMeetingsSuspense } from '../hooks/useMeetingsSuspense';
 import { useCalendarState } from '../hooks/useCalendarState';
-import { useMeetingActions } from '../hooks/useMeetingActionsQuery';
+import { useMeetingActions } from '../hooks/useMeetingActions';
 import { useReminderService } from '../hooks/useReminderService';
 import { Meeting } from '@/types/meeting';
 

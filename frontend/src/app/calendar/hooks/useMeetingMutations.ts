@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Meeting } from '../../../types/meeting';
 import { ApiMeeting, ApiParticipant } from '../../../types/api';
 import { meetingApi } from '../apis/meeting.api';
@@ -23,81 +23,6 @@ const mapApiToMeeting = (apiMeeting: ApiMeeting): Meeting => ({
   createdAt: new Date(apiMeeting.createdAt),
   updatedAt: new Date(apiMeeting.updatedAt)
 });
-
-// 会議一覧の取得（既存のuseMeetingsと互換性を保つ）
-export const useMeetings = (filters?: { date?: Date; ownerId?: string }) => {
-  const queryClient = useQueryClient();
-  
-  const { data: meetings = [], isLoading, error } = useQuery({
-    queryKey: queryKeys.meetingsList(filters),
-    queryFn: async () => {
-      const response = await meetingApi.getAll();
-      if (response.success && response.data) {
-        const allMeetings = response.data.map(mapApiToMeeting);
-        
-        // フィルタリング
-        let filtered = allMeetings;
-        if (filters?.date) {
-          const targetDate = filters.date.toDateString();
-          filtered = filtered.filter(m => 
-            new Date(m.startTime).toDateString() === targetDate
-          );
-        }
-        if (filters?.ownerId) {
-          filtered = filtered.filter(m => m.ownerId === filters.ownerId);
-        }
-        
-        return filtered;
-      }
-      throw new Error('Failed to fetch meetings');
-    },
-    staleTime: 30 * 1000, // 30秒
-    gcTime: 5 * 60 * 1000, // 5分
-  });
-
-  // 既存のインターフェースとの互換性のため
-  const loadMeetings = async () => {
-    await invalidateHelpers.invalidateAllMeetings(queryClient);
-  };
-
-  const updateMeetings = (updater: (prev: Meeting[]) => Meeting[]) => {
-    queryClient.setQueryData(queryKeys.meetingsList(filters), updater);
-  };
-
-  return {
-    meetings,
-    isLoading,
-    error: error ? '会議の取得に失敗しました' : null,
-    loadMeetings,
-    updateMeetings
-  };
-};
-
-// 会議詳細の取得（新規）
-export const useMeetingDetail = (meetingId: string | null) => {
-  const queryClient = useQueryClient();
-  
-  return useQuery({
-    queryKey: queryKeys.meetingDetail(meetingId!),
-    queryFn: async () => {
-      // まずキャッシュから取得を試みる
-      const cachedMeeting = cacheHelpers.getMeetingFromList(queryClient, meetingId!);
-      if (cachedMeeting) {
-        return cachedMeeting;
-      }
-      
-      // キャッシュになければAPIから取得
-      const response = await meetingApi.getById(meetingId!);
-      if (response.success && response.data) {
-        return mapApiToMeeting(response.data);
-      }
-      throw new Error('Failed to fetch meeting detail');
-    },
-    enabled: !!meetingId,
-    staleTime: 60 * 1000, // 1分
-    gcTime: 10 * 60 * 1000, // 10分
-  });
-};
 
 // 会議作成のMutation
 export const useCreateMeeting = () => {

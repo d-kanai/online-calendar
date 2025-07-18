@@ -7,7 +7,7 @@ import { Separator } from '@/lib/ui/separator';
 import { ParticipantManager } from './ParticipantManager.component';
 import { Meeting } from '@/types/meeting';
 import { Calendar, Clock, User, Star, Edit, Trash2 } from 'lucide-react';
-import { useMeetingDetailSuspense } from '../hooks/useMeetingsQuerySuspense';
+import { useMeetingDetailSuspense } from '../hooks/useMeetingsSuspense';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorFallback } from '@/components/ErrorFallback';
 
