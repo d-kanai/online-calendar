@@ -47,7 +47,9 @@ class ApiClient {
   ): Promise<ApiResponse<T>> {
     try {
       const authHeaders = await this.getAuthHeaders();
-      const url = new URL(endpoint, this.baseURL);
+      // エンドポイントが/で始まる場合は削除（new URLの仕様対応）
+      const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+      const url = new URL(cleanEndpoint, this.baseURL.endsWith('/') ? this.baseURL : this.baseURL + '/');
       
       // URLパラメータの追加
       if (options.params) {

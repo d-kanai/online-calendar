@@ -29,22 +29,37 @@ BeforeAll(async function () {
   browser = await chromium.launch({ headless });
   page = await browser.newPage();
   
-  // デバッグモードの場合、ブラウザのコンソールログを出力
-  if (isDebugMode) {
-    page.on('console', msg => {
-      const type = msg.type();
-      const text = msg.text();
-      console.log(`[Browser ${type}]`, text);
-    });
-    
-    page.on('pageerror', error => {
-      console.error('[Browser Error]', error.message);
-    });
-    
-    page.on('requestfailed', request => {
+  // ブラウザのコンソールログを常に出力
+  page.on('console', async msg => {
+    const type = msg.type();
+    const args = await Promise.all(msg.args().map(arg => arg.jsonValue().catch(() => arg.toString())));
+    console.log(`[Browser ${type}]`, ...args);
+  });
+  
+  page.on('pageerror', error => {
+    console.error('[Browser Error]', error.message);
+  });
+  
+  page.on('requestfailed', request => {
+    if (!request.url().includes('_next/static')) {
       console.error('[Network Error]', `${request.method()} ${request.url()} failed: ${request.failure().errorText}`);
-    });
-  }
+    }
+  });
+  
+  // APIレスポンスをログ出力
+  page.on('response', async response => {
+    if (response.url().includes('/api/')) {
+      console.log(`[API] ${response.status()} ${response.url()}`);
+      if (response.status() >= 400) {
+        try {
+          const body = await response.text();
+          console.error('[API Error Response]', body);
+        } catch (e) {
+          console.error('[API Error] Could not read response body');
+        }
+      }
+    }
+  });
   
   // Page Objectインスタンスを作成
   global.calendarPage = new CalendarPage(page);
