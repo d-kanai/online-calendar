@@ -716,6 +716,68 @@ export function CalendarPage() {
 - **エラーハンドリング**: 一貫したエラー処理とロールバック機能
 - **開発体験**: React DevToolsとTanStack Query DevToolsでの可視化
 
+### 📁 React Query hooksの命名規則とファイル構成
+
+#### 命名規則
+- **Query系（データ取得）**: `useXxxQuery.ts`
+  - Suspense版も同じファイルに含める
+  - 例: `useMeetingsQuery.ts`
+- **Mutation系（データ変更）**: `useXxxMutations.ts`
+  - ビジネスロジックを含むラッパー関数
+  - 例: `useMeetingMutations.ts`
+- **内部実装**: `_useXxxMutations.ts`
+  - React Query の mutation 定義
+  - 外部から直接使用しない
+  - 例: `_useMeetingMutations.ts`
+
+#### ファイル構成例
+```typescript
+// hooks/useMeetingsQuery.ts - Query系（データ取得）
+export function useMeetingsSuspense() {
+  const { data: meetings } = useSuspenseQuery({
+    queryKey: queryKeys.meetingsList(),
+    queryFn: getMeetings
+  });
+  return { meetings };
+}
+
+export function useMeetingDetailSuspense(id: string) {
+  const { data: meeting } = useSuspenseQuery({
+    queryKey: queryKeys.meetingDetail(id),
+    queryFn: () => getMeetingById(id)
+  });
+  return { meeting };
+}
+
+// hooks/useMeetingMutations.ts - Mutation系（公開API）
+import { useCreateMeeting as _useCreateMeeting } from './_useMeetingMutations';
+
+export function useMeetingActions() {
+  const createMutation = _useCreateMeeting();
+  
+  const handleCreateMeeting = async (data: CreateMeetingData) => {
+    // UIステート管理やビジネスロジック
+    await createMutation.mutateAsync(data);
+    // 後処理
+  };
+  
+  return { handleCreateMeeting };
+}
+
+// hooks/_useMeetingMutations.ts - 内部実装
+export function useCreateMeeting() {
+  return useMutation({
+    mutationFn: createMeetingAPI,
+    onSuccess: invalidateMeetings
+  });
+}
+```
+
+#### メリット
+- **明確な責任分離**: Query（読み取り）とMutation（書き込み）が明確
+- **React Query標準への準拠**: 一般的な命名規則に従う
+- **内部実装の隠蔽**: _プレフィックスで実装詳細を隠す
+
 ## 🔄 統一API クライアントパターン
 
 ### 🎯 基本原則
