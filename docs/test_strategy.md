@@ -7,8 +7,7 @@
 | **TestA** | Backend | API in-out Test |
 | **TestB** | Backend | Domain Layer Pattern Test |
 | **TestC** | Frontend | Page Event Test |
-| **TestD** | Frontend | Page Behavior Test |
-| **TestE** | E2E Test | Scenario Test |
+| **TestD** | E2E Test | Scenario Test |
 
 ## 🎯 TestA: Controller API テスト
 
@@ -156,6 +155,7 @@ test('メソッド名 - 期待する動作の詳細説明', async () => {
 | **更新API (Mutation)** | フォーム送信の検証 | **Given**: フォーム入力とsubmit<br>**When**: ユーザー操作をシミュレート<br>**Then**: ①APIに正しいパラメータが渡される<br>②成功時のルーティング<br>③トースト通知の表示 |
 | **フォームバリデーション** | 入力検証の確認 | **Given**: 不正な入力値<br>**When**: フォーム送信を試行<br>**Then**: ①エラーメッセージが表示される<br>②APIが呼ばれないことを確認 |
 | **イベントハンドリング** | 全イベントのカバー | **Given**: ページ/コンポーネントのレンダリング<br>**When**: クリック等のユーザーイベント発生<br>**Then**: 期待される振る舞い（ルーティング、状態変更等）を確認<br>**注**: カバレッジレポートで未カバーのイベントを特定 |
+| **APIレスポンス検証** | データの包括的アサート | **原則**: APIで返すデータは基本的に画面で使用されるため、モックで設定した値は可能な限り画面でアサートする<br>**実装**: モックデータの全フィールドが画面に表示されることを確認 |
 
 ### 📝 実装例
 
@@ -177,6 +177,50 @@ it('会議一覧が表示される', async () => {
   await waitFor(() => {
     expect(screen.getByText('チームミーティング')).toBeVisible();
     expect(screen.getByText('進捗確認')).toBeVisible();
+  });
+});
+```
+
+#### APIレスポンス包括的アサートのテスト
+```typescript
+it('統計データが正しく表示される', async () => {
+  // Given - APIレスポンスを詳細にモック
+  const mockStatsData = {
+    averageDailyMinutes: 120.5,
+    weeklyData: [
+      { date: '2024-01-15', dayName: '月', totalMinutes: 90 },
+      { date: '2024-01-16', dayName: '火', totalMinutes: 150 },
+      { date: '2024-01-17', dayName: '水', totalMinutes: 120 },
+      { date: '2024-01-18', dayName: '木', totalMinutes: 180 },
+      { date: '2024-01-19', dayName: '金', totalMinutes: 60 },
+      { date: '2024-01-20', dayName: '土', totalMinutes: 0 },
+      { date: '2024-01-21', dayName: '日', totalMinutes: 0 },
+    ],
+  };
+
+  // When - ページをレンダリング
+  renderWithProviders(<StatsPage />);
+
+  // Then - APIで返す全データが画面に表示されることを確認
+  await waitFor(() => {
+    // 平均値のアサート
+    expect(screen.getByTestId('daily-average-time')).toHaveTextContent('120.5分');
+    
+    // 週次データの全項目をアサート
+    expect(screen.getByText('月')).toBeVisible();
+    expect(screen.getByText('火')).toBeVisible();
+    expect(screen.getByText('水')).toBeVisible();
+    expect(screen.getByText('木')).toBeVisible();
+    expect(screen.getByText('金')).toBeVisible();
+    expect(screen.getByText('土')).toBeVisible();
+    expect(screen.getByText('日')).toBeVisible();
+    
+    // 実際の時間データもアサート
+    expect(screen.getByText('90分')).toBeVisible();
+    expect(screen.getByText('150分')).toBeVisible();
+    expect(screen.getByText('120分')).toBeVisible();
+    expect(screen.getByText('180分')).toBeVisible();
+    expect(screen.getByText('60分')).toBeVisible();
   });
 });
 ```

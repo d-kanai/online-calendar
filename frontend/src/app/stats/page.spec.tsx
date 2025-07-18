@@ -99,44 +99,28 @@ describe('StatsPage - 統計ページの振る舞い', () => {
       // When - ページをレンダリング
       renderWithAuthProvider(<StatsPage />);
 
-      // Then - 統計データが表示される
+      // Then - APIで返す全データが画面に表示されることを確認
       await waitFor(() => {
+        // 平均値のアサート
         expect(screen.getByTestId('daily-average-time')).toHaveTextContent('120.5分');
       });
 
-      // 週次データが表示される
+      // 週次データの全項目をアサート（曜日名）
       expect(screen.getByText('月')).toBeVisible();
       expect(screen.getByText('火')).toBeVisible();
       expect(screen.getByText('水')).toBeVisible();
       expect(screen.getByText('木')).toBeVisible();
       expect(screen.getByText('金')).toBeVisible();
-    });
+      expect(screen.getByText('土')).toBeVisible();
+      expect(screen.getByText('日')).toBeVisible();
 
-    it('APIが正常に呼び出されることを確認', async () => {
-      // When - ページをレンダリング
-      renderWithAuthProvider(<StatsPage />);
-
-      // Then - useSuspenseQueryが呼び出される
-      expect(useSuspenseQuery).toHaveBeenCalled();
-      
-      // 統計データが表示される
-      await waitFor(() => {
-        expect(screen.getByTestId('daily-average-time')).toHaveTextContent('120.5分');
-      });
-    });
-  });
-
-  describe('APIモック設定の検証', () => {
-    it('APIモックが正しく設定されている', async () => {
-      // Given - APIの設定確認
-      const result = await statsApi.getDailyAverage();
-      
-      // Then - モックの戻り値が正しい
-      expect(result.success).toBe(true);
-      expect(result.data).toEqual(mockStatsData);
-      
-      // useSuspenseQueryのモックも確認
-      expect(useSuspenseQuery).toBeDefined();
+      // 実際の時間データもアサート（formatMinutes関数を通した表示）
+      expect(screen.getByText('1時間30分')).toBeVisible(); // 90分
+      expect(screen.getByText('2時間30分')).toBeVisible(); // 150分
+      expect(screen.getByText('2時間')).toBeVisible();     // 120分
+      expect(screen.getByText('3時間')).toBeVisible();     // 180分
+      expect(screen.getByText('1時間')).toBeVisible();     // 60分 → 1時間として表示
+      // 土日の0分は表示されない（0分の場合は空文字表示）
     });
   });
 
@@ -163,13 +147,25 @@ describe('StatsPage - 統計ページの振る舞い', () => {
       // When - ページをレンダリング
       renderWithAuthProvider(<StatsPage />);
 
-      // Then - 時間フォーマットが正しく表示される
+      // Then - 時間フォーマットが正しく表示される（包括的アサート）
       await waitFor(() => {
-        expect(screen.getByText('2時間5分')).toBeVisible();
+        expect(screen.getByText('2時間5分')).toBeVisible(); // 125分
       });
-      expect(screen.getByText('1時間')).toBeVisible();
-      expect(screen.getByText('30分')).toBeVisible();
-      expect(screen.getByText('3時間')).toBeVisible();
+      expect(screen.getByText('1時間')).toBeVisible();     // 60分
+      expect(screen.getByText('30分')).toBeVisible();      // 30分
+      expect(screen.getByText('3時間')).toBeVisible();     // 180分
+      
+      // 週次データの全項目をアサート（曜日名）
+      expect(screen.getByText('月')).toBeVisible();
+      expect(screen.getByText('火')).toBeVisible();
+      expect(screen.getByText('水')).toBeVisible();
+      expect(screen.getByText('木')).toBeVisible();
+      expect(screen.getByText('金')).toBeVisible();
+      expect(screen.getByText('土')).toBeVisible();
+      expect(screen.getByText('日')).toBeVisible();
+      
+      // 平均値も確認
+      expect(screen.getByTestId('daily-average-time')).toHaveTextContent('120.5分');
     });
   });
 });
