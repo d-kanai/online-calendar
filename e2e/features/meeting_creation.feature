@@ -7,7 +7,6 @@ Feature: 会議登録
   Rule: 会議作成時の必須項目チェック
     title, period, important flag は全て必須項目である
 
-    @develop
     Scenario: 必要項目をすべて入力して会議を作成する
       When title "定例MTG", period "30分", important flag "false" で会議を作成する
       Then 会議が正常に作成される
