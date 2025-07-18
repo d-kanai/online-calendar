@@ -21,35 +21,3 @@ export function useDailyAverage() {
     refetchInterval: 5 * 60 * 1000, // 5分ごとに自動更新
   });
 }
-
-// 統計データの更新トリガー
-export function useInvalidateStats() {
-  const queryClient = useQueryClient();
-  
-  return () => {
-    invalidateHelpers.invalidateStats(queryClient);
-  };
-}
-
-// プリフェッチ用のヘルパー
-export function usePrefetchStats() {
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
-  
-  return async () => {
-    if (!user?.id) return;
-    
-    // 統計データをプリフェッチ
-    await queryClient.prefetchQuery({
-      queryKey: queryKeys.dailyAverage(user.id),
-      queryFn: async () => {
-        const response = await statsApi.getDailyAverage();
-        if (response.success && response.data) {
-          return response.data;
-        }
-        throw new Error('Failed to prefetch stats');
-      },
-      staleTime: 60 * 1000,
-    });
-  };
-}
