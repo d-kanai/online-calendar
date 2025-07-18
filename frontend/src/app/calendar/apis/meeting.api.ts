@@ -1,6 +1,5 @@
 import { ApiMeeting, ApiResponse } from '../../../types/api';
-import { authApi } from '../../auth/apis/auth.api';
-import { API_BASE_URL } from '../../../lib/config';
+import { apiClient } from '../../../lib/api-client';
 
 interface CreateMeetingRequest {
   title: string;
@@ -18,101 +17,30 @@ interface UpdateMeetingRequest {
 
 export const meetingApi = {
   async create(data: CreateMeetingRequest): Promise<ApiResponse<ApiMeeting>> {
-    const token = authApi.getToken();
-    const response = await fetch(`${API_BASE_URL}/meetings`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    });
-    
-    // HTTPステータスが400の場合もレスポンスボディを解析
-    const result = await response.json();
-    
-    // HTTPステータスが失敗でもレスポンスボディにエラー情報があればそれを返す
-    return result;
+    return apiClient.post<ApiMeeting>('/meetings', data);
   },
   
   async getAll(): Promise<ApiResponse<ApiMeeting[]>> {
-    const token = authApi.getToken();
-    const response = await fetch(`${API_BASE_URL}/meetings`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-    return response.json();
+    return apiClient.get<ApiMeeting[]>('/meetings');
   },
   
   async getById(id: string): Promise<ApiResponse<ApiMeeting>> {
-    const token = authApi.getToken();
-    const response = await fetch(`${API_BASE_URL}/meetings/${id}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-    return response.json();
+    return apiClient.get<ApiMeeting>(`/meetings/${id}`);
   },
   
   async update(id: string, data: UpdateMeetingRequest): Promise<ApiResponse<ApiMeeting>> {
-    const token = authApi.getToken();
-    const response = await fetch(`${API_BASE_URL}/meetings/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    });
-    
-    const result = await response.json();
-    return result;
+    return apiClient.put<ApiMeeting>(`/meetings/${id}`, data);
   },
 
   async addParticipant(meetingId: string, data: { email: string; name: string }): Promise<ApiResponse<ApiMeeting>> {
-    const token = authApi.getToken();
-    const response = await fetch(`${API_BASE_URL}/meetings/${meetingId}/participants`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    });
-    
-    const result = await response.json();
-    return result;
+    return apiClient.post<ApiMeeting>(`/meetings/${meetingId}/participants`, data);
   },
 
   async removeParticipant(meetingId: string, participantId: string): Promise<ApiResponse<ApiMeeting>> {
-    const token = authApi.getToken();
-    const response = await fetch(`${API_BASE_URL}/meetings/${meetingId}/participants/${participantId}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-    
-    const result = await response.json();
-    return result;
+    return apiClient.delete<ApiMeeting>(`/meetings/${meetingId}/participants/${participantId}`);
   },
 
   async delete(id: string): Promise<ApiResponse<void>> {
-    const token = authApi.getToken();
-    const response = await fetch(`${API_BASE_URL}/meetings/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-    
-    if (response.ok) {
-      return { success: true, data: undefined };
-    }
-    
-    const result = await response.json();
-    return result;
+    return apiClient.delete<void>(`/meetings/${id}`);
   }
 };
