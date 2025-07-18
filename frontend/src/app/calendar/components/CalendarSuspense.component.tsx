@@ -35,7 +35,8 @@ function CalendarContent({ currentUser }: { currentUser: string }) {
   const {
     handleMeetingSubmit,
     handleMeetingDelete,
-    handleParticipantsChange,
+    handleAddParticipant,
+    handleRemoveParticipant,
   } = useMeetingActions({
     editingMeeting,
     setEditingMeeting: () => {},
@@ -69,7 +70,8 @@ function CalendarContent({ currentUser }: { currentUser: string }) {
         onCloseDetail={handleCloseDetail}
         onEditMeeting={handleEditMeeting}
         onMeetingDelete={handleMeetingDelete}
-        onParticipantsChange={handleParticipantsChange}
+        onAddParticipant={handleAddParticipant}
+        onRemoveParticipant={handleRemoveParticipant}
       />
       
       <Toaster />
@@ -109,7 +111,8 @@ function CalendarModals({
   onCloseDetail,
   onEditMeeting,
   onMeetingDelete,
-  onParticipantsChange
+  onAddParticipant,
+  onRemoveParticipant
 }: {
   meetings: Meeting[];
   currentUser: string;
@@ -123,7 +126,8 @@ function CalendarModals({
   onCloseDetail: () => void;
   onEditMeeting: (meeting: Meeting) => void;
   onMeetingDelete: (meeting: Meeting) => void;
-  onParticipantsChange: (type: 'add' | 'remove', meetingId: string, data: { email?: string; participantId?: string }) => void;
+  onAddParticipant: (meetingId: string, email: string) => void;
+  onRemoveParticipant: (meetingId: string, participantId: string) => void;
 }) {
   return (
     <>
@@ -143,7 +147,13 @@ function CalendarModals({
         onClose={onCloseDetail}
         onEdit={onEditMeeting}
         onDelete={onMeetingDelete}
-        onParticipantsChange={onParticipantsChange}
+        onParticipantsChange={(type, meetingId, data) => {
+          if (type === 'add' && data.email) {
+            onAddParticipant(meetingId, data.email);
+          } else if (type === 'remove' && data.participantId) {
+            onRemoveParticipant(meetingId, data.participantId);
+          }
+        }}
         currentUser={currentUser}
       />
     </>

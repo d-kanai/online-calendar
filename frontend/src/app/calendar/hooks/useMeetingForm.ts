@@ -91,61 +91,74 @@ export function useMeetingForm({
     watch
   } = form;
 
+  // フォーム初期値を生成する関数群
+  const getEmptyFormData = (): FormData => ({
+    title: '',
+    startTime: '',
+    endTime: '',
+    isImportant: false
+  });
+
+  const getEditFormData = (meeting: Meeting): FormData => {
+    const startTime = meeting.startTime instanceof Date 
+      ? meeting.startTime 
+      : new Date(meeting.startTime);
+    const endTime = meeting.endTime instanceof Date 
+      ? meeting.endTime 
+      : new Date(meeting.endTime);
+    
+    return {
+      title: meeting.title,
+      startTime: toLocalDateTimeString(startTime),
+      endTime: toLocalDateTimeString(endTime),
+      isImportant: meeting.isImportant
+    };
+  };
+
+  const getNewFormDataWithDate = (selectedDate: Date): FormData => {
+    const defaultStart = new Date(selectedDate);
+    defaultStart.setHours(10, 0, 0, 0);
+    const defaultEnd = new Date(defaultStart);
+    defaultEnd.setHours(11, 0, 0, 0);
+    
+    return {
+      title: '',
+      startTime: toLocalDateTimeString(defaultStart),
+      endTime: toLocalDateTimeString(defaultEnd),
+      isImportant: false
+    };
+  };
+
+  const getNewFormDataDefault = (): FormData => {
+    const now = new Date();
+    now.setHours(now.getHours() + 1, 0, 0, 0);
+    const endTime = new Date(now);
+    endTime.setHours(endTime.getHours() + 1);
+    
+    return {
+      title: '',
+      startTime: toLocalDateTimeString(now),
+      endTime: toLocalDateTimeString(endTime),
+      isImportant: false
+    };
+  };
+
+  // フォーム初期値を決定する関数
+  const getInitialFormData = (): FormData => {
+    if (meeting) return getEditFormData(meeting);
+    if (selectedDate) return getNewFormDataWithDate(selectedDate);
+    return getNewFormDataDefault();
+  };
+
   // フォームの初期化ロジック
   useEffect(() => {
     if (!open) {
-      reset({
-        title: '',
-        startTime: '',
-        endTime: '',
-        isImportant: false
-      });
+      reset(getEmptyFormData());
       clearErrors();
       return;
     }
     
-    if (meeting) {
-      // 編集モード
-      const startTime = meeting.startTime instanceof Date 
-        ? meeting.startTime 
-        : new Date(meeting.startTime);
-      const endTime = meeting.endTime instanceof Date 
-        ? meeting.endTime 
-        : new Date(meeting.endTime);
-      
-      reset({
-        title: meeting.title,
-        startTime: toLocalDateTimeString(startTime),
-        endTime: toLocalDateTimeString(endTime),
-        isImportant: meeting.isImportant
-      });
-    } else if (selectedDate) {
-      // 新規作成モード（日付選択あり）
-      const defaultStart = new Date(selectedDate);
-      defaultStart.setHours(10, 0, 0, 0);
-      const defaultEnd = new Date(defaultStart);
-      defaultEnd.setHours(11, 0, 0, 0);
-      
-      reset({
-        title: '',
-        startTime: toLocalDateTimeString(defaultStart),
-        endTime: toLocalDateTimeString(defaultEnd),
-        isImportant: false
-      });
-    } else {
-      // 新規作成モード（デフォルト）
-      const now = new Date();
-      now.setHours(now.getHours() + 1, 0, 0, 0);
-      const endTime = new Date(now);
-      endTime.setHours(endTime.getHours() + 1);
-      
-      reset({
-        title: '',
-        startTime: toLocalDateTimeString(now),
-        endTime: toLocalDateTimeString(endTime),
-        isImportant: false
-      });
-    }
+    reset(getInitialFormData());
   }, [open, meeting, selectedDate, reset, clearErrors]);
 
   // ビジネスルールバリデーション

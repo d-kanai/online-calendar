@@ -83,45 +83,43 @@ export const useMeetingActions = ({
     }
   };
 
-  // 参加者変更（追加・削除）
-  const handleParticipantsChange = async (
-    type: 'add' | 'remove',
-    meetingId: string,
-    data: { email?: string; participantId?: string }
-  ) => {
-    if (type === 'add' && data.email) {
-      const result = await addParticipantMutation.mutateAsync({
-        meetingId,
-        email: data.email
-      });
-      
-      // 選択中の会議の参加者を更新
-      if (selectedMeeting?.id === meetingId && result) {
-        setSelectedMeeting(prev => prev ? {
-          ...prev,
-          participants: [...prev.participants, result.participant]
-        } : null);
-      }
-    } else if (type === 'remove' && data.participantId) {
-      await removeParticipantMutation.mutateAsync({
-        meetingId,
-        participantId: data.participantId
-      });
-      
-      // 選択中の会議の参加者を更新
-      if (selectedMeeting?.id === meetingId) {
-        setSelectedMeeting(prev => prev ? {
-          ...prev,
-          participants: prev.participants.filter(p => p.id !== data.participantId)
-        } : null);
-      }
+  // 参加者追加
+  const handleAddParticipant = async (meetingId: string, email: string) => {
+    const result = await addParticipantMutation.mutateAsync({
+      meetingId,
+      email
+    });
+    
+    // 選択中の会議の参加者を更新
+    if (selectedMeeting?.id === meetingId && result) {
+      setSelectedMeeting(prev => prev ? {
+        ...prev,
+        participants: [...prev.participants, result.participant]
+      } : null);
+    }
+  };
+
+  // 参加者削除
+  const handleRemoveParticipant = async (meetingId: string, participantId: string) => {
+    await removeParticipantMutation.mutateAsync({
+      meetingId,
+      participantId
+    });
+    
+    // 選択中の会議の参加者を更新
+    if (selectedMeeting?.id === meetingId) {
+      setSelectedMeeting(prev => prev ? {
+        ...prev,
+        participants: prev.participants.filter(p => p.id !== participantId)
+      } : null);
     }
   };
 
   return {
     handleMeetingSubmit,
     handleMeetingDelete,
-    handleParticipantsChange,
+    handleAddParticipant,
+    handleRemoveParticipant,
     // Mutation状態
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,

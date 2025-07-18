@@ -430,6 +430,42 @@ export function MeetingForm(props) {
 - **テスト容易性**: フックとコンポーネントを独立してテスト可能
 - **可読性**: コンポーネントがシンプルになり、構造を理解しやすい
 
+## 🚫 アンチパターンと推奨パターン
+
+### ❌ リテラル型ユニオンによる分岐処理
+```typescript
+// ❌ Bad: type引数で処理を分岐
+const handleParticipantsChange = async (
+  type: 'add' | 'remove',
+  meetingId: string,
+  data: { email?: string; participantId?: string }
+) => {
+  if (type === 'add' && data.email) {
+    // 追加処理
+  } else if (type === 'remove' && data.participantId) {
+    // 削除処理
+  }
+};
+```
+
+### ✅ 専用メソッドへの分離
+```typescript
+// ✅ Good: それぞれの処理を専用メソッドに分離
+const handleAddParticipant = async (meetingId: string, email: string) => {
+  // 追加処理
+};
+
+const handleRemoveParticipant = async (meetingId: string, participantId: string) => {
+  // 削除処理
+};
+```
+
+### 原則
+- **単一責任の原則**: 1つの関数は1つの責務のみを持つ
+- **if文の最小化**: 条件分岐は可能な限り削減する
+- **型安全性**: 各関数は必要なパラメータのみを受け取る
+- **命名の明確性**: 関数名から動作が明確にわかるようにする
+
 ## 🎨 Frontend Zodバリデーション実装パターン
 
 ### 📝 基本構成
