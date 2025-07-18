@@ -156,4 +156,18 @@ describe('SignUpPage - ユーザー登録フローの振る舞い', () => {
       expect(authApi.signUp).not.toHaveBeenCalled();
     });
   });
+
+  describe('ページナビゲーション', () => {
+    it('「ログイン」リンクをクリックすると、サインインページへ遷移する', async () => {
+      // Given
+      const user = userEvent.setup();
+      renderWithAuthProvider(<SignUpPage />);
+
+      // When - ログインリンクをクリック
+      await user.click(screen.getByRole('button', { name: 'ログイン' }));
+
+      // Then - サインインページへ遷移
+      expect(mockPush).toHaveBeenCalledWith('/auth/signin');
+    });
+  });
 });
