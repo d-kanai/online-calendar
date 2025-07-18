@@ -1371,3 +1371,261 @@ describe('SignInForm', () => {
 - [ ] メインコンポーネントのJSXが構造的に読みやすい
 
 この設計により、**「コードを読むだけでUIのイメージが湧く」**直感的で保守性の高いコンポーネント設計を実現する 🎨
+
+## 🚪 page.tsx エントリーポイント設計パターン
+
+### 🎯 基本原則
+- **構造の可視化**: アプリの構造を一目で理解できることが最重要
+- **最小限のJSX**: page.tsxは10行程度の簡潔な構造を維持
+- **レイアウト分離**: 共通レイアウトは専用コンポーネントに分離
+- **DRY原則**: 複数のpage.tsxで重複するコードは共通化
+
+### 🏗️ 理想的なpage.tsx構造
+
+#### ✅ 推奨パターン（シンプルで明確）
+```typescript
+// app/calendar/page.tsx - 理想的な例
+'use client';
+
+import React from 'react';
+import { CalendarSuspense } from './components/CalendarSuspense.component';
+import { AuthenticatedLayout } from '@/components/AuthenticatedLayout';
+import { useAuth } from '@/contexts/AuthContext';
+import { useGlobalRealtimeSync } from './hooks/useRealtimeSync';
+
+export default function CalendarPage() {
+  const { user } = useAuth();
+  const CURRENT_USER = user?.email || 'unknown@example.com';
+  
+  // グローバルリアルタイム同期を有効化
+  useGlobalRealtimeSync();
+
+  return (
+    <AuthenticatedLayout>
+      <CalendarSuspense currentUser={CURRENT_USER} />
+      <Toaster />
+    </AuthenticatedLayout>
+  );
+}
+```
+
+#### ❌ 避けるべきパターン（大きなJSX）
+```typescript
+// ❌ JSXが長すぎる例
+export default function BadPage() {
+  return (
+    <div className="min-h-screen bg-background flex">
+      {/* 50行以上の複雑なレイアウトJSX */}
+      <div className="hidden lg:flex lg:flex-1 bg-primary">
+        <div className="max-w-md text-center space-y-6">
+          {/* 大量のレイアウトコード... */}
+        </div>
+      </div>
+      <div className="flex-1 flex items-center justify-center">
+        {/* さらに続くレイアウトコード... */}
+      </div>
+    </div>
+  );
+}
+```
+
+### 📂 レイアウト共通化パターン
+
+#### 🔄 重複除去前後の比較
+```typescript
+// Before: 重複だらけ（70行の重複JSX）
+// signin/page.tsx: 44行、JSX 35行（80%）
+// signup/page.tsx: 44行、JSX 35行（80%）
+
+// After: Component Composition適用
+// signin/page.tsx: 13行、JSX 3行（23%）
+export default function SignInPage() {
+  return (
+    <AuthLayout>
+      <SignInForm />
+    </AuthLayout>
+  );
+}
+
+// signup/page.tsx: 13行、JSX 3行（23%）
+export default function SignUpPage() {
+  return (
+    <AuthLayout>
+      <SignUpForm />
+    </AuthLayout>
+  );
+}
+
+// 共通化されたAuthLayout.component.tsx
+export function AuthLayout({ children }: AuthLayoutProps) {
+  return (
+    <div className="min-h-screen bg-background flex">
+      <BrandingSection />
+      <AuthFormSection>
+        {children}
+      </AuthFormSection>
+    </div>
+  );
+}
+```
+
+### 🎯 page.tsx設計ガイドライン
+
+#### 1. **構造の明確性**
+- ページの目的が瞬時に理解できる
+- 使用するコンポーネントから機能が推測できる
+- ビジネスロジックは適切なhooksに分離
+
+#### 2. **JSXサイズ制限**
+- **10行以下推奨**: エントリーポイントとして適切なサイズ
+- **20行超えは要検討**: レイアウト分離を検討
+- **30行超えは禁止**: 必ず共通コンポーネントに分離
+
+#### 3. **レイアウト責務分離**
+```typescript
+// ✅ 適切な責務分離
+export default function MyPage() {
+  // 最小限のロジック（hooks呼び出し等）
+  const data = usePageData();
+  
+  return (
+    <PageLayout>           {/* レイアウト責務 */}
+      <PageContent />      {/* コンテンツ責務 */}
+    </PageLayout>
+  );
+}
+```
+
+#### 4. **共通化判断基準**
+- **2箇所以上使用**: 必ず共通レイアウトコンポーネント作成
+- **類似構造**: 80%以上類似する場合は共通化対象
+- **保守性**: 変更時に複数ファイルを修正する必要がある場合
+
+### 🏗️ レイアウトコンポーネント設計
+
+#### Component Compositionパターン適用
+```typescript
+// components/AuthLayout.component.tsx
+function BrandingSection() {
+  return (
+    <div className="hidden lg:flex lg:flex-1 bg-primary text-primary-foreground items-center justify-center p-12">
+      {/* ブランディング内容 */}
+    </div>
+  );
+}
+
+function MobileBranding() {
+  return (
+    <div className="lg:hidden flex items-center justify-center space-x-2 mb-8">
+      {/* モバイルブランディング */}
+    </div>
+  );
+}
+
+function AuthFormSection({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
+      <div className="w-full max-w-md">
+        <MobileBranding />
+        <Suspense fallback={<LoadingSpinner message="読み込み中..." />}>
+          {children}
+        </Suspense>
+      </div>
+    </div>
+  );
+}
+
+// メインレイアウト - 構造が一目瞭然
+export function AuthLayout({ children }: AuthLayoutProps) {
+  return (
+    <div className="min-h-screen bg-background flex">
+      <BrandingSection />
+      <AuthFormSection>
+        {children}
+      </AuthFormSection>
+    </div>
+  );
+}
+```
+
+### 📊 品質メトリクス
+
+#### page.tsx品質基準
+- **JSX行数**: 10行以下（理想）、20行以下（許容）
+- **JSX比率**: 50%以下（理想）、70%以下（許容）
+- **import数**: 5個以下（理想）、10個以下（許容）
+- **責務**: 単一（ページエントリーポイントのみ）
+
+#### 測定例
+```typescript
+// ✅ 理想的な品質例
+// stats/page.tsx: 15行、JSX 7行（47%）、import 3個
+export default function StatsPage() {
+  return (
+    <AuthenticatedLayout>
+      <div className="flex-1 overflow-hidden" data-testid="stats-view">
+        <StatsSuspense />
+      </div>
+    </AuthenticatedLayout>
+  );
+}
+```
+
+### 🧪 テスト戦略
+
+#### page.tsx専用テスト
+```typescript
+// page.tsx単体テスト
+describe('CalendarPage', () => {
+  test('should render AuthenticatedLayout with CalendarSuspense', () => {
+    // レイアウトとコンテンツの組み合わせテスト
+  });
+
+  test('should initialize realtime sync', () => {
+    // hooks統合テスト
+  });
+});
+
+// レイアウトコンポーネント単体テスト
+describe('AuthLayout', () => {
+  test('should render branding and form sections', () => {
+    // レイアウト構造のテスト
+  });
+});
+```
+
+### 📋 実装チェックリスト
+
+#### page.tsx作成時
+- [ ] JSX行数が10行以下に収まっている
+- [ ] ページの目的が一目で理解できる
+- [ ] 複雑なレイアウトは専用コンポーネントに分離
+- [ ] 他のページとの重複がない
+- [ ] 適切なSuspense境界が設定されている
+- [ ] testid等のテスタビリティが確保されている
+
+#### レイアウト共通化時
+- [ ] 2箇所以上で使用される共通部分を特定
+- [ ] Component Compositionパターンで適切に分割
+- [ ] レスポンシブ対応が適切に分離されている
+- [ ] children propsで柔軟性を確保
+- [ ] 共通レイアウトの単体テストを作成
+
+### 🎯 設計効果
+
+#### 🔍 可読性向上
+- **エントリーポイント理解**: 3秒でページ構造が把握可能
+- **機能推測**: コンポーネント名から機能が明確
+- **ナビゲーション効率**: 目的の実装箇所を即座に特定
+
+#### 🛠️ 保守性向上
+- **変更局所化**: レイアウト変更は共通コンポーネントのみ
+- **リファクタ容易**: ページ構造変更の影響範囲が限定的
+- **デバッグ効率**: 問題箇所の特定が迅速
+
+#### ⚡ 開発効率
+- **新ページ作成**: 既存レイアウトの再利用で高速開発
+- **並行開発**: レイアウトとコンテンツの独立実装
+- **コードレビュー**: page.tsxの簡潔性によりレビュー効率向上
+
+この設計により、**「page.tsxを見るだけでアプリの構造が一目で理解できる」**理想的なエントリーポイント設計を実現する 🚪
