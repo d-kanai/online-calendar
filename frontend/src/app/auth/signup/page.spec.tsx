@@ -3,9 +3,24 @@ import userEvent from '@testing-library/user-event';
 import SignUpPage from './page';
 import { authApi } from '@/app/auth/apis/auth.api';
 import { toast } from 'sonner';
+import { resetAllMocks } from '@/test/setup-mocks';
 
 // モック化する関数
 const mockPush = jest.fn();
+const mockReplace = jest.fn();
+const mockPrefetch = jest.fn();
+
+// Next.js Navigationのモック
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: mockPush,
+    replace: mockReplace,
+    prefetch: mockPrefetch,
+  }),
+  useSearchParams: () => ({
+    get: jest.fn(),
+  }),
+}));
 
 // APIレイヤーのみモック（TestCルールに従う）
 jest.mock('@/app/auth/apis/auth.api', () => ({
@@ -19,40 +34,13 @@ jest.mock('@/app/auth/apis/auth.api', () => ({
   },
 }));
 
-// 副作用の検証用モック
-jest.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: mockPush,
-    replace: jest.fn(),
-    prefetch: jest.fn(),
-  }),
-  useSearchParams: () => ({
-    get: jest.fn(),
-  }),
-}));
-
-jest.mock('sonner');
-
-// localStorageのモック
-const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-};
-Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock,
-});
-
-// QueryClientのモック
-jest.mock('@tanstack/react-query', () => ({
-  useQueryClient: jest.fn(),
-}));
-
 describe('SignUpPage - ユーザー登録フローの振る舞い', () => {
   beforeEach(() => {
     // 各テスト前にモックをリセット
-    jest.clearAllMocks();
+    resetAllMocks();
+    mockPush.mockClear();
+    mockReplace.mockClear();
+    mockPrefetch.mockClear();
   });
 
   describe('ページ表示', () => {

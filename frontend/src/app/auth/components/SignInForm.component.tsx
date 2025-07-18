@@ -122,6 +122,7 @@ function SignUpLink({ onSwitchToSignUp, isLoading }: { onSwitchToSignUp?: () => 
 
 // 🏗️ メインコンポーネント - 構造が一目瞭然
 export function SignInForm({ onSwitchToSignUp }: SignInFormProps) {
+  const router = useRouter();
   const { signIn, isLoading } = useAuth();
   
   const {
@@ -140,7 +141,8 @@ export function SignInForm({ onSwitchToSignUp }: SignInFormProps) {
   const onSubmit = async (data: FormData) => {
     try {
       await signIn(data);
-      // 成功時は自動的にリダイレクトされる
+      // 成功時はカレンダーページへリダイレクト
+      router.push('/calendar');
     } catch (error) {
       // APIエラーの場合、フォームエラーとして表示
       if (error instanceof Error) {
