@@ -13,7 +13,8 @@ interface MeetingDetailProps {
   onClose: () => void;
   onEdit: (meeting: Meeting) => void;
   onDelete: (meeting: Meeting) => void;
-  onParticipantsChange: (type: 'add' | 'remove', meetingId: string, data: { email?: string; participantId?: string }) => void;
+  onAddParticipant: (meetingId: string, email: string) => void;
+  onRemoveParticipant: (meetingId: string, participantId: string) => void;
   currentUser: string;
 }
 
@@ -171,7 +172,8 @@ export function MeetingDetail({
   onClose, 
   onEdit, 
   onDelete,
-  onParticipantsChange,
+  onAddParticipant,
+  onRemoveParticipant,
   currentUser 
 }: MeetingDetailProps) {
   if (!meeting) return null;
@@ -199,7 +201,8 @@ export function MeetingDetail({
           <ParticipantManager
             meetingId={meeting.id}
             participants={meeting.participants}
-            onParticipantsChange={onParticipantsChange}
+            onAddParticipant={onAddParticipant}
+            onRemoveParticipant={onRemoveParticipant}
             owner={meeting.owner}
             currentUser={currentUser}
             isOwner={isOwner}

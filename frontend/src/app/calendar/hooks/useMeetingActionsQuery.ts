@@ -30,42 +30,43 @@ export const useMeetingActions = ({
   const addParticipantMutation = useAddParticipant();
   const removeParticipantMutation = useRemoveParticipant();
 
-  // 会議作成・更新
-  const handleMeetingSubmit = async (meetingData: Omit<Meeting, 'id' | 'createdAt' | 'updatedAt'>) => {
-    if (editingMeeting) {
-      // 更新
-      await updateMutation.mutateAsync({
-        id: editingMeeting.id,
-        data: {
-          title: meetingData.title,
-          startTime: meetingData.startTime,
-          endTime: meetingData.endTime,
-          isImportant: meetingData.isImportant
-        }
-      });
-      
-      // 編集モードをクリア
-      setEditingMeeting(undefined);
-      
-      // 選択中の会議も更新
-      if (selectedMeeting?.id === editingMeeting.id) {
-        setSelectedMeeting(prev => prev ? {
-          ...prev,
-          title: meetingData.title,
-          startTime: meetingData.startTime,
-          endTime: meetingData.endTime,
-          isImportant: meetingData.isImportant
-        } : null);
-      }
-    } else {
-      // 新規作成
-      await createMutation.mutateAsync({
+  // 会議作成
+  const handleCreateMeeting = async (meetingData: Omit<Meeting, 'id' | 'createdAt' | 'updatedAt'>) => {
+    await createMutation.mutateAsync({
+      title: meetingData.title,
+      startTime: meetingData.startTime,
+      endTime: meetingData.endTime,
+      ownerId: meetingData.ownerId,
+      isImportant: meetingData.isImportant
+    });
+  };
+
+  // 会議更新
+  const handleUpdateMeeting = async (meetingId: string, meetingData: Partial<Omit<Meeting, 'id' | 'createdAt' | 'updatedAt'>>) => {
+    await updateMutation.mutateAsync({
+      id: meetingId,
+      data: {
         title: meetingData.title,
         startTime: meetingData.startTime,
         endTime: meetingData.endTime,
-        ownerId: meetingData.ownerId,
         isImportant: meetingData.isImportant
-      });
+      }
+    });
+    
+    // 編集モードをクリア
+    if (editingMeeting?.id === meetingId) {
+      setEditingMeeting(undefined);
+    }
+    
+    // 選択中の会議も更新
+    if (selectedMeeting?.id === meetingId) {
+      setSelectedMeeting(prev => prev ? {
+        ...prev,
+        title: meetingData.title || prev.title,
+        startTime: meetingData.startTime || prev.startTime,
+        endTime: meetingData.endTime || prev.endTime,
+        isImportant: meetingData.isImportant ?? prev.isImportant
+      } : null);
     }
   };
 
@@ -116,7 +117,8 @@ export const useMeetingActions = ({
   };
 
   return {
-    handleMeetingSubmit,
+    handleCreateMeeting,
+    handleUpdateMeeting,
     handleMeetingDelete,
     handleAddParticipant,
     handleRemoveParticipant,

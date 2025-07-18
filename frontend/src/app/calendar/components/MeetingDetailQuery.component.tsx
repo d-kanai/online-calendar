@@ -17,7 +17,8 @@ interface MeetingDetailProps {
   onClose: () => void;
   onEdit: (meeting: Meeting) => void;
   onDelete: (meeting: Meeting) => void;
-  onParticipantsChange: (type: 'add' | 'remove', meetingId: string, data: { email?: string; participantId?: string }) => void;
+  onAddParticipant: (meetingId: string, email: string) => void;
+  onRemoveParticipant: (meetingId: string, participantId: string) => void;
   currentUser: string;
 }
 
@@ -165,7 +166,8 @@ function MeetingDetailContent({
   meetingId, 
   onEdit, 
   onDelete,
-  onParticipantsChange,
+  onAddParticipant,
+  onRemoveParticipant,
   currentUser 
 }: Omit<MeetingDetailProps, 'open' | 'onClose'>) {
   const { meeting } = useMeetingDetailSuspense(meetingId);
@@ -202,7 +204,8 @@ function MeetingDetailContent({
         <ParticipantManager
           meetingId={meeting.id}
           participants={meeting.participants}
-          onParticipantsChange={onParticipantsChange}
+          onAddParticipant={onAddParticipant}
+          onRemoveParticipant={onRemoveParticipant}
           owner={meeting.owner}
           currentUser={currentUser}
           isOwner={isOwner}
@@ -224,7 +227,8 @@ export function MeetingDetailQuery({
   onClose, 
   onEdit, 
   onDelete,
-  onParticipantsChange,
+  onAddParticipant,
+  onRemoveParticipant,
   currentUser 
 }: MeetingDetailProps) {
   if (!open || !meetingId) return null;
@@ -238,7 +242,8 @@ export function MeetingDetailQuery({
               meetingId={meetingId}
               onEdit={onEdit}
               onDelete={onDelete}
-              onParticipantsChange={onParticipantsChange}
+              onAddParticipant={onAddParticipant}
+              onRemoveParticipant={onRemoveParticipant}
               currentUser={currentUser}
             />
           </Suspense>

@@ -33,7 +33,8 @@ function CalendarContent({ currentUser }: { currentUser: string }) {
   } = useCalendarState();
 
   const {
-    handleMeetingSubmit,
+    handleCreateMeeting: createMeeting,
+    handleUpdateMeeting: updateMeeting,
     handleMeetingDelete,
     handleAddParticipant,
     handleRemoveParticipant,
@@ -66,7 +67,9 @@ function CalendarContent({ currentUser }: { currentUser: string }) {
         showMeetingDetail={showMeetingDetail}
         selectedMeetingId={selectedMeetingId}
         onCloseForm={handleCloseForm}
-        onMeetingSubmit={handleMeetingSubmit}
+        onMeetingSubmit={editingMeeting 
+          ? (data) => updateMeeting(editingMeeting.id, data)
+          : createMeeting}
         onCloseDetail={handleCloseDetail}
         onEditMeeting={handleEditMeeting}
         onMeetingDelete={handleMeetingDelete}
@@ -147,13 +150,8 @@ function CalendarModals({
         onClose={onCloseDetail}
         onEdit={onEditMeeting}
         onDelete={onMeetingDelete}
-        onParticipantsChange={(type, meetingId, data) => {
-          if (type === 'add' && data.email) {
-            onAddParticipant(meetingId, data.email);
-          } else if (type === 'remove' && data.participantId) {
-            onRemoveParticipant(meetingId, data.participantId);
-          }
-        }}
+        onAddParticipant={onAddParticipant}
+        onRemoveParticipant={onRemoveParticipant}
         currentUser={currentUser}
       />
     </>

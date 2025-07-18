@@ -21,7 +21,8 @@ import { toast } from 'sonner';
 interface ParticipantManagerProps {
   meetingId: string;
   participants: Participant[];
-  onParticipantsChange: (type: 'add' | 'remove', meetingId: string, data: { email?: string; participantId?: string }) => void;
+  onAddParticipant: (meetingId: string, email: string) => void;
+  onRemoveParticipant: (meetingId: string, participantId: string) => void;
   owner: string;
   currentUser: string;
   isOwner: boolean;
@@ -136,12 +137,12 @@ function NonOwnerActions({
   currentUser, 
   participants, 
   meetingId, 
-  onParticipantsChange 
+  onRemoveParticipant 
 }: { 
   currentUser: string; 
   participants: Participant[]; 
   meetingId: string; 
-  onParticipantsChange: (type: 'add' | 'remove', meetingId: string, data: { participantId?: string }) => void; 
+  onRemoveParticipant: (meetingId: string, participantId: string) => void; 
 }) {
   return (
     <div className="space-y-2">
@@ -158,7 +159,7 @@ function NonOwnerActions({
           // 参加者が会議から退会する処理
           const participant = participants.find(p => p.email === currentUser);
           if (participant) {
-            onParticipantsChange('remove', meetingId, { participantId: participant.id });
+            onRemoveParticipant(meetingId, participant.id);
           }
         }}
       >
@@ -217,7 +218,8 @@ function DeleteConfirmDialog({
 export function ParticipantManager({ 
   meetingId,
   participants, 
-  onParticipantsChange, 
+  onAddParticipant,
+  onRemoveParticipant, 
   owner, 
   currentUser,
   isOwner 
@@ -262,7 +264,7 @@ export function ParticipantManager({
     }
     
     // API呼び出しは親コンポーネントでmutationを通じて実行
-    onParticipantsChange('add', meetingId, { email: email });
+    onAddParticipant(meetingId, email);
     setNewParticipantEmail('');
   };
   
@@ -280,7 +282,7 @@ export function ParticipantManager({
     if (!participantToDelete) return;
     
     // API呼び出しは親コンポーネントでmutationを通じて実行
-    onParticipantsChange('remove', meetingId, { participantId: participantToDelete.id });
+    onRemoveParticipant(meetingId, participantToDelete.id);
     setDeleteDialogOpen(false);
     setParticipantToDelete(null);
   };
@@ -307,7 +309,7 @@ export function ParticipantManager({
           currentUser={currentUser}
           participants={participants}
           meetingId={meetingId}
-          onParticipantsChange={onParticipantsChange}
+          onRemoveParticipant={onRemoveParticipant}
         />
       )}
       <DeleteConfirmDialog 
