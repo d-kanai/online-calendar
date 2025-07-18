@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/lib/ui/card';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/lib/ui/chart';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+// import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/lib/ui/chart';
+// import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { Clock } from 'lucide-react';
 import { useDailyAverageSuspense } from '../hooks/useStatsQuerySuspense';
 
@@ -24,13 +24,14 @@ export function StatsContent() {
     }
   };
 
-  const chartData = data.weeklyData.map(day => ({
-    name: day.dayName,
-    value: day.totalMinutes,
-    display: formatMinutes(day.totalMinutes)
-  }));
+  // グラフ用データ - チャート機能有効化時に使用
+  // const chartData = data.weeklyData.map(day => ({
+  //   name: day.dayName,
+  //   value: day.totalMinutes,
+  //   display: formatMinutes(day.totalMinutes)
+  // }));
 
-  const maxValue = Math.max(...data.weeklyData.map(d => d.totalMinutes), 1);
+  // const maxValue = Math.max(...data.weeklyData.map(d => d.totalMinutes), 1);
 
   return (
     <div className="grid gap-6">
@@ -55,7 +56,7 @@ export function StatsContent() {
         </CardContent>
       </Card>
 
-      {/* グラフカード */}
+      {/* グラフカード - チャート依存関係インストール後に有効化 */}
       <Card>
         <CardHeader>
           <CardTitle>日別会議時間</CardTitle>
@@ -64,6 +65,10 @@ export function StatsContent() {
           </CardDescription>
         </CardHeader>
         <CardContent className="h-[300px]">
+          <div className="flex items-center justify-center h-full text-muted-foreground">
+            <p className="text-sm">グラフ表示機能は準備中です</p>
+          </div>
+          {/* TODO: recharts と chart-ui インストール後に以下を有効化
           <ChartContainer
             config={{
               value: {
@@ -87,7 +92,7 @@ export function StatsContent() {
                 />
                 <ChartTooltip 
                   content={<ChartTooltipContent />}
-                  formatter={(value: any) => [`${value}分`, '会議時間']}
+                  formatter={(value: number) => [`${value}分`, '会議時間']}
                 />
                 <Bar 
                   dataKey="value" 
@@ -97,6 +102,7 @@ export function StatsContent() {
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
+          */}
         </CardContent>
       </Card>
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { SignInForm } from './SignInForm';
+import { SignInForm } from './SignInForm.component';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/lib/ui/card';
 
 export function SignInContent() {

@@ -50,13 +50,15 @@ export const useRealtimeSync = (options: RealtimeSyncOptions = {}) => {
 
     const handleFocus = () => {
       // ウィンドウがフォーカスされたときに最新データを取得
-      invalidateHelpers.invalidateAll(queryClient);
+      invalidateHelpers.invalidateAllMeetings(queryClient);
+      invalidateHelpers.invalidateStats(queryClient);
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         // タブが表示されたときに最新データを取得
-        invalidateHelpers.invalidateAll(queryClient);
+        invalidateHelpers.invalidateAllMeetings(queryClient);
+      invalidateHelpers.invalidateStats(queryClient);
       }
     };
 
@@ -87,7 +89,7 @@ export const useRealtimeSync = (options: RealtimeSyncOptions = {}) => {
           case 'meeting:updated':
           case 'meeting:deleted':
             // 会議データを再取得
-            invalidateHelpers.invalidateMeetings(queryClient);
+            invalidateHelpers.invalidateAllMeetings(queryClient);
             break;
             
           case 'participant:added':
@@ -121,12 +123,13 @@ export const useRealtimeSync = (options: RealtimeSyncOptions = {}) => {
 
   // 手動同期関数
   const syncNow = () => {
-    invalidateHelpers.invalidateAll(queryClient);
+    invalidateHelpers.invalidateAllMeetings(queryClient);
+    invalidateHelpers.invalidateStats(queryClient);
   };
 
   // 特定のデータのみ同期
   const syncMeetings = () => {
-    invalidateHelpers.invalidateMeetings(queryClient);
+    invalidateHelpers.invalidateAllMeetings(queryClient);
   };
 
   const syncStats = () => {

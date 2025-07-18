@@ -62,7 +62,7 @@ function CalendarContent({ currentUser }: { currentUser: string }) {
         onClose={handleCloseForm}
         onSubmit={handleMeetingSubmit}
         meeting={editingMeeting}
-        selectedDate={selectedDate}
+        selectedDate={selectedDate ?? undefined}
         existingMeetings={meetings}
         currentUser={currentUser}
       />

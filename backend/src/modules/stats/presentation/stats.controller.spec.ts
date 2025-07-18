@@ -1,32 +1,9 @@
 import { describe, test, expect, beforeEach } from 'vitest';
-import { StatsController } from './stats.controller.js';
 import { prisma } from '../../../shared/database/prisma.js';
 import { UserFactory, MeetingFactory } from '../../../test/factories/index.js';
 
-// Mock Hono Context
-const createMockContext = (params: Record<string, string> = {}, jsonBody = {}, loginUserId = 'test-user-id') => ({
-  req: {
-    param: (key: string) => params[key] || '',
-    json: async () => jsonBody
-  },
-  json: (data: any, status?: number) => {
-    return {
-      data,
-      status: status || 200
-    };
-  },
-  get: (key: string) => {
-    if (key === 'loginUserId') return loginUserId;
-    if (key === 'loginUserEmail') return 'test@example.com';
-    return null;
-  }
-});
-
 describe('StatsController', () => {
-  let statsController: StatsController;
-
   beforeEach(async () => {
-    statsController = new StatsController();
     // setup.tsでクリーンアップされるので、ここでは不要
   });
 

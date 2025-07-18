@@ -14,6 +14,8 @@ export function useMeetingsSuspense() {
           ...meeting,
           startTime: new Date(meeting.startTime),
           endTime: new Date(meeting.endTime),
+          createdAt: new Date(meeting.createdAt),
+          updatedAt: new Date(meeting.updatedAt),
         }));
       }
       throw new Error(response.error || '会議データの取得に失敗しました');
@@ -34,11 +36,12 @@ export function useMeetingDetailSuspense(meetingId: string | null) {
           ...response.data,
           startTime: new Date(response.data.startTime),
           endTime: new Date(response.data.endTime),
+          createdAt: new Date(response.data.createdAt),
+          updatedAt: new Date(response.data.updatedAt),
         };
       }
       throw new Error(response.error || '会議詳細の取得に失敗しました');
     },
-    enabled: !!meetingId,
   });
 
   return { meeting };
@@ -56,6 +59,8 @@ export function useMeetingDetailsSuspense(meetingIds: string[]) {
             ...response.data,
             startTime: new Date(response.data.startTime),
             endTime: new Date(response.data.endTime),
+            createdAt: new Date(response.data.createdAt),
+            updatedAt: new Date(response.data.updatedAt),
           };
         }
         throw new Error(response.error || '会議詳細の取得に失敗しました');
@@ -64,6 +69,6 @@ export function useMeetingDetailsSuspense(meetingIds: string[]) {
   });
 
   return {
-    meetings: results.map(result => result.data as Meeting),
+    meetings: results.map(result => result.data),
   };
 }

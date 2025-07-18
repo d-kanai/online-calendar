@@ -63,7 +63,11 @@ function MeetingDetailContent({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => onEdit(meeting)}
+                onClick={() => onEdit({
+                  ...meeting,
+                  createdAt: new Date(meeting.createdAt),
+                  updatedAt: new Date(meeting.updatedAt)
+                })}
               >
                 <Edit className="h-4 w-4" />
                 編集
@@ -71,7 +75,11 @@ function MeetingDetailContent({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => onDelete(meeting)}
+                onClick={() => onDelete({
+                  ...meeting,
+                  createdAt: new Date(meeting.createdAt),
+                  updatedAt: new Date(meeting.updatedAt)
+                })}
                 className="text-destructive hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4" />
