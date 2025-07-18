@@ -1130,3 +1130,244 @@ export default function DataPage() {
 - [ ] E2Eテストでローディング完了待機を実装
 
 この設計により、React 18のSuspense機能を最大限活用し、宣言型でメンテナブルなデータフェッチング層を実現する 🚀
+
+## 🎨 Component Composition Pattern
+
+### 🎯 基本原則
+- **UIイメージの可視化**: コードを読むだけでUIの構造が直感的に分かる
+- **適切な粒度**: 大きなJSXを避け、意味のある単位でコンポーネント分割
+- **Co-location**: 関連するUIコンポーネントは同一ファイル内に配置
+- **再利用性判断**: 2箇所以上で使われない限りファイル分離しない
+
+### 🏗️ 実装パターン
+
+#### ❌ 避けるべきパターン（大きなJSX）
+```typescript
+export function SignInForm() {
+  return (
+    <div className="w-full max-w-md space-y-6">
+      {/* 100行以上の複雑なJSX */}
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl">ログイン</h1>
+        <p className="text-muted-foreground">...</p>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="email">メールアドレス</Label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Input id="email" type="email" {...register('email')} />
+        </div>
+      </div>
+      {/* さらに続く長いJSX... */}
+    </div>
+  );
+}
+```
+
+#### ✅ 推奨パターン（Component Composition）
+```typescript
+// 🎨 UIコンポーネント群（同一ファイル内）
+function FormHeader() {
+  return (
+    <div className="text-center space-y-2">
+      <h1 className="text-3xl">ログイン</h1>
+      <p className="text-muted-foreground">
+        アカウントにログインしてカレンダーアプリを使用する
+      </p>
+    </div>
+  );
+}
+
+function EmailInput({ register, isLoading }: { register: any; isLoading: boolean }) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="email">メールアドレス</Label>
+      <div className="relative">
+        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+        <Input
+          id="email"
+          type="email"
+          placeholder="your@email.com"
+          {...register('email')}
+          className="pl-10"
+          disabled={isLoading}
+        />
+      </div>
+    </div>
+  );
+}
+
+function PasswordInput({ register, isLoading }: { register: any; isLoading: boolean }) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="password">パスワード</Label>
+      <div className="relative">
+        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+        <Input
+          id="password"
+          type="password"
+          placeholder="パスワードを入力"
+          {...register('password')}
+          className="pl-10"
+          disabled={isLoading}
+        />
+      </div>
+    </div>
+  );
+}
+
+function SubmitButton({ isLoading }: { isLoading: boolean }) {
+  return (
+    <Button type="submit" className="w-full" disabled={isLoading}>
+      {isLoading ? 'ログイン中...' : 'ログイン'}
+    </Button>
+  );
+}
+
+// 🏗️ メインコンポーネント - 構造が一目瞭然
+export function SignInForm({ onSwitchToSignUp }: SignInFormProps) {
+  const { signIn, isLoading } = useAuth();
+  const { register, handleSubmit, formState: { errors }, setError } = useForm({...});
+
+  const onSubmit = async (data: FormData) => { /* ビジネスロジック */ };
+
+  return (
+    <div className="w-full max-w-md space-y-6">
+      <FormHeader />
+      <ErrorAlert errors={errors} />
+      
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <EmailInput register={register} isLoading={isLoading} />
+        <PasswordInput register={register} isLoading={isLoading} />
+        <SubmitButton isLoading={isLoading} />
+      </form>
+
+      <SignUpLink onSwitchToSignUp={onSwitchToSignUp} isLoading={isLoading} />
+    </div>
+  );
+}
+```
+
+### 📂 ファイル分離の判断基準
+
+#### ✅ 同一ファイル内に留める（推奨）
+- **単一責任**: 1つのフォーム/画面の専用部品
+- **利用箇所**: 1箇所でのみ使用
+- **サイズ**: 各コンポーネントが20-50行程度
+- **可読性**: ファイル全体が200行以下
+- **凝集性**: 親コンポーネントと密結合
+
+```typescript
+// SignInForm.component.tsx
+function EmailInput() { ... }     // SignInForm専用
+function PasswordInput() { ... }  // SignInForm専用
+function SubmitButton() { ... }   // SignInForm専用
+export function SignInForm() { ... }
+```
+
+#### 🔄 ファイル分離を検討する場合
+- **真の再利用性**: 2箇所以上で使用される
+- **独立性**: 他のコンテキストでも意味を持つ
+- **複雑性**: 50行以上の複雑なロジック
+- **テスタビリティ**: 独立したテストが必要
+
+```typescript
+// components/ui/LoadingButton.tsx - 汎用的
+export function LoadingButton() { ... } // 複数フォームで使用
+
+// components/auth/OAuthButtons.tsx - 独立機能
+export function OAuthButtons() { 
+  // Google/GitHub連携など複雑なロジック
+}
+```
+
+### 🎯 設計メリット
+
+#### 📖 可読性向上
+```typescript
+// JSXを見るだけでUIの構造が分かる
+return (
+  <div>
+    <FormHeader />           {/* ヘッダー部分 */}
+    <ErrorAlert />           {/* エラー表示 */}
+    <form>
+      <EmailInput />         {/* メール入力 */}
+      <PasswordInput />      {/* パスワード入力 */}
+      <SubmitButton />       {/* 送信ボタン */}
+    </form>
+    <SignUpLink />          {/* 新規登録リンク */}
+  </div>
+);
+```
+
+#### 🔧 保守性向上
+- **局所的変更**: 特定のUIパーツのみ修正可能
+- **責務明確**: 各コンポーネントの役割が明確
+- **テスト容易**: 個別コンポーネントのテストが可能
+- **スタイル管理**: CSSの影響範囲が限定的
+
+#### ⚡ 開発効率
+- **認知負荷軽減**: 一度に理解する範囲が小さい
+- **並行開発**: チームメンバーが異なる部品を担当可能
+- **デバッグ効率**: 問題の箇所を素早く特定
+
+### 📋 実装ガイドライン
+
+#### 🎯 コンポーネント分割の判断
+1. **意味的なまとまり**: ユーザーが認識する単位（ヘッダー、入力エリア、ボタンなど）
+2. **サイズ制限**: 20-50行程度の適切なサイズ
+3. **責務単一**: 1つの明確な責任を持つ
+4. **UIイメージ**: コンポーネント名からUIが想像できる
+
+#### 🚫 過度な分割を避ける
+```typescript
+// ❌ 過度な分割（やりすぎ）
+function EmailIcon() { return <Mail />; }
+function EmailLabel() { return <Label>メール</Label>; }
+function EmailTextField() { return <Input />; }
+
+// ✅ 適切な分割
+function EmailInput() {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="email">メールアドレス</Label>
+      <div className="relative">
+        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+        <Input id="email" type="email" />
+      </div>
+    </div>
+  );
+}
+```
+
+### 📝 命名規約
+- **機能的命名**: `EmailInput`, `SubmitButton`, `ErrorAlert`
+- **UI構造命名**: `FormHeader`, `FormFooter`, `SidebarNav`
+- **状態反映**: `LoadingButton`, `DisabledInput`, `ActiveTab`
+
+### 🧪 テスト戦略
+```typescript
+// 各コンポーネントの単体テスト
+describe('EmailInput', () => {
+  test('should display validation error', () => {
+    // EmailInput固有のテスト
+  });
+});
+
+// 統合テスト
+describe('SignInForm', () => {
+  test('should complete sign in flow', () => {
+    // フォーム全体の動作テスト
+  });
+});
+```
+
+### 📋 実装チェックリスト
+- [ ] JSXが50行を超える場合、意味的な単位で分割
+- [ ] コンポーネント名からUIイメージが想像できる
+- [ ] 同一ファイル内で関連コンポーネントをグループ化
+- [ ] 2箇所以上で使用される場合のみファイル分離を検討
+- [ ] 各コンポーネントが単一責任を持つ
+- [ ] メインコンポーネントのJSXが構造的に読みやすい
+
+この設計により、**「コードを読むだけでUIのイメージが湧く」**直感的で保守性の高いコンポーネント設計を実現する 🎨
