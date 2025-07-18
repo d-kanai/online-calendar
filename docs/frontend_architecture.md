@@ -359,6 +359,77 @@ useEffect(() => {
 
 この構造により、Next.js App Routerの利点を最大限活用し、保守性の高いModular Monolithアーキテクチャを実現する 🚀
 
+## 🪝 カスタムフックパターン
+
+### 基本原則
+- **ロジックの分離**: ビジネスロジックとUI表示ロジックを明確に分離
+- **再利用性**: 複雑なステート管理やAPIコールをフックに集約
+- **テスタビリティ**: フックを独立してテスト可能に
+- **単一責任**: 1つのフックは1つの責務に集中
+
+### 実装例
+```typescript
+// ✅ Good: フォームロジックをカスタムフックに分離
+// hooks/useMeetingForm.ts
+export function useMeetingForm({ meeting, onSubmit, onClose }) {
+  const form = useForm({
+    resolver: zodResolver(MeetingFormSchema),
+    defaultValues: getDefaultValues(meeting)
+  });
+
+  // フォーム初期化ロジック
+  useEffect(() => {
+    if (meeting) {
+      form.reset(convertMeetingToFormData(meeting));
+    }
+  }, [meeting]);
+
+  // ビジネスルールバリデーション
+  const validateBusinessRules = (data) => {
+    // 時間重複チェック、開始済みチェックなど
+  };
+
+  // 送信処理
+  const handleSubmit = async (data) => {
+    if (!validateBusinessRules(data)) return;
+    await onSubmit(data);
+    onClose();
+  };
+
+  return {
+    ...form,
+    handleSubmit,
+    isEditing: !!meeting
+  };
+}
+
+// components/MeetingForm.tsx
+export function MeetingForm(props) {
+  // ロジックは全てカスタムフックに委譲
+  const { register, handleSubmit, errors } = useMeetingForm(props);
+  
+  // コンポーネントはUIの表示のみに集中
+  return (
+    <form onSubmit={handleSubmit}>
+      <TitleInput register={register} />
+      <TimeInputs register={register} />
+      <SubmitButton />
+    </form>
+  );
+}
+```
+
+### カスタムフックの命名規則
+- `use` プレフィックスを必須とする
+- 機能を明確に表す名前にする（例: `useMeetingForm`, `useAuthStatus`）
+- 汎用的なフックは `useBoolean`, `useDebounce` など簡潔に
+
+### メリット
+- **保守性向上**: ロジックとUIの関心事が分離される
+- **再利用性**: 同じロジックを複数のコンポーネントで使い回せる
+- **テスト容易性**: フックとコンポーネントを独立してテスト可能
+- **可読性**: コンポーネントがシンプルになり、構造を理解しやすい
+
 ## 🎨 Frontend Zodバリデーション実装パターン
 
 ### 📝 基本構成
