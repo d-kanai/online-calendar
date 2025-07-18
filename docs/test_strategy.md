@@ -154,6 +154,7 @@ test('メソッド名 - 期待する動作の詳細説明', async () => {
 |---------|-----------|----------|
 | **取得API (Query)** | データ表示の検証 | **Given**: APIレスポンスをモック定義<br>**When**: ページをレンダリング<br>**Then**: 取得した値が画面に表示されていることを確認 |
 | **更新API (Mutation)** | フォーム送信の検証 | **Given**: フォーム入力とsubmit<br>**When**: ユーザー操作をシミュレート<br>**Then**: ①APIに正しいパラメータが渡される<br>②成功時のルーティング<br>③トースト通知の表示 |
+| **フォームバリデーション** | 入力検証の確認 | **Given**: 不正な入力値<br>**When**: フォーム送信を試行<br>**Then**: ①エラーメッセージが表示される<br>②APIが呼ばれないことを確認 |
 
 ### 📝 実装例
 
@@ -208,12 +209,52 @@ it('フォーム送信後、正しく処理される', async () => {
 });
 ```
 
+#### フォームバリデーションのテスト
+```typescript
+it('必須項目が未入力の場合、バリデーションエラーが表示される', async () => {
+  // Given
+  const user = userEvent.setup();
+  renderWithProviders(<SignUpPage />);
+
+  // When - 必須項目を空のまま送信
+  await user.click(screen.getByRole('button', { name: '送信' }));
+
+  // Then - バリデーションエラーの検証
+  // ① エラーメッセージが表示される
+  await waitFor(() => {
+    expect(screen.getByText('名前は必須項目です')).toBeVisible();
+    expect(screen.getByText('メールアドレスは必須項目です')).toBeVisible();
+    expect(screen.getByText('パスワードは6文字以上で入力してください')).toBeVisible();
+  });
+  
+  // ② APIが呼ばれないことを確認
+  expect(authApi.signUp).not.toHaveBeenCalled();
+});
+
+it('メールアドレスの形式が不正な場合、エラーが表示される', async () => {
+  // Given
+  const user = userEvent.setup();
+  renderWithProviders(<SignUpPage />);
+
+  // When - 不正な形式のメールアドレスを入力
+  await user.type(screen.getByLabelText('メールアドレス'), 'invalid-email');
+  await user.click(screen.getByRole('button', { name: '送信' }));
+
+  // Then
+  await waitFor(() => {
+    expect(screen.getByText('有効なメールアドレスを入力してください')).toBeVisible();
+  });
+  expect(authApi.signUp).not.toHaveBeenCalled();
+});
+```
+
 ### 🛠️ テスト実装のポイント
 - **モック最小化の原則**: APIレイヤー（`authApi`, `meetingApi`など）のみをモックし、他は実装を使用
 - **実装の結合**: AuthContext、カスタムHooks、UIコンポーネントは実際の実装を使用
 - **非同期処理の考慮**: `waitFor`を使用して非同期処理を適切に待機
 - **ユーザー操作の再現**: `@testing-library/user-event`で実際の操作を忠実に再現
 - **複数の検証**: 1つのユーザーアクションに対する複数の結果を包括的に検証
+- **バリデーションテスト**: フロントエンドのバリデーションロジックが正しく動作することを確認
 
 ### 📌 モック戦略
 ```typescript
