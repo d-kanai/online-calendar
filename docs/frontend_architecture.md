@@ -917,3 +917,216 @@ test('getDailyAverage - 過去1週間の日次平均会議時間を正しく計�
 - **決定論的**: 常に同じ結果が得られる信頼性の高いテスト
 - **保守性**: 実装変更時にテストの意図が明確
 - **デバッグ**: テスト失敗時の原因特定が容易
+
+## 🚀 Suspense Query パターン
+
+### 🎯 基本原則
+- **宣言型UI**: ローディング・エラー状態をコンポーネント外で管理
+- **型安全性**: データが必ず存在することが保証される
+- **Suspense境界**: React SuspenseとErrorBoundaryで状態を制御
+- **パフォーマンス**: TanStack QueryのSuspense機能を活用した最適化
+
+### 🏗️ useSuspenseQuery vs useQuery
+
+#### ❌ 従来のuseQueryパターン
+```typescript
+// 従来: 各コンポーネントで状態管理が必要
+export function DataComponent() {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['data'],
+    queryFn: fetchData
+  });
+
+  // コンポーネント内で条件分岐が必要
+  if (isLoading) return <Loading />;
+  if (error) return <Error />;
+  if (!data) return null;
+  
+  return <UI data={data} />;
+}
+```
+
+#### ✅ useSuspenseQueryパターン
+```typescript
+// Suspense Query: データロジックに集中
+export function DataComponent() {
+  const { data } = useSuspenseQuery({
+    queryKey: ['data'],
+    queryFn: fetchData
+  });
+
+  // dataは必ず存在、条件分岐不要
+  return <UI data={data} />;
+}
+
+// 状態管理は外側のSuspense境界で処理
+export function DataPage() {
+  return (
+    <ErrorBoundary FallbackComponent={ErrorUI}>
+      <Suspense fallback={<LoadingUI />}>
+        <DataComponent />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+```
+
+### 🛡️ 必須ラッパー構成
+
+#### ❗ ErrorBoundaryとSuspenseが必須
+```typescript
+// useSuspenseQueryは内部でPromise/Errorを throw
+const { data } = useSuspenseQuery({ ... });
+// ↑ データロード中は Promise を throw
+// ↑ エラー時は Error を throw
+```
+
+#### 🚫 ラッパーがない場合のエラー
+```typescript
+// Suspenseなし → エラー
+// "A component suspended while responding to synchronous input"
+
+// ErrorBoundaryなし → アプリクラッシュ
+// "Uncaught Error: Failed to fetch data"
+```
+
+#### ✅ 正しいラッパー構成
+```typescript
+export function DataSuspense() {
+  return (
+    <ErrorBoundary FallbackComponent={DataError}>
+      <Suspense fallback={<DataLoading />}>
+        <DataComponent /> {/* useSuspenseQuery使用 */}
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+
+// エラーフォールバックコンポーネント
+function DataError({ error, resetErrorBoundary }) {
+  return (
+    <div className="h-full flex items-center justify-center">
+      <div className="text-center space-y-4">
+        <p className="text-destructive">データの読み込みでエラーが発生しました</p>
+        <p className="text-muted-foreground">{error.message}</p>
+        <button
+          onClick={resetErrorBoundary}
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+        >
+          再試行
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+### 🏗️ 実装パターン
+
+#### 1. フック層のSuspense Query対応
+```typescript
+// hooks/useDataQuery.ts
+import { useSuspenseQuery } from '@tanstack/react-query';
+
+export function useDataSuspense() {
+  return useSuspenseQuery({
+    queryKey: ['data'],
+    queryFn: async () => {
+      const response = await dataApi.getAll();
+      if (!response.success) {
+        throw new Error(response.error || 'データの取得に失敗しました');
+      }
+      return response.data;
+    },
+    staleTime: 60 * 1000, // 1分
+    gcTime: 5 * 60 * 1000, // 5分
+    refetchInterval: 5 * 60 * 1000, // 5分ごとに自動更新
+  });
+}
+```
+
+#### 2. コンポーネント層の簡素化
+```typescript
+// components/DataComponent.tsx
+export function DataComponent() {
+  // Suspense Query Hook（isLoading, errorは不要）
+  const { data } = useDataSuspense();
+  
+  // 純粋なデータ表示ロジックのみ
+  return (
+    <div className="space-y-4">
+      {data.map(item => (
+        <DataItem key={item.id} item={item} />
+      ))}
+    </div>
+  );
+}
+```
+
+#### 3. Suspense境界の作成
+```typescript
+// components/DataSuspense.component.tsx
+export function DataSuspense() {
+  return (
+    <ErrorBoundary FallbackComponent={DataError}>
+      <Suspense fallback={<LoadingSpinner message="データを読み込んでいます..." />}>
+        <DataComponent />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+```
+
+#### 4. ページ層での統合
+```typescript
+// app/data/page.tsx
+export default function DataPage() {
+  return (
+    <AuthenticatedLayout>
+      <div className="flex-1 overflow-hidden" data-testid="data-view">
+        <DataSuspense />
+      </div>
+    </AuthenticatedLayout>
+  );
+}
+```
+
+### 🎯 設計メリット
+
+#### 📊 コード品質
+- **関心の分離**: データロジック、UI状態、表示の明確な分離
+- **可読性**: コンポーネントが純粋なデータ表示に集中
+- **型安全性**: TypeScriptでdataの存在が保証される
+- **テスタビリティ**: ロジック層の独立テストが容易
+
+#### ⚡ パフォーマンス
+- **条件分岐削減**: ローディング・エラー状態の条件分岐が不要
+- **レンダリング最適化**: Suspense境界による効率的な再レンダリング
+- **コード削減**: ボイラープレートコードの大幅削減
+
+#### 🔄 開発体験
+- **一貫性**: 全データ取得で統一されたパターン
+- **保守性**: エラーハンドリングとローディング状態の一元管理
+- **再利用性**: Suspense境界コンポーネントの共通化
+
+### ⚠️ 注意点
+
+#### 🚨 必須要件
+- **react-error-boundary**: ErrorBoundaryライブラリが必要
+- **TanStack Query**: useSuspenseQueryサポートバージョン
+- **適切なラッパー**: ErrorBoundaryとSuspenseの両方が必須
+
+#### 🎯 適用ガイドライン
+- **データ取得**: サーバーからのデータ取得に使用
+- **ページレベル**: 主要なデータロードにSuspense境界を設定
+- **モーダル**: 細かい粒度でもSuspense境界を適用可能
+
+### 📋 実装チェックリスト
+- [ ] useSuspenseQueryでフックを実装
+- [ ] コンポーネントからisLoading、error条件分岐を削除
+- [ ] ErrorBoundary + Suspenseのラッパーコンポーネント作成
+- [ ] 専用のローディング・エラーフォールバックコンポーネント作成
+- [ ] ページでSuspenseコンポーネントを使用
+- [ ] E2Eテストでローディング完了待機を実装
+
+この設計により、React 18のSuspense機能を最大限活用し、宣言型でメンテナブルなデータフェッチング層を実現する 🚀
