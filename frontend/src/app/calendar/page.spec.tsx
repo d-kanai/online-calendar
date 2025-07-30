@@ -67,6 +67,14 @@ describe('CalendarPage - カレンダーページの振る舞いテスト', () =
     mockPush.mockClear();
     mockReplace.mockClear();
     mockPrefetch.mockClear();
+    
+    // console.errorをモックしてテスト中のエラーログを抑制
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    // console.errorのモックをリストア
+    jest.restoreAllMocks();
   });
 
   describe('取得API (Query) - 会議データの表示', () => {

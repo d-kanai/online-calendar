@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/lib/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/lib/ui/dialog';
 import { Button } from '@/lib/ui/button';
 import { Badge } from '@/lib/ui/badge';
 import { Separator } from '@/lib/ui/separator';
@@ -84,6 +84,9 @@ function DetailHeader({ meeting, isOwner, hasStarted, onEdit, onDelete }: {
           </div>
         )}
       </DialogTitle>
+      <DialogDescription>
+        会議の詳細情報と参加者を確認できます。
+      </DialogDescription>
     </DialogHeader>
   );
 }

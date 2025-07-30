@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/lib/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/lib/ui/dialog';
 import { Button } from '@/lib/ui/button';
 import { Input } from '@/lib/ui/input';
 import { Label } from '@/lib/ui/label';
@@ -26,6 +26,9 @@ function FormHeader({ isEditing }: { isEditing: boolean }) {
       <DialogTitle>
         {isEditing ? '会議を編集' : '新しい会議を作成'}
       </DialogTitle>
+      <DialogDescription>
+        {isEditing ? '会議の詳細を編集してください。' : '新しい会議の詳細を入力してください。'}
+      </DialogDescription>
     </DialogHeader>
   );
 }
