@@ -462,6 +462,100 @@ it('メールアドレスの形式が不正な場合、エラーが表示され�
 - **動的データのみアサート**: APIレスポンスの動的データは全てアサート、静的な文字列（タイトル等）はアサート不要
 - **テストログのクリーン化**: エラーハンドリングテストでは`console.error`をモックしてログ出力を抑制
 
+### 📊 ATDDプロセス - ステップ7: カバレッジ改善
+
+#### 🎯 目的
+TestCテスト実装後、カバレッジレポートを確認し、80%以下のカバレッジを持つ部分を特定して改善する。
+
+#### 🔍 カバレッジ確認手順
+1. **カバレッジレポートの生成**
+   ```bash
+   yarn front:ut
+   ```
+2. **カバレッジレポート確認**
+   - ターミナルで出力されるカバレッジサマリーを確認
+   - 特にカスタムフック（hooks/）のカバレッジに注目
+   - 80%以下のファイルを特定
+
+#### 🛠️ カバレッジ改善の実装方法
+
+##### ✅ TestCルールに従った改善方法
+1. **page.spec.tsxでの振る舞いテスト追加**
+   - カスタムフックを直接テストせず、ページコンポーネントを通じてテスト
+   - ユーザーインタラクションをシミュレートして間接的にカバー
+   
+   ```typescript
+   // ✅ 良い例 - usePrefetchMeetingsをページコンポーネント経由でテスト
+   it('会議リストアイテムにホバーすると詳細データがプリフェッチされる', async () => {
+     // Given - 会議リストをモック
+     (meetingApi.getMeetings as jest.Mock).mockResolvedValue({
+       success: true,
+       data: [{ id: '1', title: 'チームミーティング' }]
+     });
+     
+     // When - ページレンダリングとホバー
+     const user = userEvent.setup();
+     renderWithAuthProvider(<CalendarPage />);
+     await waitFor(() => {
+       expect(screen.getByText('チームミーティング')).toBeVisible();
+     });
+     
+     // ホバーアクション
+     await user.hover(screen.getByText('チームミーティング'));
+     
+     // Then - プリフェッチAPIが呼ばれる
+     await waitFor(() => {
+       expect(meetingApi.getById).toHaveBeenCalledWith('1');
+     });
+   });
+   ```
+
+2. **使用されていない機能の削除**
+   - カバレッジが低い理由が「未使用」の場合、実装を削除
+   - テストを追加するより、不要なコードを削除する方が適切
+   
+   ```typescript
+   // ❌ 削除対象の例 - 実際に使われていない関数
+   export const usePrefetchMeetings = () => {
+     // ✅ 実際に使われている関数は残す
+     const prefetchOnHover = (meetingId: string) => { ... };
+     
+     // ❌ 使われていない関数は削除
+     const prefetchAll = () => { ... };        // 削除
+     const prefetchNext = () => { ... };      // 削除
+     
+     return { prefetchOnHover };
+   };
+   ```
+
+##### ❌ 避けるべきアプローチ
+```typescript
+// ❌ 悪い例 - カスタムフックの直接テスト
+describe('usePrefetchMeetings', () => {
+  it('prefetchOnHover calls queryClient.prefetchQuery', () => {
+    const { result } = renderHook(() => usePrefetchMeetings());
+    // フックを直接テストしない
+  });
+});
+```
+
+#### 📋 カバレッジ改善チェックリスト
+- [ ] `yarn front:ut`でカバレッジレポートを確認
+- [ ] 80%以下のカスタムフックを特定
+- [ ] 各低カバレッジファイルについて以下を判断：
+  - [ ] 実際に使用されている → page.spec.tsxで振る舞いテスト追加
+  - [ ] 未使用 → 実装を削除
+- [ ] 改善後、再度カバレッジを確認
+- [ ] 目標: 使用されているコードは80%以上のカバレッジ
+
+#### 💡 実例: usePrefetchMeetingsの改善
+1. **Before**: カバレッジ48.71%（5つの関数中1つのみ使用）
+2. **分析**: `prefetchOnHover`のみ実際に使用されている
+3. **対応**: 未使用の4関数を削除
+4. **After**: カバレッジ93.33%（使用されている部分のみ残る）
+
+この方法により、実際に必要なコードのみを高品質に保つことができる。
+
 ### 📌 モック戦略（3つのみ）
 
 #### 1️⃣ APIレイヤーのモック

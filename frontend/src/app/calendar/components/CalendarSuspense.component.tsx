@@ -9,7 +9,6 @@ import { Toaster } from 'sonner';
 import { useMeetingsSuspense } from '../hooks/useMeetingsQuery';
 import { useCalendarState } from '../hooks/useCalendarState';
 import { useMeetingActions } from '../hooks/useMeetingMutations';
-import { useReminderService } from '../hooks/useReminderService';
 import { Meeting } from '@/types/meeting';
 
 // Suspense対応のカレンダーコンテンツ
@@ -46,8 +45,6 @@ function CalendarContent({ currentUser }: { currentUser: string }) {
     setShowMeetingDetail: () => {},
   });
 
-  // リマインダーサービス
-  useReminderService({ meetings });
 
   return (
     <>
