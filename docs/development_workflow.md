@@ -25,6 +25,7 @@ yarn e2e:develop
 - failをパスさせるためにstep定義を実装
 - 必要に応じてfrontendコンポーネント・フックを実装
 - UI動作・状態管理・エラーハンドリングを実装
+- yarn front:ut in root
 - **📋 チェックリスト確認**: [Frontend Architecture](./frontend_architecture.md)の各実装チェックリストを参照
   - Custom Hooks Pattern実装チェックリスト
   - Next.js App Router実装チェックリスト
@@ -45,7 +46,7 @@ yarn e2e:develop
 
 **5. 🔴 Backend Test実行（UT Red）**
 ```bash
-yarn ut
+yarn back:ut
 ```
 - APIテストが失敗することを確認（Red）
 - 期待するエラーメッセージ・振る舞いを確認
@@ -65,6 +66,7 @@ yarn ut
 - TestCルールに従ってFrontendページの振る舞いテストを実装
 - Backend APIとの結合が正しく動作することを確認
 - Frontend単体でのエラーがないことを保証
+- yarn front:ut in root
 - **📋 チェックリスト確認**: [Test Strategy](./test_strategy.md)のTestC実装チェックリストを参照
   - テスト管理（新機能追加時）チェックリスト
   - Query（取得API）テストチェックリスト
