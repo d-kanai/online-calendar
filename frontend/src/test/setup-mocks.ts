@@ -23,13 +23,8 @@ Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
 });
 
-// QueryClientのモック
-jest.mock('@tanstack/react-query', () => ({
-  useQueryClient: jest.fn(),
-  useSuspenseQuery: jest.fn().mockReturnValue({ data: null }),
-  QueryClient: jest.fn().mockImplementation(() => ({})),
-  QueryClientProvider: ({ children }: { children: React.ReactNode }) => children,
-}));
+// QueryClientの設定 - モックしない（TestCルールに従う）
+// カスタムフックは実装を使用するため、QueryClientもモックしない
 
 // Navigation モック関数（各テストファイルで使用）
 const createNavigationMocks = () => ({

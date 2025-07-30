@@ -143,11 +143,11 @@ test('メソッド名 - 期待する動作の詳細説明', async () => {
 ### 📋 テスト方針
 - **Page.tsx に対する振る舞いテスト**: 各ページコンポーネント（page.tsx）の振る舞いを検証
 - **ユーザー視点のテスト**: 実際のユーザー操作をシミュレート
-- **APIレイヤーでのモック**: APIレイヤーのみをモックし、それ以外は実装を使用
+- **最小限のモック戦略**: 3つのみモック（APIレイヤー、Navigation、ErrorBoundary）
 - **結合度の最大化**: Context、Hooks、コンポーネントは実際の実装を使用してモック領域を最小化
 - **副作用の確認**: ルーティング、トースト通知などの副作用を検証
 - **⚠️ 重要**: TestCは必ずpage.tsxファイルに対するテストであること
-- **🚫 コンポーネントモック禁止**: 子コンポーネントは実際の実装を使用し、モックしない
+- **🚫 カスタムフックのモック禁止**: カスタムフックは実際の実装を使用し、モックしない
 
 ### 📊 テスト観点別の実装パターン
 
@@ -157,7 +157,7 @@ test('メソッド名 - 期待する動作の詳細説明', async () => {
 | **更新API (Mutation)** | フォーム送信の検証 | **Given**: フォーム入力とsubmit<br>**When**: ユーザー操作をシミュレート<br>**Then**: ①APIに正しいパラメータが渡される<br>②成功時のルーティング<br>③トースト通知の表示 |
 | **フォームバリデーション** | 入力検証の確認 | **Given**: 不正な入力値<br>**When**: フォーム送信を試行<br>**Then**: ①エラーメッセージが表示される<br>②APIが呼ばれないことを確認 |
 | **イベントハンドリング** | 全イベントのカバー | **Given**: ページ/コンポーネントのレンダリング<br>**When**: クリック等のユーザーイベント発生<br>**Then**: 期待される振る舞い（ルーティング、状態変更等）を確認<br>**注**: カバレッジレポートで未カバーのイベントを特定 |
-| **APIレスポンス検証** | データの包括的アサート | **原則**: APIで返すデータは基本的に画面で使用されるため、モックで設定した値は可能な限り画面でアサートする<br>**実装**: モックデータの全フィールドが画面に表示されることを確認 |
+| **APIレスポンス検証** | 動的データの包括的アサート | **原則**: APIで返すデータは基本的に画面で使用されるため、モックで設定した動的データは全て画面でアサートする<br>**実装**: APIレスポンスの各フィールドが画面に表示されることを確認<br>**除外**: 静的な文字列（タイトル等）はアサート不要 |
 
 ### 📝 実装例
 
@@ -166,14 +166,15 @@ test('メソッド名 - 期待する動作の詳細説明', async () => {
 it('会議一覧が表示される', async () => {
   // Given - APIレスポンスをモック
   (meetingApi.getMeetings as jest.Mock).mockResolvedValue({
-    meetings: [
+    success: true,
+    data: [
       { id: '1', title: 'チームミーティング', startTime: '2025-01-20T10:00:00Z' },
       { id: '2', title: '進捗確認', startTime: '2025-01-20T14:00:00Z' }
     ]
   });
 
   // When - ページをレンダリング
-  renderWithProviders(<MeetingListPage />);
+  renderWithAuthProvider(<MeetingListPage />);
 
   // Then - データが画面に表示されていることを確認
   await waitFor(() => {
@@ -183,7 +184,7 @@ it('会議一覧が表示される', async () => {
 });
 ```
 
-#### APIレスポンス包括的アサートのテスト
+#### APIレスポンスの動的データアサートのテスト
 ```typescript
 it('統計データが正しく表示される', async () => {
   // Given - APIレスポンスを詳細にモック
@@ -199,31 +200,38 @@ it('統計データが正しく表示される', async () => {
       { date: '2024-01-21', dayName: '日', totalMinutes: 0 },
     ],
   };
+  (statsApi.getDailyAverage as jest.Mock).mockResolvedValue({
+    success: true,
+    data: mockStatsData,
+  });
 
   // When - ページをレンダリング
-  renderWithProviders(<StatsPage />);
+  renderWithAuthProvider(<StatsPage />);
 
-  // Then - APIで返す全データが画面に表示されることを確認
+  // Then - APIの動的データのみアサート（静的なタイトル等は除外）
   await waitFor(() => {
-    // 平均値のアサート
+    // APIレスポンスの averageDailyMinutes を確認
     expect(screen.getByTestId('daily-average-time')).toHaveTextContent('120.5分');
-    
-    // 週次データの全項目をアサート
-    expect(screen.getByText('月')).toBeVisible();
-    expect(screen.getByText('火')).toBeVisible();
-    expect(screen.getByText('水')).toBeVisible();
-    expect(screen.getByText('木')).toBeVisible();
-    expect(screen.getByText('金')).toBeVisible();
-    expect(screen.getByText('土')).toBeVisible();
-    expect(screen.getByText('日')).toBeVisible();
-    
-    // 実際の時間データもアサート
-    expect(screen.getByText('90分')).toBeVisible();
-    expect(screen.getByText('150分')).toBeVisible();
-    expect(screen.getByText('120分')).toBeVisible();
-    expect(screen.getByText('180分')).toBeVisible();
-    expect(screen.getByText('60分')).toBeVisible();
   });
+
+  // 週合計（APIデータから計算される動的な値）
+  expect(screen.getByText('週合計: 10時間')).toBeVisible();
+
+  // 週次データのdayName（APIレスポンスの動的データ）
+  expect(screen.getByText('月')).toBeVisible();
+  expect(screen.getByText('火')).toBeVisible();
+  expect(screen.getByText('水')).toBeVisible();
+  expect(screen.getByText('木')).toBeVisible();
+  expect(screen.getByText('金')).toBeVisible();
+  expect(screen.getByText('土')).toBeVisible();
+  expect(screen.getByText('日')).toBeVisible();
+  
+  // totalMinutes（APIレスポンスの動的データ、formatMinutes関数を通した表示）
+  expect(screen.getByText('1時間30分')).toBeVisible(); // 90分
+  expect(screen.getByText('2時間30分')).toBeVisible(); // 150分
+  expect(screen.getByText('2時間')).toBeVisible();     // 120分
+  expect(screen.getByText('3時間')).toBeVisible();     // 180分
+  expect(screen.getByText('1時間')).toBeVisible();     // 60分
 });
 ```
 
@@ -232,7 +240,7 @@ it('統計データが正しく表示される', async () => {
 it('フォーム送信後、正しく処理される', async () => {
   // Given - APIモックとユーザーイベントのセットアップ
   const user = userEvent.setup();
-  renderWithProviders(<SignUpPage />);
+  renderWithAuthProvider(<SignUpPage />);
   
   // When - フォーム入力とsubmit
   await user.type(screen.getByLabelText('名前'), '山田太郎');
@@ -261,7 +269,7 @@ it('フォーム送信後、正しく処理される', async () => {
 it('必須項目が未入力の場合、バリデーションエラーが表示される', async () => {
   // Given
   const user = userEvent.setup();
-  renderWithProviders(<SignUpPage />);
+  renderWithAuthProvider(<SignUpPage />);
 
   // When - 必須項目を空のまま送信
   await user.click(screen.getByRole('button', { name: '送信' }));
@@ -281,7 +289,7 @@ it('必須項目が未入力の場合、バリデーションエラーが表示�
 it('メールアドレスの形式が不正な場合、エラーが表示される', async () => {
   // Given
   const user = userEvent.setup();
-  renderWithProviders(<SignUpPage />);
+  renderWithAuthProvider(<SignUpPage />);
 
   // When - 不正な形式のメールアドレスを入力
   await user.type(screen.getByLabelText('メールアドレス'), 'invalid-email');
@@ -296,29 +304,112 @@ it('メールアドレスの形式が不正な場合、エラーが表示され�
 ```
 
 ### 🛠️ テスト実装のポイント
-- **モック最小化の原則**: APIレイヤー（`authApi`, `meetingApi`など）のみをモックし、他は実装を使用
+- **モック最小化の原則**: 3つのみモック（APIレイヤー、Navigation、ErrorBoundary）
 - **実装の結合**: AuthContext、カスタムHooks、UIコンポーネントは実際の実装を使用
+- **renderWithAuthProvider必須**: 全てのテストで`renderWithAuthProvider`を使用
 - **非同期処理の考慮**: `waitFor`を使用して非同期処理を適切に待機
 - **ユーザー操作の再現**: `@testing-library/user-event`で実際の操作を忠実に再現
 - **複数の検証**: 1つのユーザーアクションに対する複数の結果を包括的に検証
 - **バリデーションテスト**: フロントエンドのバリデーションロジックが正しく動作することを確認
 - **イベントカバレッジ**: カバレッジレポートを活用し、全てのクリックイベント等をテストでカバー
+- **動的データのみアサート**: APIレスポンスの動的データは全てアサート、静的な文字列（タイトル等）はアサート不要
 
-### 📌 モック戦略
+### 📌 モック戦略（3つのみ）
+
+#### 1️⃣ APIレイヤーのモック
 ```typescript
-// ✅ 良い例 - APIレイヤーのみモック
-jest.mock('@/app/auth/apis/auth.api', () => ({
-  authApi: {
-    signUp: jest.fn(),
-    signIn: jest.fn()
-  }
-}));
-
-// ❌ 悪い例 - Contextやカスタムフックをモック
-jest.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({ ... })  // これは避ける
+jest.mock('./apis/stats.api', () => ({
+  statsApi: {
+    getDailyAverage: jest.fn(),
+  },
 }));
 ```
+
+#### 2️⃣ Navigationのモック
+```typescript
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: mockPush,
+    replace: mockReplace,
+    prefetch: mockPrefetch,
+  }),
+  useSearchParams: () => ({
+    get: jest.fn(),
+  }),
+  usePathname: () => '/stats',
+}));
+```
+
+#### 3️⃣ ErrorBoundaryのモック
+```typescript
+jest.mock('react-error-boundary', () => ({
+  ErrorBoundary: ({ children }: any) => children,
+}));
+```
+
+#### ❌ 避けるべきモック
+```typescript
+// カスタムフックをモックしない
+jest.mock('./hooks/useStatsQuery'); // ❌
+jest.mock('@tanstack/react-query'); // ❌
+
+// Contextをモックしない  
+jest.mock('@/contexts/AuthContext'); // ❌
+```
+
+### 🧪 テストユーティリティの設定
+
+#### test-utils.tsx の実装
+```typescript
+import React from 'react';
+import { render } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '@/contexts/AuthContext';
+
+// テスト用のQueryClientを作成
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        staleTime: 0,
+        gcTime: 0,
+      },
+      mutations: {
+        retry: false,
+      },
+    },
+  });
+}
+
+// カスタムレンダラー - AuthProviderとQueryClientProviderでラップ
+export function renderWithAuthProvider(ui: React.ReactElement) {
+  const testQueryClient = createTestQueryClient();
+  
+  return render(
+    <QueryClientProvider client={testQueryClient}>
+      <AuthProvider>
+        {ui}
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+}
+
+// re-export everything
+export * from '@testing-library/react';
+```
+
+### 🎯 Suspense/ErrorBoundary対応
+
+#### Suspenseを使用するコンポーネントのテスト
+- **QueryClientProvider必須**: `renderWithAuthProvider`で自動的に提供
+- **ErrorBoundaryモック**: シンプルに`({ children }) => children`でモック
+- **非同期待機**: `waitFor`で適切に待機
+
+#### エラーハンドリングのテスト
+- **APIエラーモック**: `mockRejectedValue`を使用
+- **エラー表示確認**: ErrorBoundaryコンポーネントの表示を確認
+- **注意**: テスト環境でのSuspense/ErrorBoundaryの動作は実環境と異なる場合がある
 
 ## 🎭 E2Eテスト特別ルール
 
