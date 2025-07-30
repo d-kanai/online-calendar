@@ -42,7 +42,17 @@ yarn ut
 - Controller・Application・Domain層を順次実装
 - Exception設計とエラーハンドリング統一
 
-**7. 🔧 TypeCheck & Fix（品質保証段階）**
+**7. 🧪 Frontend Test実装（TestC）**
+- TestCルールに従ってFrontendページの振る舞いテストを実装
+- Backend APIとの結合が正しく動作することを確認
+- Frontend単体でのエラーがないことを保証
+- 以下の観点を必ずカバー：
+  - **Query（取得API）**: APIレスポンスの動的データが画面に表示される
+  - **Mutation（更新API）**: ①APIパラメータ ②ルーティング ③トースト通知
+  - **バリデーション**: エラー表示とAPIが呼ばれないことの確認
+  - **エラーハンドリング**: APIエラー時の適切な処理
+
+**8. 🔧 TypeCheck & Fix（品質保証段階）**
 ```bash
 yarn typecheck
 ```
@@ -50,15 +60,18 @@ yarn typecheck
 - 型エラーが発生した場合は即座に修正
 - 型安全な実装で回帰バグを予防
 
-**8. 🔄 E2E確認 (AT Green)**
-- 対象のシナリオがpassするまで繰り返し
-- **backend test** と **e2e test** 両方がパスするように実装を進める
-- 予期せぬfailした際はe2eデバッグルールに沿ってfixさせる
+**9. 🔄 全テスト確認 (All Tests Green)**
+- 以下の3つのテストが全てパスすることを確認：
+  - **E2E Test (TestD)**: 対象のシナリオがpassする
+  - **Backend Test (TestA)**: APIテストがpassする
+  - **Frontend Test (TestC)**: ページ振る舞いテストがpassする
+- 3つ全てがパスするまで実装を調整
+- 予期せぬfailした際は各テストのデバッグルールに沿ってfix
 
-**9. リファクタリング**
+**10. リファクタリング**
 - アーキテクチャルール・コード品質・設計原則を確認してリファクタリング
 
-**10. 🧹 Dead Code Detection（最終品質保証段階）**
+**11. 🧹 Dead Code Detection（最終品質保証段階）**
 ```bash
 yarn dead-code
 ```
@@ -91,7 +104,7 @@ yarn dead-code:fix
 
 - **🚫 実装ファーストの禁止**: テストなしでの実装は絶対に行わない
 - **🎯 一つずつ進める**: 複数シナリオを並行実装しない
-- **✅ 4つパス必須**: backend test + e2e test + typecheck + dead-code detection の全てが成功するまで完了としない
+- **✅ 5つパス必須**: E2E test (TestD) + Backend test (TestA) + Frontend test (TestC) + typecheck + dead-code detection の全てが成功するまで完了としない
 - **📊 継続確認**: 実装中も定期的にテスト実行して状態確認
 - **🔧 型安全優先**: TypeCheckエラーは他の作業より優先して修正
 - **🛡️ Validation二重チェック**: Frontend + Backend両方でvalidation実装必須
