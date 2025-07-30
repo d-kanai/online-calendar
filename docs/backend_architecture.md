@@ -27,6 +27,34 @@ backend/src/modules/{module}/
 ## 🎯 層別責務
 
 ### 🎪 Presentation層（プレゼンテーション層）
+
+### 🛡️ Presentation層実装チェックリスト
+
+#### ✅ 基本設計
+- [ ] Controllerクラスで実装
+- [ ] 各エンドポイントに対応するメソッドを定義
+- [ ] ハッピーパスのみ処理（try-catch無し）
+- [ ] Application層のQuery/Commandのみに依存
+
+#### ✅ Output型設計
+- [ ] 1 APIエンドポイント = 1 Output型
+- [ ] `presentation/output.ts`にすべてのOutput型を定義
+- [ ] 各APIに対応する`to{ApiName}Output()`変換関数
+- [ ] ドメインモデルの隠蔽を保証
+- [ ] API仕様に合わせたフィールド命名
+
+#### ✅ レスポンス返却
+- [ ] 成功時: `c.json({ success: true, data: output })`
+- [ ] エラーは捕捉せずグローバルハンドラーに任せる
+- [ ] HTTPステータスコードはデフォルト200
+- [ ] ドメインオブジェクトからOutput型へ変換
+
+#### ✅ 禁止事項
+- [ ] ビジネスロジックの実装禁止
+- [ ] バリデーション処理の実装禁止
+- [ ] データ整合性チェックの実装禁止
+- [ ] Controller内での404/500チェック禁止
+
 - **責務**: HTTPリクエスト/レスポンスの処理、データ変換、レスポンス形成
 - **依存**: Application層のQuery/Commandのみ
 - **特徴**: 

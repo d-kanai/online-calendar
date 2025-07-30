@@ -567,3 +567,4 @@ yarn e2e:install
 - 🔤 Featureファイルのキーワードは英語を使用すること（Feature, Scenario, Given, When, Then, And, Rule）
 - FeatureファイルにUIのルールは含めない。ビジネスルールのみ
 - 🇯🇵 説明文や手順は日本語で記述すること
+
