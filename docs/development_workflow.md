@@ -101,6 +101,8 @@ yarn typecheck
 
 **10. リファクタリング**
 - アーキテクチャルール・コード品質・設計原則を確認してリファクタリング
+- [バックエンド](./backend_architecture.md)のチェックリスト参照
+- [フロントエンド](./frontend_architecture.md)のチェックリスト参照
 
 **11. 🧹 Dead Code Detection（最終品質保証段階）**
 ```bash
