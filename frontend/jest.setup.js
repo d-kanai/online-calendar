@@ -7,3 +7,19 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
   unobserve: jest.fn(),
   disconnect: jest.fn(),
 }))
+
+// Suppress console warnings in test environment
+const originalWarn = console.warn
+beforeAll(() => {
+  console.warn = (...args) => {
+    // Suppress Radix UI Dialog warnings about missing Description
+    if (args[0]?.includes?.('Missing `Description` or `aria-describedby`')) {
+      return
+    }
+    originalWarn(...args)
+  }
+})
+
+afterAll(() => {
+  console.warn = originalWarn
+})

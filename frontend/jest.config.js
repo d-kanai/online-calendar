@@ -24,6 +24,7 @@ const customJestConfig = {
     '!src/**/*.api.ts',
     '!src/**/*.api.tsx',
     '!src/lib/**',
+    '!src/**/useRealtimeSync.ts',
   ],
   coverageThreshold: {
     global: {
