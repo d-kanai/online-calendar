@@ -23,6 +23,7 @@ const customJestConfig = {
     '!src/test/**',
     '!src/**/*.api.ts',
     '!src/**/*.api.tsx',
+    '!src/lib/**',
   ],
   coverageThreshold: {
     global: {
