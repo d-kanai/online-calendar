@@ -1,570 +1,156 @@
 # 🧪 E2Eテスト仕様
 
-### 🛠️ E2Eテスト環境設定
+## 🛡️ E2Eテスト環境設定チェックリスト
 
-#### 🔐 認証共通ステップ（必須）
-**全てのFeatureファイルで以下のBackgroundを使用する**:
-```gherkin
-Feature: 機能名
-  機能の説明
+#### ✅ 認証共通ステップ（必須）
+- [ ] 全Featureファイルで`Background: Given ユーザー"Daiki"でログイン`使用
+- [ ] 認証済み状態での動作を前提とする
+- [ ] `auth.steps.js`でデータベースリセットとユーザー作成実装
+- [ ] クリーンアップ処理でページ・ブラウザ・DB接続クローズ
 
-  Background:
-    Given ユーザー"Daiki"でログイン
+#### ✅ ATDD基本原則
+- [ ] 全APIが実際にバックエンドと連携していることを確認
+- [ ] テスト間でデータ競合しないよう各テスト前にDBリセット
+- [ ] データ準備ステップは`data.steps.js`に集約
+- [ ] 処理完了待機（APIレスポンス、UI更新完了）まで適切に待機
 
-  Rule: ビジネスルール
-    Scenario: シナリオ名
-      Given 何かの前提条件
-      When 何かの動作
-      Then 何かの結果
-```
+#### ✅ Headlessモード制御
+- [ ] デフォルト: headlessモード（`yarn e2e:develop`）
+- [ ] デバッグ用: ブラウザ表示モード（`yarn e2e:debug`）
+- [ ] CI/CD: headless全シナリオ（`yarn e2e`）
+- [ ] 初期開発: ブラウザ表示でUI動作確認
 
-#### 🔧 共通認証ステップの実装
+## 🛡️ E2E待機戦略実装チェックリスト
+
+#### ✅ 禁止事項
+- [ ] `waitForTimeout()`による固定時間待機禁止
+- [ ] 推測による待機時間設定禁止
+
+#### ✅ 推奨パターン実装
+- [ ] `waitForLoadState('networkidle')`でネットワーク完了待機
+- [ ] `waitForSelector()`で要素表示待機
+- [ ] `waitForSelector('[role="dialog"]')`でダイアログ表示待機
+
 ```javascript
-// e2e/steps/auth.steps.js
-Given('ユーザー{string}でログイン', async function (userName) {
-  // データベースリセット - 全テーブルをクリア
-  await prisma.meetingParticipant.deleteMany();
-  await prisma.meeting.deleteMany();
-  await prisma.user.deleteMany();
-  
-  // ユーザー作成
-  const user = await prisma.user.create({
-    data: {
-      email: `${userName.toLowerCase()}@example.com`,
-      name: userName
-    }
-  });
-  
-  // ユーザー情報を保存（他のステップで使用）
-  this.currentUser = user;
-});
-```
-
-#### クリーンアップ処理
-```javascript
-After(async function () {
-  if (page) {
-    await page.close();
-    page = null;
-  }
-  if (browser) {
-    await browser.close();
-    browser = null;
-  }
-  await prisma.$disconnect();
-});
-```
-
-### ⚠️ ATDD注意点
-- **Background必須**: 全てのFeatureファイルでBackground: ユーザー"Daiki"でログインを記載する
-- **認証前提**: 全てのシナリオは認証済み状態での動作を前提とする
-- **全API統合**: シナリオで関連する全てのAPIが実際にバックエンドと連携していることを確認
-- **データの一貫性**: テスト間でデータが競合しないよう、各テスト前にデータベースリセット
-- **🚫 固定待機禁止**: `waitForTimeout()`による固定待機は基本禁止
-- **⚡ 動的待機必須**: 要素やネットワーク完了を待つ動的待機を使用
-- **処理完了待機**: APIレスポンス、UI更新完了まで適切に待機
-- **📊 データ準備分離**: Given（データ準備）ステップは`data.steps.js`に集約
-- **🖥️ Headlessモード**: デフォルトはheadless、デバッグ時のみブラウザ表示
-
-### 🔧 E2Eテスト環境設定
-
-#### 🖥️ Headlessモード制御
-```bash
-# デフォルト: headlessモード（高速）
-yarn e2e
-yarn e2e:develop
-
-# デバッグ用: ブラウザ表示モード
-yarn e2e:debug
-E2E_HEADLESS=false yarn e2e:develop
-```
-
-#### 🎯 モード選択指針
-- **通常開発**: `yarn e2e:develop`（headless、高速）
-- **デバッグ時**: `yarn e2e:debug`（ブラウザ表示、動作確認）
-- **CI/CD**: `yarn e2e`（headless、全シナリオ）
-- **初期開発**: `yarn e2e:debug`（UIの動作確認）
-
-### 🚀 E2E待機戦略ルール
-
-#### ❌ 禁止パターン
-```javascript
-// 固定時間待機（禁止）
-await page.waitForTimeout(3000);
-await page.waitForTimeout(1000);
-```
-
-#### ✅ 推奨パターン
-```javascript
-// ネットワーク完了待機
+// ✅ 正しい待機パターン
 await page.waitForLoadState('networkidle');
+await page.waitForSelector('[data-testid="meeting-list"]');
+await page.waitForSelector('[role="dialog"]', { state: 'visible' });
 
-// 要素表示待機
-await page.waitForSelector('[data-testid="calendar-view"]', { timeout: 10000 });
-
-// ダイアログ表示待機
-await page.waitForSelector('[role="dialog"]', { timeout: 10000 });
-
-// 特定テキスト表示待機
-await page.waitForSelector(':text("更新された会議")', { timeout: 10000 });
+// ❌ 禁止パターン
+await page.waitForTimeout(3000); // 固定時間待機は禁止
 ```
+## 🛡️ 権限制御テスト実装チェックリスト
 
-#### 🎯 待機戦略の選択指針
-- **ページロード後**: `waitForLoadState('networkidle')`でネットワーク完了を待機
-- **要素表示**: `waitForSelector()`で要素が表示されるまで待機
-- **フォーム表示**: `waitForSelector('[data-testid="form-element"]')`でフォーム要素を待機
-- **ダイアログ表示**: `waitForSelector('[role="dialog"]')`でダイアログを待機
-- **データ更新**: `waitForSelector(':text("更新後の内容")')`で更新された内容を待機
+#### ✅ 基本原則
+- [ ] Frontend/Backend二重防御で権限制御実装
+- [ ] E2Eテストはユーザー視点の動作確認
+- [ ] Backend TestAでAPIレベル保護確認
 
-この戦略により、テスト実行時間を70%短縮（40秒→12秒）し、より安定したE2Eテストを実現する 🚀
+#### ✅ パターン1: UI要素非表示の場合
+- [ ] 編集ボタンが表示されないことを確認
+- [ ] Backend TestAで403エラー返却確認
+- [ ] 権限のないユーザーでの操作試行テスト
 
-### 🎯 ATDDの価値
-- **ビジネス価値の検証**: 実際のユーザーシナリオでビジネス価値を確認
-- **統合品質保証**: システム全体の統合動作を保証
-- **回帰テスト**: 機能追加時の既存機能への影響を検知
-- **仕様の生きた文書**: Featureファイルが常に最新の仕様書として機能
+#### ✅ パターン2: エラーメッセージ表示の場合
+- [ ] 実際に操作を行いエラーメッセージ表示確認
+- [ ] Backend TestAで同じ制約のAPI確認
+- [ ] ビジネスルール違反時の適切な表示
 
-## 🔒 権限制御テストパターン
+#### ✅ テスト責務分担
+- [ ] E2Eテスト: ユーザー視点動作確認
+- [ ] Backend TestA: APIレベル権限・制約確認
+- [ ] Frontend単体テスト: UI要素表示制御ロジック
 
-### 🎯 基本原則
-- **Frontend/Backend二重防御**: 権限制御はFrontendとBackendの両方で実装
-- **E2E検証範囲**: E2Eテストはユーザーが実際に体験する動作を検証
-- **API保護の確認**: Backend APIレベルの保護はBackend TestA（API Test）で担保
+## 🛡️ E2Eステップ分離実装チェックリスト
 
-### 📋 権限制御の検証パターン
+#### ✅ ファイル構成原則
+- [ ] 認証・データ準備・UI操作を独立したファイルに分離
+- [ ] Givenステップは純粋なデータベース操作のみ実行
+- [ ] 共通のデータパターンを全featureファイルで使用可能
 
-#### パターン1: UIに権限制御要素が表示されない場合
+#### ✅ ファイル別責務
+- [ ] `auth.steps.js`: 認証処理・ブラウザ管理・グローバル状態管理
+- [ ] `data.steps.js`: テストデータ作成（純粋なDB操作のみ）
+
+```javascript
+// auth.steps.js - 認証とブラウザ管理
+Given('ユーザー{string}でログイン', async function (userName) {
+  await resetDatabase();
+  await createUser(userName);
+  await this.page.goto('/signin');
+});
+
+// data.steps.js - データ準備のみ
+Given('会議 {string} を作成済み', async function (meetingTitle) {
+  await createMeeting({ title: meetingTitle, ownerId: 'user1' });
+});
+```
+#### ✅ 禁止事項
+- [ ] `data.steps.js`内でのページ操作禁止
+- [ ] UI操作ステップ内でのデータ作成禁止
+- [ ] 関心事の混在禁止
+
+#### ✅ データパターン設計
+- [ ] パラメータ化でさまざまなデータパターンに対応
+- [ ] 合理的なデフォルト値設定（明日14:00-15:00等）
+- [ ] 複数Givenステップ組み合わせで複雑シナリオ構成
+- [ ] 命名規約: `Given {エンティティ} "{パラメータ}" を{状態}済み`
+
 ```gherkin
-Scenario: オーナー以外は会議を更新できない
-  Given 他のユーザーが作成した会議がある
-  When 参加者が会議を更新しようとする
-  Then "オーナーのみが会議を編集できます" エラーが表示される
+# ✅ パラメータ化されたデータパターン
+Given 会議 "定期MTG" を作成済み
+Given ユーザー "田中" を招待済み
+Given 会議 "緊急会議" を "明日 10:00-11:00" で作成済み
+
+# ✅ 複数ステップの組み合わせ
+Given 会議 "プロジェクト会議" を作成済み
+And ユーザー "佐藤" を招待済み
+And ユーザー "佐藤" が招待を承諾済み
 ```
 
-**実装方針**:
-- **E2Eテスト**: 編集ボタンが表示されないことを確認
-- **Backend TestA**: 権限のないユーザーがAPIを直接呼び出した場合に403エラーが返ることを確認
+## 🛡️ Page Object実装チェックリスト
+
+#### ✅ 基本原則
+- [ ] 各ページのDOM構造とセレクターを1つのクラスに集約
+- [ ] 低レベルDOM操作を高レベルビジネス操作に変換
+- [ ] UI変更時の修正箇所を最小限に抑制
+- [ ] step定義をビジネスロジック中心に簡素化
+
+#### ✅ ファイル構成
+- [ ] `e2e/page-objects/`に各画面のPage Object配置
+- [ ] `e2e/steps/`にPage Object使用したstep定義
+- [ ] `e2e/features/`にGherkinシナリオ配置
+
+#### ✅ クラス構造
+- [ ] セレクター定義を集約
+- [ ] ビジネス操作メソッド実装
+- [ ] 個別操作メソッド実装
+- [ ] 検証メソッド実装
 
 ```javascript
-// E2E Step実装例
-Then('{string} エラーが表示される', async function (expectedErrorMessage) {
-  if (expectedErrorMessage === 'オーナーのみが会議を編集できます') {
-    // 参加者には編集ボタンが表示されないことを確認
-    const editButton = await page.$(':text("編集")');
-    if (editButton) {
-      throw new Error('編集ボタンが表示されています。参加者には編集ボタンが表示されないはずです。');
-    }
-    return;
-  }
-  // 他のエラーケースの処理...
-});
-```
-
-#### パターン2: UIで操作を試みてエラーメッセージが表示される場合
-```gherkin
-Scenario: 開始済みの会議は更新できない
-  Given オーナーが作成した開始済みの会議がある
-  When オーナーが会議を更新しようとする
-  Then "開始済みの会議は編集できません" エラーが表示される
-```
-
-**実装方針**:
-- **E2Eテスト**: 実際に操作を行い、エラーメッセージが表示されることを確認
-- **Backend TestA**: APIレベルでも同じ制約が適用されることを確認
-
-### ⚖️ テスト責務の分担
-- **E2Eテスト**: ユーザー視点の動作確認（UIに表示される/されない、操作できる/できない）
-- **Backend TestA**: APIレベルの権限・制約確認（直接APIを叩いた場合の保護）
-- **Frontend単体テスト**: UI要素の表示制御ロジック
-
-### 🛡️ セキュリティの考え方
-- **Defense in Depth**: 多層防御の原則に従い、Frontend・Backend両方で制御
-- **最小権限の原則**: ユーザーには必要最小限の操作のみを許可
-- **Backend最終防衛線**: Frontendをバイパスされても、Backendで確実に保護
-
-## 📊 E2Eステップ分離ルール
-
-### 🎯 基本原則
-- **関心の分離**: 認証・データ準備・UI操作を独立したファイルに分離
-- **純粋性**: Givenステップは純粋なデータベース操作のみ実行
-- **再利用性**: 共通のデータパターンを全featureファイルで使用可能
-
-### 📂 ファイル構成と責務
-
-#### 🔐 `auth.steps.js`
-- **責務**: 認証処理・ブラウザ管理・グローバル状態管理
-- **含む内容**:
-  - `Given ユーザー"Daiki"でログイン`
-  - `BeforeAll`/`AfterAll`フック
-  - グローバルPage Object初期化
-
-#### 📊 `data.steps.js`
-- **責務**: テストデータの作成（純粋なDB操作のみ）
-- **含む内容**:
-  - `Given 会議 "タイトル" を作成済み`
-  - `Given 時間帯 "10:00-11:00" の会議を作成済み`
-  - `Given 重要会議 "タイトル" を作成済み`
-  - `Given 会議 "タイトル" に参加者 "email" を追加済み`
-- **特徴**:
-  - ページアクセス一切なし
-  - Prismaによる直接DB操作
-  - `this.createdMeeting`で他ステップに共有
-
-#### 🖥️ `{feature}.steps.js`
-- **責務**: UI操作・ページアクセス・結果確認
-- **含む内容**:
-  - `When` ステップ（ページ操作）
-  - `Then` ステップ（結果確認）
-- **特徴**:
-  - グローバルPage Object使用
-  - 動的待機戦略の適用
-
-### 🚫 禁止パターン
-```javascript
-// ❌ data.steps.js内でのページ操作（禁止）
-Given('会議を作成済み', async function () {
-  await page.goto('http://localhost:3000'); // NG
-  await page.click('button'); // NG
-});
-
-// ❌ UI操作ステップ内でのデータ作成（禁止）
-When('会議を作成する', async function () {
-  await prisma.meeting.create({...}); // NG
-});
-```
-
-### ✅ 推奨パターン
-```javascript
-// ✅ data.steps.js - 純粋なDB操作
-Given('会議 {string} を作成済み', async function (title) {
-  const meeting = await prisma.meeting.create({
-    data: { title, startTime: tomorrow, endTime: endTime, ownerId: this.currentUser.id }
-  });
-  this.createdMeeting = meeting;
-});
-
-// ✅ {feature}.steps.js - UI操作
-When('カレンダー画面で会議詳細を開く', async function () {
-  await global.calendarPage.navigate();
-  await global.calendarPage.page.click(':text("会議タイトル")');
-});
-```
-
-### 🎯 データパターンの設計指針
-- **柔軟性**: パラメータ化でさまざまなデータパターンに対応
-- **デフォルト**: 合理的なデフォルト値（明日14:00-15:00等）
-- **組み合わせ**: 複数のGivenステップを組み合わせて複雑なシナリオを構成
-- **命名規約**: `Given {エンティティ} "{パラメータ}" を{状態}済み`
-
-### 🔄 ステップ実行フロー
-```
-1. Background: ユーザー"Daiki"でログイン (auth.steps.js)
-2. Given: 会議 "タイトル" を作成済み (data.steps.js)
-3. When: カレンダー画面で会議詳細を開く ({feature}.steps.js)
-4. Then: 会議詳細が表示される ({feature}.steps.js)
-```
-
-この構成により、保守性・再利用性・テスト実行速度の全てを向上させる 🎯
-
-## 🎭 Page Objectパターン
-
-### 🎯 基本原則
-- **DOM情報の集約**: 各ページのDOM構造とセレクターを1つのクラスに集約
-- **ビジネス操作の抽象化**: 低レベルなDOM操作を高レベルなビジネス操作に変換
-- **保守性の向上**: UI変更時の修正箇所を最小限に抑制
-- **可読性の向上**: step定義をビジネスロジック中心に簡素化
-
-### 🏗️ Page Objectクラス設計
-
-#### 📂 ファイル構成
-```
-e2e/
-├── page-objects/
-│   ├── CalendarPage.js      # カレンダー画面のPage Object
-│   ├── MeetingFormPage.js   # 会議フォームのPage Object
-│   └── [PageName]Page.js    # 各画面のPage Object
-├── steps/
-│   ├── meeting_creation.steps.js  # Page Objectを使用したstep定義
-│   └── toppage.steps.js           # Page Objectを使用したstep定義
-└── features/
-    └── *.feature             # Gherkinシナリオ
-```
-
-#### 🎨 Page Objectクラス構造
-```javascript
-class MeetingFormPage {
+// MeetingPage.js - Page Object例
+class MeetingPage {
   constructor(page) {
     this.page = page;
-    
-    // 🎯 セレクター定義を集約
+    // セレクター集約
     this.selectors = {
-      createMeetingButton: 'text=会議を作成',
-      titleInput: '[data-testid="meeting-title-input"]',
-      submitButton: '[data-testid="meeting-submit-button"]',
-      errorAlert: '[role="alert"]'
+      createButton: '[data-testid="create-meeting"]',
+      titleInput: '[data-testid="meeting-title"]',
+      saveButton: '[data-testid="save-meeting"]'
     };
   }
 
-  // 🎪 ビジネス操作メソッド
-  async createMeeting(title, period, importantFlag) {
-    await this.openCreateMeetingForm();
-    await this.fillTitle(title);
-    await this.setPeriod(period);
-    await this.setImportantFlag(importantFlag === 'true');
-    await this.submitAndWaitForCompletion();
+  // ビジネス操作
+  async createMeeting(title) {
+    await this.page.click(this.selectors.createButton);
+    await this.page.fill(this.selectors.titleInput, title);
+    await this.page.click(this.selectors.saveButton);
   }
 
-  // 📝 個別操作メソッド
-  async openCreateMeetingForm() {
-    await this.page.click(this.selectors.createMeetingButton);
-    await this.page.waitForSelector(this.selectors.titleInput);
-  }
-
-  // 🚨 検証メソッド
-  async waitForErrorMessage(expectedErrorMessage) {
-    await this.page.waitForSelector(this.selectors.errorAlert, { timeout: 10000 });
-    const alertContent = await this.page.textContent(this.selectors.errorAlert);
-    if (!alertContent.includes(expectedErrorMessage)) {
-      throw new Error(`Expected error message "${expectedErrorMessage}" not found`);
-    }
+  // 検証メソッド
+  async verifyMeetingExists(title) {
+    await this.page.waitForSelector(`text=${title}`);
   }
 }
 ```
-
-### 🔄 step definition変更
-
-#### **Before（DOM操作が散在）:**
-```javascript
-When('period {string} で会議を作成する', async function (period) {
-  // 会議を作成ボタンをクリック
-  await page.click('text=会議を作成');
-  
-  // フォームが表示されるまで待機
-  await page.waitForSelector('[data-testid="meeting-title-input"]');
-  
-  // タイトルを入力（必須項目のため）
-  await page.fill('[data-testid="meeting-title-input"]', 'テスト会議');
-  
-  // 開始時刻と終了時刻を設定（期間に応じて）
-  const now = new Date();
-  const startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0);
-  const endTime = new Date(startTime);
-  
-  // 期間の解析
-  const periodMatch = period.match(/(\d+)分/);
-  if (periodMatch) {
-    const minutes = parseInt(periodMatch[1]);
-    endTime.setMinutes(startTime.getMinutes() + minutes);
-  }
-  
-  const startTimeString = startTime.toISOString().slice(0, 16);
-  const endTimeString = endTime.toISOString().slice(0, 16);
-  
-  await page.fill('#startTime', startTimeString);
-  await page.fill('#endTime', endTimeString);
-  
-  // 作成ボタンをクリック
-  await page.click('[data-testid="meeting-submit-button"]');
-});
-```
-
-#### **After（Page Object集約）:**
-```javascript
-When('period {string} で会議を作成する', async function (period) {
-  // Page Objectを使用した期間指定会議作成
-  await meetingFormPage.createMeetingWithPeriod(period);
-});
-```
-
-### 🏭 Page Object実装パターン
-
-#### 🎯 セレクター管理
-```javascript
-class CalendarPage {
-  constructor(page) {
-    this.page = page;
-    
-    this.selectors = {
-      // ナビゲーション
-      calendarView: '[data-testid="calendar-view"]',
-      createMeetingButton: 'text=会議を作成',
-      
-      // カレンダー要素
-      monthHeader: '.text-2xl.font-semibold',
-      dateCells: '.min-h-24.p-2.cursor-pointer',
-      
-      // 会議要素
-      meetingItems: '.text-xs.p-1.rounded.truncate',
-      importantMeetings: '.bg-destructive.text-destructive-foreground'
-    };
-  }
-}
-```
-
-#### ⚡ 操作メソッド分類
-**基本操作**: `click()`, `fill()`, `navigate()`
-```javascript
-async clickCreateMeeting() {
-  await this.page.click(this.selectors.createMeetingButton);
-}
-
-async navigate(url = 'http://localhost:3000') {
-  await this.page.goto(url);
-}
-```
-
-**複合操作**: 複数の基本操作を組み合わせたビジネス操作
-```javascript
-async createMeeting(title, period, importantFlag) {
-  await this.openCreateMeetingForm();
-  await this.fillTitle(title);
-  await this.setPeriod(period);
-  await this.setImportantFlag(importantFlag === 'true');
-  await this.submitAndWaitForCompletion();
-}
-```
-
-**検証操作**: 状態確認・待機・エラー検証
-```javascript
-async waitForSuccessMessage() {
-  await this.page.waitForSelector(this.selectors.successToast, { timeout: 10000 });
-}
-
-async waitForErrorMessage(expectedErrorMessage) {
-  await this.page.waitForSelector(this.selectors.errorAlert, { timeout: 10000 });
-  const alertContent = await this.page.textContent(this.selectors.errorAlert);
-  if (!alertContent.includes(expectedErrorMessage)) {
-    throw new Error(`Expected error message "${expectedErrorMessage}" not found`);
-  }
-}
-```
-
-### 🚀 Page Object導入効果
-
-#### **1. 保守性向上** 🛠️
-- **UI変更対応**: セレクター変更時の修正箇所が1ファイルに集約
-- **影響範囲明確化**: DOM構造変更の影響範囲が特定しやすい
-- **一元管理**: 画面固有のロジックが1箇所に集約
-
-#### **2. 可読性向上** 📖
-- **ビジネス中心**: step定義がビジネス操作中心になり理解しやすい
-- **抽象化**: 技術的詳細が隠蔽されてシナリオが読みやすい
-- **意図明確**: メソッド名でビジネス意図が明確に表現
-
-#### **3. 再利用性向上** ♻️
-- **共通操作**: 画面固有の操作を他のシナリオで簡単に再利用
-- **標準化**: 同じ操作が常に同じ方法で実行される
-- **DRY原則**: 重複コードの削減
-
-#### **4. テスト安定性向上** 🛡️
-- **待機処理統一**: Page Object内で適切な待機処理を実装
-- **エラーハンドリング**: 統一されたエラーハンドリング
-- **セレクター品質**: data-testid等の推奨セレクターを集約管理
-
-### 📋 Page Object実装ガイドライン
-
-#### ✅ 推奨パターン
-- **1画面1クラス**: 各画面に対応する専用Page Objectクラスを作成
-- **セレクター集約**: 全セレクターをコンストラクタで定義
-- **ビジネス操作**: 高レベルなビジネス操作メソッドを提供
-- **適切な待機**: 非同期処理に対する適切な待機処理
-
-#### ❌ アンチパターン
-- **巨大クラス**: 複数画面の操作を1つのクラスに混在
-- **DOM操作露出**: step定義に直接的なDOM操作が残存
-- **重複実装**: 同じ操作を複数のPage Objectで重複実装
-- **セレクター散在**: セレクターがメソッド内に散在
-
-この設計により、E2Eテストの保守性・可読性・再利用性が大幅に向上し、チーム開発での品質が確保される 🎉
-
-## 🐛 E2Eデバッグルール
-
-### 🚨 E2Eテスト失敗時の対応手順
-
-**E2Eテストがfailした場合、以下の手順を必ず実行すること：**
-
-#### 1️⃣ **最優先: スクリーンショットとログの確認**
-```bash
-# 失敗時は必ず最初に実施
-1. スクリーンショットを確認 → e2e/screenshots/
-2. ブラウザコンソールログを確認
-3. 実際の画面状態を把握してから修正に着手
-```
-
-#### ❌ **アンチパターン（避けるべき対応）**
-```bash
-# E2E失敗 → すぐにコードを見て推測で修正 ❌
-# E2E失敗 → 何度も試行錯誤 ❌
-# E2E失敗 → ようやくスクリーンショット確認 ❌
-```
-
-#### ✅ **推奨パターン**
-```bash
-# E2E失敗 → スクリーンショット確認 ✅
-# 実際の画面状態を確認 → 原因特定 ✅
-# 的確な修正を実施 ✅
-```
-
-### 📸 自動デバッグ情報
-
-1. **スクリーンショット自動取得**
-   - テストfail時に自動でスクリーンショットを保存
-   - 保存先: `e2e/screenshots/[feature名]_[scenario名]_[timestamp].png`
-
-2. **ブラウザログ出力**
-   - console.log、console.error、console.warnを全て出力
-   - ネットワークエラーやJavaScriptエラーを即座に確認
-
-3. **デバッグ情報収集**
-   ```javascript
-   // E2E失敗時の自動実行
-   - ブラウザコンソールログ
-   - JavaScriptエラー
-   - ネットワークエラー
-   - 最後のDOM状態
-   ```
-
-### 🔍 デバッグのコツ
-
-**スクリーンショットから読み取れる情報：**
-- **「読み込み中...」表示** → API通信の問題、認証エラー
-- **データが表示されている** → 計算ロジックの差異、期待値の問題
-- **エラーメッセージ** → バックエンドエラー、バリデーションエラー
-- **画面が白い** → ルーティングエラー、コンポーネントクラッシュ
-
-### 🎯 デバッグモード実行
-```bash
-# ブラウザ表示でリアルタイムデバッグ
-yarn e2e:debug
-
-# 特定のシナリオのみ実行
-yarn e2e:debug --tags "@specific-scenario"
-```
-
-このプロセスにより、E2Eテストの問題を素早く特定し、効率的に修正できる 🛡️
-
-
-
-## ⚡ 基本コマンド
-
-### 🧪 E2Eテスト
-```bash
-# 🚀 全体のE2Eテスト実行（headlessモード）
-yarn e2e
-
-# 🔍 開発用E2Eテスト実行（headlessモード）
-yarn e2e:develop
-
-# 🐛 デバッグ用E2Eテスト実行（ブラウザ表示）
-yarn e2e:debug
-
-# 📦 E2Eテスト用ブラウザインストール
-yarn e2e:install
-```
-
-## 📏 実装ルール
-
-- 🔤 Featureファイルのキーワードは英語を使用すること（Feature, Scenario, Given, When, Then, And, Rule）
-- FeatureファイルにUIのルールは含めない。ビジネスルールのみ
-- 🇯🇵 説明文や手順は日本語で記述すること
-
