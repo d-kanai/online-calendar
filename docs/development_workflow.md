@@ -41,6 +41,11 @@ yarn ut
 - backend testをpassするように実装
 - Controller・Application・Domain層を順次実装
 - Exception設計とエラーハンドリング統一
+- **🔥 DB変更時の必須チェック**: スキーマ変更時は以下を確認
+  - [ ] ドメインモデル: 新フィールドのプロパティとgetter追加
+  - [ ] Repository: `fromPersistence`と`mapToDomain`で新フィールド処理
+  - [ ] Output型: インターフェースに新フィールド定義
+  - [ ] 変換関数: 全ての`toXXXOutput`で新フィールドマッピング
 
 **7. 🧪 Frontend Test実装（TestC）**
 - TestCルールに従ってFrontendページの振る舞いテストを実装
@@ -67,6 +72,10 @@ yarn typecheck
   - **Frontend Test (TestC)**: ページ振る舞いテストがpassする
 - 3つ全てがパスするまで実装を調整
 - 予期せぬfailした際は各テストのデバッグルールに沿ってfix
+- **🔥 E2E失敗時のデバッグ順序**:
+  1. APIレスポンス確認: 新フィールドが正しく返されているか
+  2. フロントエンド表示確認: APIデータが正しくUIに反映されているか
+  3. React Query Suspenseクエリ: キャッシュ更新が正しく動作しているか
 
 **10. リファクタリング**
 - アーキテクチャルール・コード品質・設計原則を確認してリファクタリング
