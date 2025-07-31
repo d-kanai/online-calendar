@@ -6,8 +6,10 @@
 |-----------|---------|-----------|
 | **TestA** | Backend | API in-out Test |
 | **TestB** | Backend | Domain Layer Pattern Test |
-| **TestC** | Frontend | Page Event Test |
-| **TestD** | E2E Test | Scenario Test |
+| **TestC** | Web Frontend UT | Page Event Test |
+| **TestD** | E2E Web | Scenario Test |
+| **TestE** | IOS Frontend UT | Page Event Test |
+| **TestF** | E2E IOS | Scenario Test |
 
 ## 🎯 TestA: Controller API テスト
 
