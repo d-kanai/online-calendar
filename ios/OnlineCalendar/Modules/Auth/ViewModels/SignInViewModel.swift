@@ -7,13 +7,7 @@ class SignInViewModel: ObservableObject {
     @Published var form = SignInForm()
     
     // MARK: - UI State
-    @Published var isLoading = false
     @Published var errorMessage: String?
-    
-    // MARK: - Computed Properties
-    var signInButtonTitle: String {
-        isLoading ? "サインイン中..." : "サインイン"
-    }
     
     // MARK: - Dependencies
     private let repository: AuthRepositoryProtocol
@@ -25,13 +19,12 @@ class SignInViewModel: ObservableObject {
     }
     
     // MARK: - Actions
-    func signIn() async {
+    func signIn() async throws {
         guard form.isValid else {
             errorMessage = "メールアドレスとパスワードを正しく入力してください"
-            return
+            throw ValidationError.invalidForm
         }
         
-        isLoading = true
         errorMessage = nil
         
         do {
@@ -42,13 +35,24 @@ class SignInViewModel: ObservableObject {
         } catch {
             errorMessage = error.localizedDescription
             print("❌ [SignInViewModel] Sign in failed: \(error)")
+            throw error
         }
-        
-        isLoading = false
     }
     
     // MARK: - Helper Methods
     func clearError() {
         errorMessage = nil
+    }
+}
+
+// MARK: - Validation Error
+enum ValidationError: LocalizedError {
+    case invalidForm
+    
+    var errorDescription: String? {
+        switch self {
+        case .invalidForm:
+            return "入力内容を確認してください"
+        }
     }
 }

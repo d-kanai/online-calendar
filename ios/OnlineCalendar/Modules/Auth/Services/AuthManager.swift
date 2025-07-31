@@ -9,10 +9,10 @@ class AuthManager: ObservableObject {
     
     // MARK: - Published Properties
     @Published var isAuthenticated = false
-    @Published var authToken: String?
-    @Published var currentUser: User?
     
     // MARK: - Private Properties
+    private var authToken: String?
+    private var currentUser: User?
     private let userDefaults = UserDefaults.standard
     private let tokenKey = "authToken"
     private let userKey = "currentUser"

@@ -37,11 +37,12 @@ ios/OnlineCalendar/
   - [x] ViewModel: ObservableObject を使用 (AuthManager, MeetingListViewModel)
   - [x] Model: データ構造とビジネスロジック
   - [x] Repository: データアクセス層の抽象化
+  - [x] モダンな非同期処理: Task + async/await パターン（React Suspense風）
 
-- [ ] **フォームバリデーション** 
-  - [ ] ValidatedPropertyKit による宣言的バリデーション
-  - [ ] Property Wrapper を使った直感的な記法
-  - [ ] リアルタイムバリデーションフィードバック
+- [x] **フォームバリデーション** 
+  - [x] フォームクラスによるロジックの分離
+  - [x] リアルタイムバリデーションフィードバック
+  - [x] シンプルな実装（外部ライブラリ不使用）
 
 - [x] **依存性注入**
   - [x] @StateObject / @ObservedObject でViewModelを注入
@@ -56,6 +57,8 @@ ios/OnlineCalendar/
   - [x] ViewとViewModelは1:1の関係
   - [x] ViewModelは画面固有のアクションのみを持つ
   - [x] 他ドメインのアクション（認証等）は直接EnvironmentObjectから呼ぶ
+  - [x] フォームロジックは専用のFormクラスに分離（例：SignInForm）
+  - [x] 必要最低限のプロパティのみ`@Published`にする（UIに影響するもののみ）
 
 ### 📡 API通信
 - [x] **APIClient**
@@ -121,6 +124,8 @@ ios/OnlineCalendar/
   - [x] 1つのファイルからしか使わないViewは `private struct` として同一ファイル内に定義
   - [x] 複数箇所から使うViewは別ファイルに切り出し
   - [x] 子Viewへの依存はコールバックで解決
+  - [x] View内のコンポーネントは大文字始まり（例：`HeaderSection`、`FormSection`）
+  - [x] コンポーネントは純粋なUIのみ返し、レイアウト（spacing、padding）は親で制御
 
 - [x] **ユーティリティ関数**
   - [x] 日付フォーマット等の純粋関数はExtensionとしてUtilsに配置
@@ -130,40 +135,139 @@ ios/OnlineCalendar/
 
 ### 実装例
 
-#### フォームバリデーション (ValidatedPropertyKit)
+#### フォームの分離パターン
 ```swift
-import ValidatedPropertyKit
-
-@MainActor
-class SignInViewModel: ObservableObject {
-    // 宣言的なバリデーション
-    @Validated(!.isEmpty && .isEmail)
+// フォームクラス：状態とバリデーション
+class SignInForm: ObservableObject {
     @Published var email: String = ""
-    
-    @Validated(.range(8...))
     @Published var password: String = ""
     
-    // カスタムバリデーション
-    @Validated(.isStrongPassword)
-    @Published var newPassword: String = ""
+    var isValid: Bool {
+        !email.isEmpty && email.contains("@") && password.count >= 8
+    }
     
-    var isFormValid: Bool {
-        _email.isValid && _password.isValid
+    var emailError: String? {
+        guard !email.isEmpty else { return nil }
+        guard email.contains("@") else { return "有効なメールアドレスを入力してください" }
+        return nil
+    }
+    
+    var passwordError: String? {
+        guard !password.isEmpty else { return nil }
+        guard password.count >= 8 else { return "パスワードは8文字以上必要です" }
+        return nil
     }
 }
 
-// カスタムバリデーションの定義
-extension Validation where Value == String {
-    static var isStrongPassword: Self {
-        .init { value in
-            let hasMinLength = value.count >= 8
-            let hasUpperCase = value.rangeOfCharacter(from: .uppercaseLetters) != nil
-            let hasLowerCase = value.rangeOfCharacter(from: .lowercaseLetters) != nil
-            let hasNumber = value.rangeOfCharacter(from: .decimalDigits) != nil
-            
-            return hasMinLength && hasUpperCase && hasLowerCase && hasNumber
+// ViewModel：ビジネスロジックのみ
+@MainActor
+class SignInViewModel: ObservableObject {
+    @Published var form = SignInForm()
+    @Published var isLoading = false
+    @Published var errorMessage: String?
+    
+    func signIn() async {
+        guard form.isValid else { return }
+        // API呼び出しなどのビジネスロジック
+    }
+}
+
+// View：UIのみ
+struct SignInView: View {
+    @StateObject private var viewModel = SignInViewModel()
+    
+    var body: some View {
+        TextField("メールアドレス", text: $viewModel.form.email)
+        if let error = viewModel.form.emailError {
+            Text(error).foregroundColor(.red)
         }
     }
+}
+```
+
+
+#### @Published プロパティの使用ガイドライン
+```swift
+// ✅ 良い例：UIに影響するプロパティのみ@Published
+class AuthManager: ObservableObject {
+    @Published var isAuthenticated = false  // UIで使用
+    
+    private var authToken: String?          // 内部でのみ使用
+    private var currentUser: User?          // 内部でのみ使用
+    
+    var currentToken: String? { authToken } // 必要に応じて読み取り専用で公開
+}
+
+// ❌ 悪い例：すべてのプロパティを@Published
+class AuthManager: ObservableObject {
+    @Published var isAuthenticated = false
+    @Published var authToken: String?      // UIで使わない
+    @Published var currentUser: User?      // UIで使わない
+}
+```
+
+#### View コンポーネントの設計
+```swift
+struct SignInView: View {
+    var body: some View {
+        VStack(spacing: 20) {  // ✅ レイアウトは親で制御
+            HeaderSection
+            
+            VStack(spacing: 15) {
+                FormSection
+            }
+            .padding(.horizontal, 40)
+        }
+    }
+}
+
+private extension SignInView {
+    var HeaderSection: some View {  // ✅ 大文字始まり
+        Text("タイトル")
+    }
+    
+    @ViewBuilder
+    var FormSection: some View {  // ✅ 純粋なUIのみ
+        EmailField
+        PasswordField
+        SubmitButton
+        // spacing等のレイアウトは含まない
+    }
+}
+```
+
+#### モダンな非同期処理パターン
+```swift
+struct SignInView: View {
+    @State private var signInTask: Task<Void, Error>?
+    
+    var body: some View {
+        Button("サインイン") {
+            signInTask?.cancel()  // ✅ 既存タスクをキャンセル
+            signInTask = Task {
+                do {
+                    try await viewModel.signIn()
+                    signInTask = nil  // ✅ 成功時にnilに設定
+                } catch {
+                    signInTask = nil  // ✅ エラー時にもnilに設定
+                    // ViewModelがエラーハンドリング済み
+                }
+            }
+        }
+        .disabled(signInTask != nil)  // ✅ Task存在でローディング状態
+        .overlay {
+            if signInTask != nil {  // ✅ 宣言的なローディング表示
+                ProgressView()
+            }
+        }
+    }
+}
+
+// ViewModel側
+func signIn() async throws {
+    // isLoading = true/false が不要！
+    // エラーはthrowで処理
+    // @Published var errorMessage でエラー表示
 }
 ```
 

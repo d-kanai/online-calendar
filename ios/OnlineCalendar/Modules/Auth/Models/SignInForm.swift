@@ -32,11 +32,6 @@ class SignInForm: ObservableObject {
         password = ""
     }
     
-    func prefillTestAccount() {
-        email = "test@example.com"
-        password = "password"
-    }
-    
     // MARK: - Form Data
     var formData: (email: String, password: String) {
         (email: email, password: password)
