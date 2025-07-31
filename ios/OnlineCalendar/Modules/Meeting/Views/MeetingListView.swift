@@ -87,27 +87,28 @@ private extension MeetingListView {
             authManager.clearSession()
         }
     }
+}
+
+// MARK: - Error View
+struct ErrorView: View {
+    let message: String
     
-    struct ErrorView: View {
-        let message: String
-        
-        var body: some View {
-            VStack(spacing: 8) {
-                Image(systemName: "exclamationmark.triangle")
-                    .font(.system(size: 48))
-                    .foregroundColor(.red)
-                Text(message)
-                    .foregroundColor(.red)
-                    .multilineTextAlignment(.center)
-            }
-            .frame(maxWidth: .infinity)
-            .padding()
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 48))
+                .foregroundColor(.red)
+            Text(message)
+                .foregroundColor(.red)
+                .multilineTextAlignment(.center)
         }
+        .frame(maxWidth: .infinity)
+        .padding()
     }
 }
 
 // MARK: - Meeting Row View
-private struct MeetingRowView: View {
+struct MeetingRowView: View {
     let meeting: Meeting
     let onTap: () -> Void
     let onDelete: () -> Void
