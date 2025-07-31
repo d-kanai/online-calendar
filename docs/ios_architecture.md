@@ -38,6 +38,11 @@ ios/OnlineCalendar/
   - [x] Model: データ構造とビジネスロジック
   - [x] Repository: データアクセス層の抽象化
 
+- [ ] **フォームバリデーション** 
+  - [ ] ValidatedPropertyKit による宣言的バリデーション
+  - [ ] Property Wrapper を使った直感的な記法
+  - [ ] リアルタイムバリデーションフィードバック
+
 - [x] **依存性注入**
   - [x] @StateObject / @ObservedObject でViewModelを注入
   - [x] @EnvironmentObject で共有状態を管理
@@ -124,6 +129,45 @@ ios/OnlineCalendar/
   - [x] DateFormatterインスタンスはstaticでキャッシュ
 
 ### 実装例
+
+#### フォームバリデーション (ValidatedPropertyKit)
+```swift
+import ValidatedPropertyKit
+
+@MainActor
+class SignInViewModel: ObservableObject {
+    // 宣言的なバリデーション
+    @Validated(!.isEmpty && .isEmail)
+    @Published var email: String = ""
+    
+    @Validated(.range(8...))
+    @Published var password: String = ""
+    
+    // カスタムバリデーション
+    @Validated(.isStrongPassword)
+    @Published var newPassword: String = ""
+    
+    var isFormValid: Bool {
+        _email.isValid && _password.isValid
+    }
+}
+
+// カスタムバリデーションの定義
+extension Validation where Value == String {
+    static var isStrongPassword: Self {
+        .init { value in
+            let hasMinLength = value.count >= 8
+            let hasUpperCase = value.rangeOfCharacter(from: .uppercaseLetters) != nil
+            let hasLowerCase = value.rangeOfCharacter(from: .lowercaseLetters) != nil
+            let hasNumber = value.rangeOfCharacter(from: .decimalDigits) != nil
+            
+            return hasMinLength && hasUpperCase && hasLowerCase && hasNumber
+        }
+    }
+}
+```
+
+#### コールバックパターン
 ```swift
 // ✅ 良い例：コールバックパターン
 struct ChildView: View {

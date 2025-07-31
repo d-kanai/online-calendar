@@ -1,56 +1,70 @@
 import Foundation
 import SwiftUI
 
+// MARK: - AuthManager
+// 認証状態の管理とトークンの永続化を担当
 @MainActor
 class AuthManager: ObservableObject {
     static let shared = AuthManager()
     
+    // MARK: - Published Properties
     @Published var isAuthenticated = false
     @Published var authToken: String?
     @Published var currentUser: User?
     
-    private let repository: AuthRepositoryProtocol
+    // MARK: - Private Properties
+    private let userDefaults = UserDefaults.standard
+    private let tokenKey = "authToken"
+    private let userKey = "currentUser"
     
-    private init(repository: AuthRepositoryProtocol = AuthRepository()) {
-        self.repository = repository
-        checkStoredToken()
+    // MARK: - Initialization
+    private init() {
+        loadStoredSession()
     }
     
-    private func checkStoredToken() {
-        if let token = UserDefaults.standard.string(forKey: "authToken") {
-            self.authToken = token
-            self.isAuthenticated = true
-            print("✅ [AuthManager] Found stored token")
-        } else {
-            print("❌ [AuthManager] No stored token found")
-        }
-    }
-    
-    func signIn(email: String, password: String) async throws {
-        print("🔐 [AuthManager] Attempting sign in for: \(email)")
+    // MARK: - Session Management
+    func setSession(token: String, user: User) {
+        self.authToken = token
+        self.currentUser = user
+        self.isAuthenticated = true
         
-        do {
-            let response = try await repository.signIn(email: email, password: password)
-            
-            self.authToken = response.token
-            self.currentUser = response.user
-            self.isAuthenticated = true
-            
-            // トークンを保存
-            UserDefaults.standard.set(response.token, forKey: "authToken")
-            
-            print("✅ [AuthManager] Sign in successful")
-        } catch {
-            print("❌ [AuthManager] Sign in failed: \(error)")
-            throw error
+        // 永続化
+        userDefaults.set(token, forKey: tokenKey)
+        if let userData = try? JSONEncoder().encode(user) {
+            userDefaults.set(userData, forKey: userKey)
         }
+        
+        print("✅ [AuthManager] Session saved")
     }
     
-    func signOut() {
+    func clearSession() {
         authToken = nil
         currentUser = nil
         isAuthenticated = false
-        UserDefaults.standard.removeObject(forKey: "authToken")
-        print("👋 [AuthManager] Signed out")
+        
+        // 永続化データをクリア
+        userDefaults.removeObject(forKey: tokenKey)
+        userDefaults.removeObject(forKey: userKey)
+        
+        print("👋 [AuthManager] Session cleared")
+    }
+    
+    // MARK: - Private Methods
+    private func loadStoredSession() {
+        if let token = userDefaults.string(forKey: tokenKey),
+           let userData = userDefaults.data(forKey: userKey),
+           let user = try? JSONDecoder().decode(User.self, from: userData) {
+            self.authToken = token
+            self.currentUser = user
+            self.isAuthenticated = true
+            print("✅ [AuthManager] Restored session")
+        } else {
+            print("❌ [AuthManager] No stored session found")
+        }
+    }
+    
+    // MARK: - Token Access
+    var currentToken: String? {
+        return authToken
     }
 }

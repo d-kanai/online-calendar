@@ -38,7 +38,7 @@ struct MeetingListView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("サインアウト") {
-                        authManager.signOut()
+                        authManager.clearSession()
                     }
                 }
             }

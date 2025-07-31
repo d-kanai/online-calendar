@@ -103,7 +103,7 @@ class APIClient {
     // MARK: - Helper Methods
     @MainActor
     private func getAuthToken() -> String? {
-        return AuthManager.shared.authToken
+        return AuthManager.shared.currentToken
     }
     
     func createJSONDecoder() -> JSONDecoder {

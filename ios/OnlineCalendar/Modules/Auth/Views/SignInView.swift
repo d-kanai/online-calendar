@@ -1,11 +1,7 @@
 import SwiftUI
 
 struct SignInView: View {
-    @StateObject private var authManager = AuthManager.shared
-    @State private var email = ""
-    @State private var password = ""
-    @State private var isLoading = false
-    @State private var errorMessage: String?
+    @StateObject private var viewModel = SignInViewModel()
     
     var body: some View {
         VStack(spacing: 20) {
@@ -16,68 +12,80 @@ struct SignInView: View {
                 .fontWeight(.bold)
             
             VStack(spacing: 15) {
-                TextField("メールアドレス", text: $email)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .autocapitalization(.none)
-                    .keyboardType(.emailAddress)
+                // Email入力
+                VStack(alignment: .leading, spacing: 4) {
+                    TextField("メールアドレス", text: $viewModel.form.email)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .autocapitalization(.none)
+                        .keyboardType(.emailAddress)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 5)
+                                .stroke(
+                                    viewModel.form.emailError != nil ? Color.red : Color.clear,
+                                    lineWidth: 1
+                                )
+                        )
+                    
+                    if let error = viewModel.form.emailError {
+                        Text(error)
+                            .font(.caption)
+                            .foregroundColor(.red)
+                    }
+                }
                 
-                SecureField("パスワード", text: $password)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                // Password入力
+                VStack(alignment: .leading, spacing: 4) {
+                    SecureField("パスワード", text: $viewModel.form.password)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 5)
+                                .stroke(
+                                    viewModel.form.passwordError != nil ? Color.red : Color.clear,
+                                    lineWidth: 1
+                                )
+                        )
+                    
+                    if let error = viewModel.form.passwordError {
+                        Text(error)
+                            .font(.caption)
+                            .foregroundColor(.red)
+                    }
+                }
                 
-                if let error = errorMessage {
+                // 一般的なエラーメッセージ
+                if let error = viewModel.errorMessage {
                     Text(error)
                         .foregroundColor(.red)
                         .font(.caption)
                 }
                 
-                Button(action: signIn) {
-                    if isLoading {
+                // サインインボタン
+                Button(action: {
+                    Task {
+                        await viewModel.signIn()
+                    }
+                }) {
+                    if viewModel.isLoading {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                     } else {
-                        Text("サインイン")
+                        Text(viewModel.signInButtonTitle)
                             .fontWeight(.semibold)
                     }
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.blue)
+                .background(viewModel.form.isValid ? Color.blue : Color.gray)
                 .foregroundColor(.white)
                 .cornerRadius(10)
-                .disabled(isLoading || email.isEmpty || password.isEmpty)
+                .disabled(!viewModel.form.isValid || viewModel.isLoading)
+                .animation(.easeInOut(duration: 0.2), value: viewModel.form.isValid)
             }
             .padding(.horizontal, 40)
-            
-            Spacer()
-            
-            // デバッグ用
-            VStack(spacing: 5) {
-                Text("テスト用アカウント")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                Button("test@example.com / password") {
-                    email = "test@example.com"
-                    password = "password"
-                }
-                .font(.caption)
-                .foregroundColor(.blue)
-            }
-            .padding(.bottom, 20)
         }
     }
-    
-    private func signIn() {
-        isLoading = true
-        errorMessage = nil
-        
-        Task {
-            do {
-                try await authManager.signIn(email: email, password: password)
-            } catch {
-                errorMessage = error.localizedDescription
-                print("❌ [SignInView] Sign in failed: \(error)")
-            }
-            isLoading = false
-        }
-    }
+}
+
+#Preview {
+    SignInView()
 }
