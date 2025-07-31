@@ -5,7 +5,6 @@ import SwiftUI
 class MeetingListViewModel: ObservableObject {
     // MARK: - Published Properties
     @Published var meetings: [Meeting] = []
-    @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var selectedMeeting: Meeting?
     
@@ -20,7 +19,6 @@ class MeetingListViewModel: ObservableObject {
     // MARK: - Meeting Management
     func loadMeetings() async {
         print("🔄 [MeetingListViewModel] Starting to load meetings...")
-        isLoading = true
         errorMessage = nil
         
         do {
@@ -33,7 +31,6 @@ class MeetingListViewModel: ObservableObject {
             print("❌ [MeetingListViewModel] Error description: \(error.localizedDescription)")
         }
         
-        isLoading = false
         print("🔄 [MeetingListViewModel] Finished loading meetings")
     }
     

@@ -6,9 +6,6 @@ struct Meeting: Identifiable {
     let description: String?
     let startDate: Date
     let endDate: Date
-    let location: String?
-    let isOnline: Bool
-    let onlineUrl: String?
     let organizer: Organizer
     let participants: [Participant]
     
@@ -19,9 +16,6 @@ struct Meeting: Identifiable {
         description: String? = nil,
         startDate: Date,
         endDate: Date,
-        location: String? = nil,
-        isOnline: Bool = false,
-        onlineUrl: String? = nil,
         organizer: Organizer,
         participants: [Participant] = []
     ) {
@@ -30,9 +24,6 @@ struct Meeting: Identifiable {
         self.description = description
         self.startDate = startDate
         self.endDate = endDate
-        self.location = location
-        self.isOnline = isOnline
-        self.onlineUrl = onlineUrl
         self.organizer = organizer
         self.participants = participants
     }
@@ -44,9 +35,6 @@ struct Meeting: Identifiable {
         self.description = nil
         self.startDate = response.startTime
         self.endDate = response.endTime
-        self.location = nil
-        self.isOnline = false
-        self.onlineUrl = nil
         self.organizer = Organizer(
             id: response.ownerId,
             name: response.owner.components(separatedBy: "@").first ?? response.owner,
@@ -55,10 +43,8 @@ struct Meeting: Identifiable {
         self.participants = response.participants.map { participantResponse in
             Participant(
                 id: participantResponse.id,
-                userId: participantResponse.userId,
-                userName: participantResponse.userName,
-                userEmail: participantResponse.userEmail,
-                status: participantResponse.status
+                email: participantResponse.email,
+                name: participantResponse.name
             )
         }
     }
@@ -72,8 +58,6 @@ struct Organizer: Codable {
 
 struct Participant: Codable {
     let id: String
-    let userId: String
-    let userName: String
-    let userEmail: String
-    let status: String
+    let email: String
+    let name: String
 }

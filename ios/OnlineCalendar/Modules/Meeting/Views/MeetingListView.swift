@@ -3,47 +3,23 @@ import SwiftUI
 struct MeetingListView: View {
     @StateObject private var viewModel = MeetingListViewModel()
     @EnvironmentObject private var authManager: AuthManager
+    @State private var loadMeetingsTask: Task<Void, Error>?
     
     var body: some View {
         NavigationView {
             List {
-                if viewModel.isLoading {
-                    HStack {
-                        Spacer()
-                        ProgressView()
-                        Spacer()
-                    }
-                    .padding()
-                } else if let error = viewModel.errorMessage {
-                    Text("Error: \(error)")
-                        .foregroundColor(.red)
-                        .padding()
-                } else {
-                    ForEach(viewModel.meetings) { meeting in
-                        MeetingRowView(
-                            meeting: meeting,
-                            onTap: {
-                                viewModel.selectMeeting(meeting)
-                            },
-                            onDelete: {
-                                Task {
-                                    await viewModel.deleteMeeting(meeting)
-                                }
-                            }
-                        )
-                    }
-                }
+                ContentView
             }
             .navigationTitle("会議一覧")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("サインアウト") {
-                        authManager.clearSession()
-                    }
+                    SignOutButton
                 }
             }
             .task {
-                await viewModel.loadMeetings()
+                loadMeetingsTask = Task {
+                    await viewModel.loadMeetings()
+                }
             }
             .refreshable {
                 await viewModel.refreshMeetings()
@@ -52,7 +28,85 @@ struct MeetingListView: View {
     }
 }
 
-// MARK: - Meeting Row View (内部View)
+// MARK: - View Components
+private extension MeetingListView {
+    
+    @ViewBuilder
+    var ContentView: some View {
+        if loadMeetingsTask != nil && viewModel.meetings.isEmpty && viewModel.errorMessage == nil {
+            LoadingView
+        } else if let error = viewModel.errorMessage {
+            ErrorView(message: error)
+        } else if viewModel.meetings.isEmpty {
+            EmptyStateView
+        } else {
+            MeetingsList
+        }
+    }
+    
+    var LoadingView: some View {
+        HStack {
+            Spacer()
+            ProgressView()
+            Spacer()
+        }
+        .padding()
+    }
+    
+    var EmptyStateView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "calendar.badge.exclamationmark")
+                .font(.system(size: 48))
+                .foregroundColor(.gray)
+            Text("会議がありません")
+                .font(.headline)
+                .foregroundColor(.gray)
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+    }
+    
+    var MeetingsList: some View {
+        ForEach(viewModel.meetings) { meeting in
+            MeetingRowView(
+                meeting: meeting,
+                onTap: {
+                    viewModel.selectMeeting(meeting)
+                },
+                onDelete: {
+                    Task {
+                        await viewModel.deleteMeeting(meeting)
+                    }
+                }
+            )
+        }
+    }
+    
+    var SignOutButton: some View {
+        Button("サインアウト") {
+            authManager.clearSession()
+        }
+    }
+    
+    struct ErrorView: View {
+        let message: String
+        
+        var body: some View {
+            VStack(spacing: 8) {
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.system(size: 48))
+                    .foregroundColor(.red)
+                Text(message)
+                    .foregroundColor(.red)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+        }
+    }
+}
+
+// MARK: - Meeting Row View
 private struct MeetingRowView: View {
     let meeting: Meeting
     let onTap: () -> Void
@@ -60,46 +114,10 @@ private struct MeetingRowView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(meeting.title)
-                .font(.headline)
-                .lineLimit(2)
-            
-            // 日時（Utilを使用）
-            Label {
-                Text(meeting.startDate.japaneseMediumDateTime)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            } icon: {
-                Image(systemName: "calendar")
-                    .foregroundColor(.secondary)
-            }
-            
-            // 場所
-            if let location = meeting.location {
-                Label {
-                    Text(location)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
-                } icon: {
-                    Image(systemName: "location")
-                        .foregroundColor(.secondary)
-                }
-            }
-            
-            // オンライン会議
-            if meeting.isOnline {
-                Label {
-                    Text("オンライン会議")
-                        .font(.subheadline)
-                        .foregroundColor(.blue)
-                } icon: {
-                    Image(systemName: "video")
-                        .foregroundColor(.blue)
-                }
-            }
+            TitleSection
+            DateTimeSection
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 8)
         .contentShape(Rectangle())
         .onTapGesture {
             onTap()
@@ -110,6 +128,27 @@ private struct MeetingRowView: View {
             } label: {
                 Label("削除", systemImage: "trash")
             }
+        }
+    }
+}
+
+// MARK: - Meeting Row Components
+private extension MeetingRowView {
+    
+    var TitleSection: some View {
+        Text(meeting.title)
+            .font(.headline)
+            .lineLimit(2)
+    }
+    
+    var DateTimeSection: some View {
+        Label {
+            Text(meeting.startDate.japaneseMediumDateTime)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        } icon: {
+            Image(systemName: "calendar")
+                .foregroundColor(.secondary)
         }
     }
 }

@@ -16,8 +16,6 @@ struct MeetingResponse: Decodable {
 
 struct ParticipantResponse: Decodable {
     let id: String
-    let userId: String
-    let userName: String
-    let userEmail: String
-    let status: String
+    let email: String
+    let name: String
 }

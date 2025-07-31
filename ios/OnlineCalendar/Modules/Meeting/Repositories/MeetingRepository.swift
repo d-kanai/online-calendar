@@ -85,9 +85,6 @@ private struct CreateMeetingRequest: Encodable {
     let description: String?
     let startDate: Date
     let endDate: Date
-    let location: String?
-    let isOnline: Bool
-    let meetingUrl: String?
     let participants: [String]
     
     init(from meeting: Meeting) {
@@ -95,10 +92,7 @@ private struct CreateMeetingRequest: Encodable {
         self.description = meeting.description
         self.startDate = meeting.startDate
         self.endDate = meeting.endDate
-        self.location = meeting.location
-        self.isOnline = meeting.isOnline
-        self.meetingUrl = meeting.onlineUrl
-        self.participants = meeting.participants.map { $0.userId }
+        self.participants = meeting.participants.map { $0.id }
     }
 }
 
@@ -107,18 +101,12 @@ private struct UpdateMeetingRequest: Encodable {
     let description: String?
     let startDate: Date
     let endDate: Date
-    let location: String?
-    let isOnline: Bool
-    let meetingUrl: String?
     
     init(from meeting: Meeting) {
         self.title = meeting.title
         self.description = meeting.description
         self.startDate = meeting.startDate
         self.endDate = meeting.endDate
-        self.location = meeting.location
-        self.isOnline = meeting.isOnline
-        self.meetingUrl = meeting.onlineUrl
     }
 }
 
