@@ -18,20 +18,13 @@ class MeetingListViewModel: ObservableObject {
     
     // MARK: - Meeting Management
     func loadMeetings() async {
-        print("🔄 [MeetingListViewModel] Starting to load meetings...")
         errorMessage = nil
         
         do {
             meetings = try await repository.fetchMeetings()
-            print("✅ [MeetingListViewModel] Successfully loaded \(meetings.count) meetings")
         } catch {
             errorMessage = error.localizedDescription
-            print("❌ [MeetingListViewModel] Failed to load meetings: \(error)")
-            print("❌ [MeetingListViewModel] Error type: \(type(of: error))")
-            print("❌ [MeetingListViewModel] Error description: \(error.localizedDescription)")
         }
-        
-        print("🔄 [MeetingListViewModel] Finished loading meetings")
     }
     
     func refreshMeetings() async {
@@ -45,6 +38,5 @@ class MeetingListViewModel: ObservableObject {
     
     func deleteMeeting(_ meeting: Meeting) async {
         // TODO: Implement delete functionality
-        print("🗑️ [MeetingListViewModel] Delete meeting: \(meeting.id)")
     }
 }

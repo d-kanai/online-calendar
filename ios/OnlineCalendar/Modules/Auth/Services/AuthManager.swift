@@ -34,7 +34,6 @@ class AuthManager: ObservableObject {
             userDefaults.set(userData, forKey: userKey)
         }
         
-        print("✅ [AuthManager] Session saved")
     }
     
     func clearSession() {
@@ -46,7 +45,6 @@ class AuthManager: ObservableObject {
         userDefaults.removeObject(forKey: tokenKey)
         userDefaults.removeObject(forKey: userKey)
         
-        print("👋 [AuthManager] Session cleared")
     }
     
     // MARK: - Private Methods
@@ -57,9 +55,6 @@ class AuthManager: ObservableObject {
             self.authToken = token
             self.currentUser = user
             self.isAuthenticated = true
-            print("✅ [AuthManager] Restored session")
-        } else {
-            print("❌ [AuthManager] No stored session found")
         }
     }
     

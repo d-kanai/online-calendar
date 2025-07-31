@@ -55,6 +55,7 @@ class APIClient {
             request.httpBody = body
         }
         
+        print("🔄 [APIClient] Starting \(method) request to \(endpoint)")
         print("📡 [APIClient] \(method) \(url)")
         print("📡 [APIClient] Headers: \(request.allHTTPHeaderFields ?? [:])")
         
@@ -66,7 +67,7 @@ class APIClient {
                 throw APIError.invalidResponse
             }
             
-            print("📡 [APIClient] Response status: \(httpResponse.statusCode)")
+            print("✅ [APIClient] Response status: \(httpResponse.statusCode)")
             
             if let responseString = String(data: data, encoding: .utf8) {
                 print("📡 [APIClient] Response body: \(responseString)")

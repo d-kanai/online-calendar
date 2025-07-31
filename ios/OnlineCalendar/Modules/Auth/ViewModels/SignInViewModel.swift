@@ -31,10 +31,8 @@ class SignInViewModel: ObservableObject {
             let (email, password) = form.formData
             let response = try await repository.signIn(email: email, password: password)
             authManager.setSession(token: response.token, user: response.user)
-            print("✅ [SignInViewModel] Sign in successful")
         } catch {
             errorMessage = error.localizedDescription
-            print("❌ [SignInViewModel] Sign in failed: \(error)")
             throw error
         }
     }
