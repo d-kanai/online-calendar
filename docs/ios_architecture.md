@@ -89,10 +89,13 @@ ios/OnlineCalendar/
   - [ ] ダークモード対応
   - [ ] アクセシビリティ対応
 
-- [ ] **デザインシステム**
+- [x] **デザインシステム**
   - [ ] 共通のカラーパレット
   - [ ] 統一されたスペーシング
-  - [ ] 再利用可能なUIコンポーネント
+  - [x] 再利用可能なUIコンポーネント
+    - [x] Atomコンポーネント（InputField, PrimaryButton, ErrorMessage）
+    - [ ] Moleculeコンポーネント
+    - [ ] Organismコンポーネント
 
 ### 🔧 開発環境
 - [ ] **ビルド設定**
@@ -118,6 +121,13 @@ ios/OnlineCalendar/
   - [ ] アプリアイコンとスクリーンショット
 
 ## 📝 コーディング規約
+
+### Atomicデザイン
+- [x] **コンポーネント階層**
+  - [x] Atoms: 最小単位のUI部品（Button、InputField等）
+  - [ ] Molecules: Atomsを組み合わせた小さなコンポーネント
+  - [ ] Organisms: 複雑な機能を持つコンポーネント
+  - [x] 共通コンポーネントは`Modules/Common/Views/`配下に配置
 
 ### View設計
 - [x] **内部Viewの管理**

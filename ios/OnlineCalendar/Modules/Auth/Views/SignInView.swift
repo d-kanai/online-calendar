@@ -53,77 +53,44 @@ private extension SignInView {
     var FormSection: some View {
         EmailField
         PasswordField
-        ErrorMessage
+        ErrorMessageView
         SignInButton
     }
     
     var EmailField: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            TextField("メールアドレス", text: $viewModel.form.email)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .autocapitalization(.none)
-                .keyboardType(.emailAddress)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 5)
-                        .stroke(
-                            viewModel.form.emailError != nil ? Color.red : Color.clear,
-                            lineWidth: 1
-                        )
-                )
-            
-            if let error = viewModel.form.emailError {
-                Text(error)
-                    .font(.caption)
-                    .foregroundColor(.red)
-            }
-        }
+        InputField(
+            title: "メールアドレス",
+            text: $viewModel.form.email,
+            error: viewModel.form.emailError,
+            keyboardType: .emailAddress,
+            autocapitalization: .none
+        )
     }
     
     var PasswordField: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            SecureField("パスワード", text: $viewModel.form.password)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .overlay(
-                    RoundedRectangle(cornerRadius: 5)
-                        .stroke(
-                            viewModel.form.passwordError != nil ? Color.red : Color.clear,
-                            lineWidth: 1
-                        )
-                )
-            
-            if let error = viewModel.form.passwordError {
-                Text(error)
-                    .font(.caption)
-                    .foregroundColor(.red)
-            }
-        }
+        InputField(
+            title: "パスワード",
+            text: $viewModel.form.password,
+            error: viewModel.form.passwordError,
+            isSecure: true
+        )
     }
     
-    @ViewBuilder
-    var ErrorMessage: some View {
-        if let error = viewModel.errorMessage {
-            Text(error)
-                .foregroundColor(.red)
-                .font(.caption)
-        }
+    var ErrorMessageView: some View {
+        ErrorMessage(message: viewModel.errorMessage)
     }
     
     var SignInButton: some View {
-        Button(action: {
-            signInTask = Task {
-                try await viewModel.signIn()
-            }
-        }) {
-            Text("サインイン")
-                .fontWeight(.semibold)
-        }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(viewModel.form.isValid ? Color.blue : Color.gray)
-        .foregroundColor(.white)
-        .cornerRadius(10)
-        .disabled(!viewModel.form.isValid || signInTask != nil)
-        .animation(.easeInOut(duration: 0.2), value: viewModel.form.isValid)
+        PrimaryButton(
+            title: "サインイン",
+            action: {
+                signInTask = Task {
+                    try await viewModel.signIn()
+                }
+            },
+            isEnabled: viewModel.form.isValid,
+            isLoading: signInTask != nil
+        )
     }
 }
 
