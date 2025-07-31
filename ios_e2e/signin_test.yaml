@@ -1,0 +1,30 @@
+appId: dkanai.OnlineCalendar
+---
+# サインインフローのE2Eテスト
+
+# アプリを起動
+- launchApp:
+    clearState: true
+
+# サインイン画面が表示されることを確認
+- assertVisible: "オンラインカレンダー"
+
+# メールアドレスを入力（即座にタップして高速入力）
+- tapOn: "メールアドレス"
+- inputText: "test@example.com"
+
+# パスワードを入力（即座にタップして高速入力）
+- tapOn: "パスワード"  
+- inputText: "password"
+
+# キーボードを閉じる
+- hideKeyboard
+
+# サインインボタンをタップ
+- tapOn: "サインイン"
+
+# 会議一覧画面に遷移することを確認
+- assertVisible: "会議一覧"
+
+# サインアウトボタンが表示されることを確認
+- assertVisible: "サインアウト"

@@ -17,8 +17,20 @@ class APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        // TODO: 実際の認証トークンを実装する必要があります
-        request.setValue("Bearer dummy-token", forHTTPHeaderField: "Authorization")
+        
+        // AuthManagerからトークンを取得
+        @MainActor
+        func getToken() -> String? {
+            return AuthManager.shared.authToken
+        }
+        
+        if let token = await getToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            print("📡 [APIClient] Using auth token")
+        } else {
+            print("❌ [APIClient] No auth token available")
+            throw APIError.unauthorized
+        }
         
         print("📡 [APIClient] Fetching meetings from: \(url)")
         print("📡 [APIClient] Headers: \(request.allHTTPHeaderFields ?? [:])")
@@ -71,8 +83,22 @@ class APIClient {
     }
 }
 
-enum APIError: Error {
+enum APIError: LocalizedError {
     case invalidURL
     case invalidResponse
     case decodingError
+    case unauthorized
+    
+    var errorDescription: String? {
+        switch self {
+        case .invalidURL:
+            return "Invalid URL"
+        case .invalidResponse:
+            return "Invalid server response"
+        case .decodingError:
+            return "Failed to decode response"
+        case .unauthorized:
+            return "Authentication required"
+        }
+    }
 }

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct MeetingListView: View {
+    @EnvironmentObject private var authManager: AuthManager
     @State private var meetings: [Meeting] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
@@ -58,6 +59,13 @@ struct MeetingListView: View {
                 }
             }
             .navigationTitle("会議一覧")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("サインアウト") {
+                        authManager.signOut()
+                    }
+                }
+            }
             .task {
                 await loadMeetings()
             }

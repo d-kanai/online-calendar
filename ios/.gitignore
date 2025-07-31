@@ -94,6 +94,10 @@ iOSInjectionProject/
 
 # Debug files
 debug_runner.sh
+auto_signin.sh
+simulator_tools.sh
+screenshot_*.png
+
 
 # Xcode workspace
 *.xcworkspace/

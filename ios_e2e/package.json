@@ -1,0 +1,12 @@
+{
+  "name": "ios-e2e-tests",
+  "version": "1.0.0",
+  "description": "iOS E2E tests using Maestro",
+  "scripts": {
+    "install": "./install_maestro_local.sh",
+    "test": "./run_e2e_tests.sh",
+    "test:signin": "./maestro_cli/maestro/bin/maestro test signin_test.yaml",
+    "maestro": "./maestro_cli/maestro/bin/maestro"
+  },
+  "private": true
+}
