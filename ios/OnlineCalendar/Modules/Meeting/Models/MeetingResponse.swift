@@ -1,12 +1,7 @@
 import Foundation
 
-struct APIResponse<T: Codable>: Codable {
-    let success: Bool
-    let data: T
-    let error: String?
-}
-
-struct MeetingResponse: Codable {
+// MARK: - API Response Models
+struct MeetingResponse: Decodable {
     let id: String
     let title: String
     let startTime: Date
@@ -19,7 +14,7 @@ struct MeetingResponse: Codable {
     let updatedAt: Date
 }
 
-struct ParticipantResponse: Codable {
+struct ParticipantResponse: Decodable {
     let id: String
     let userId: String
     let userName: String

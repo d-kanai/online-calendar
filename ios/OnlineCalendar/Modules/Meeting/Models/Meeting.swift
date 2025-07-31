@@ -12,6 +12,32 @@ struct Meeting: Identifiable {
     let organizer: Organizer
     let participants: [Participant]
     
+    // 通常のイニシャライザ
+    init(
+        id: String,
+        title: String,
+        description: String? = nil,
+        startDate: Date,
+        endDate: Date,
+        location: String? = nil,
+        isOnline: Bool = false,
+        onlineUrl: String? = nil,
+        organizer: Organizer,
+        participants: [Participant] = []
+    ) {
+        self.id = id
+        self.title = title
+        self.description = description
+        self.startDate = startDate
+        self.endDate = endDate
+        self.location = location
+        self.isOnline = isOnline
+        self.onlineUrl = onlineUrl
+        self.organizer = organizer
+        self.participants = participants
+    }
+    
+    // APIレスポンスからの変換用
     init(from response: MeetingResponse) {
         self.id = response.id
         self.title = response.title
