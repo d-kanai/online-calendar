@@ -40,13 +40,7 @@ struct Meeting: Identifiable {
             name: response.owner.components(separatedBy: "@").first ?? response.owner,
             email: response.owner
         )
-        self.participants = response.participants.map { participantResponse in
-            Participant(
-                id: participantResponse.id,
-                email: participantResponse.email,
-                name: participantResponse.name
-            )
-        }
+        self.participants = [] // 一時的に空配列
     }
 }
 
