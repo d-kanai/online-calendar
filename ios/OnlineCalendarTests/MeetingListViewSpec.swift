@@ -145,8 +145,11 @@ struct MeetingListViewSpec {
 
         // 初期データをロード
         await viewModel.loadMeetings()
-        #expect(viewModel.meetings.count == 1)
-        #expect(viewModel.meetings[0].title == "初期会議")
+        
+        // 初期データが画面に表示されていることを確認
+        let initialInspection = try view.inspect()
+        let initialMeetingText = try initialInspection.find(text: "初期会議")
+        #expect(try initialMeetingText.string() == "初期会議")
         
         // When - refreshMeetingsを呼び出す（refreshableアクションのテスト）
         let updatedMeeting = Meeting(
@@ -162,9 +165,10 @@ struct MeetingListViewSpec {
         
         await viewModel.refreshMeetings()
         
-        // Then - データが更新されていることを確認
-        #expect(viewModel.meetings.count == 1)
-        #expect(viewModel.meetings[0].title == "更新後会議")
+        // Then - 更新後のデータが画面に表示されていることを確認
+        let updatedInspection = try view.inspect()
+        let updatedMeetingText = try updatedInspection.find(text: "更新後会議")
+        #expect(try updatedMeetingText.string() == "更新後会議")
     }
     
     @Test("サインアウトボタンをタップするとclearSessionが呼ばれる")
