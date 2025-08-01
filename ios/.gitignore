@@ -104,3 +104,35 @@ screenshot_*.png
 
 # SwiftData sample files
 Item.swift
+
+# Coverage reports
+coverage/
+coverage.json
+*.lcov
+
+# Test outputs
+test_output.log
+test_detail.log
+test_full_output.log
+full_test.log
+full_test_output.log
+filtered_output.log
+test_output_detail.log
+
+# Ruby
+.ruby-version
+Gemfile
+Gemfile.lock
+
+# Slather
+.slather.yml
+
+# Coverage generation scripts (temporary)
+generate_coverage_html.sh
+generate_coverage_html_slather_style.sh
+generate_project_coverage_html.sh
+generate_slather_format_html.sh
+generate_slather_format_html_with_all.sh
+generate_slather_style_html.sh
+run_slather.sh
+slather_coverage.sh
