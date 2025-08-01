@@ -105,12 +105,19 @@ struct MeetingListViewSpec {
         // ViewModelとViewを準備
         let viewModel = MeetingListViewModel(repository: mockRepository)
         let authManager = AuthManager.shared
+        let view = MeetingListView(viewModel: viewModel).environmentObject(authManager)
+
+        // When - loadMeetingsを呼び出してデータをロード
+        await viewModel.loadMeetings()
         
-        // ViewModelのselectMeetingメソッドを直接テスト
-        // When - selectMeetingを直接呼び出す
-        viewModel.selectMeeting(mockMeeting)
+        // ViewInspectorでビューを検査してidでMeetingRowを見つける
+        let inspection = try view.inspect()
+        let meetingRow = try inspection.find(viewWithId: "meetingRow_1")
         
-        // Then - selectedMeetingが設定されることを確認
+        // Then - onTapGestureアクションを実行
+        try meetingRow.callOnTapGesture()
+        
+        // selectMeetingが呼ばれたことを確認（selectedMeetingが設定される）
         #expect(viewModel.selectedMeeting?.id == "1")
         #expect(viewModel.selectedMeeting?.title == "テスト会議")
     }

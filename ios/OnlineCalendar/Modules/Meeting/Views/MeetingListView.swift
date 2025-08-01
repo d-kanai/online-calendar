@@ -121,6 +121,7 @@ struct MeetingRowView: View {
         .onTapGesture {
             onTap()
         }
+        .id("meetingRow_\(meeting.id)")
     }
 }
 
