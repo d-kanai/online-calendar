@@ -145,19 +145,33 @@ struct SignInScreenSpec {
     @MainActor
     func test7() async throws {
         // Given - 空のフォームでSignInScreenを準備
-        let view = SignInScreen()
+        let mockRepository = MockAuthRepository()
+        let viewModel = SignInViewModel(repository: mockRepository)
+        let view = SignInScreen(viewModel: viewModel)
         
-        // ViewInspectorでビューを検査
+        // When - ViewInspectorでビューを検査
         let inspection = try view.inspect()
         
-        // Then - サインインボタンが存在することを確認（フォームが空のため無効状態）
+        // Then - サインインボタンが無効状態であることを確認
+        // PrimaryButtonのisEnabledがfalseになっているはず
         let signInButton = try inspection.find(button: "サインイン")
         #expect(signInButton != nil)
         
-        // ViewModelのフォームが無効であることを確認
-        let mockRepository = MockAuthRepository()
-        let viewModel = SignInViewModel(repository: mockRepository)
+        // フォームが空の状態でボタンが無効になっていることを確認
+        // （ViewModelのisValidがfalseのため、PrimaryButtonのisEnabledもfalse）
         #expect(viewModel.form.isValid == false)
+        
+        // 実際にボタンをタップしようとするとエラーになることを確認（ボタンが無効化されている）
+        do {
+            try signInButton.tap()
+            #expect(Bool(false), "ボタンが無効なのにタップできてしまった")
+        } catch {
+            // 期待通り：ボタンが無効化されているため、タップできない
+            #expect(error.localizedDescription.contains("disabled"))
+        }
+        
+        // signInが呼ばれていないことを確認
+        #expect(mockRepository.signInCalled == false)
     }
 }
 
@@ -166,10 +180,12 @@ class MockAuthRepository: AuthRepositoryProtocol {
     var signInResult: Result<AuthResponse, Error> = .failure(APIError.networkError("Not configured"))
     var signUpResult: Result<AuthResponse, Error> = .failure(APIError.networkError("Not configured"))
     var signOutCalled = false
+    var signInCalled = false
     var refreshTokenResult: Result<AuthResponse, Error> = .failure(APIError.networkError("Not configured"))
     var getCurrentUserResult: Result<User, Error> = .failure(APIError.networkError("Not configured"))
     
     func signIn(email: String, password: String) async throws -> AuthResponse {
+        signInCalled = true
         switch signInResult {
         case .success(let response):
             return response
