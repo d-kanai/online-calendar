@@ -23,6 +23,15 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 # エラーログとスクリーンショットを保存
 export MAESTRO_DRIVER_STARTUP_TIMEOUT=60000
 
+# iPhone 16 シミュレータが起動していることを確認
+if ! xcrun simctl list devices booted | grep -q "iPhone 16"; then
+    echo "⚠️  iPhone 16 シミュレータが起動していません。起動します..."
+    xcrun simctl boot "iPhone 16"
+    sleep 3
+    open -a Simulator
+    sleep 5
+fi
+
 # アプリがビルドされていることを確認
 if ! ls /Users/d.kanai/Library/Developer/Xcode/DerivedData/OnlineCalendar-* >/dev/null 2>&1; then
     echo "⚠️  アプリがビルドされていません。ビルドを実行します..."
