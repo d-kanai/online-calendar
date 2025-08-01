@@ -238,12 +238,15 @@ cat > coverage/index.html << EOF
                     }
                     
                     target.files.forEach(file => {
-                        // ViewInspector、APIClient、Repositoryのファイルパスは除外
+                        // ViewInspector、APIClient、Repository、テストファイルは除外
                         if (file.path.includes('ViewInspector') || 
                             file.path.includes('PackageFrameworks') ||
                             file.path.includes('.build') ||
                             file.path.includes('APIClient.swift') ||
-                            file.path.includes('Repository.swift')) {
+                            file.path.includes('Repository.swift') ||
+                            file.path.includes('Tests/') ||
+                            file.path.includes('Spec.swift') ||
+                            file.path.includes('Test.swift')) {
                             return;
                         }
                         
@@ -279,12 +282,15 @@ cat > coverage/index.html << EOF
                     }
                     
                     target.files.forEach(file => {
-                        // ViewInspector、APIClient、Repositoryのファイルパスは除外
+                        // ViewInspector、APIClient、Repository、テストファイルは除外
                         if (file.path.includes('ViewInspector') || 
                             file.path.includes('PackageFrameworks') ||
                             file.path.includes('.build') ||
                             file.path.includes('APIClient.swift') ||
-                            file.path.includes('Repository.swift')) {
+                            file.path.includes('Repository.swift') ||
+                            file.path.includes('Tests/') ||
+                            file.path.includes('Spec.swift') ||
+                            file.path.includes('Test.swift')) {
                             return;
                         }
                         
