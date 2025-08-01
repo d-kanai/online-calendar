@@ -1,9 +1,13 @@
 import SwiftUI
 
 struct MeetingListView: View {
-    @StateObject private var viewModel = MeetingListViewModel()
+    @ObservedObject var viewModel: MeetingListViewModel
     @EnvironmentObject private var authManager: AuthManager
     @State private var loadMeetingsTask: Task<Void, Error>?
+    
+    init(viewModel: MeetingListViewModel) {
+        self.viewModel = viewModel
+    }
     
     var body: some View {
         NavigationView {
