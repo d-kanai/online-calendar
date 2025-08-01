@@ -1,8 +1,12 @@
 import SwiftUI
 
 struct SignInScreen: View {
-    @StateObject private var viewModel = SignInViewModel()
+    @ObservedObject var viewModel: SignInViewModel
     @State private var signInTask: Task<Void, Error>?
+    
+    init(viewModel: SignInViewModel? = nil) {
+        self.viewModel = viewModel ?? SignInViewModel()
+    }
     
     var body: some View {
         VStack(spacing: 20) {

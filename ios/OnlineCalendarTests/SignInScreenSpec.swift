@@ -7,33 +7,6 @@ import ViewInspector
 @Suite("SignInScreen振る舞いテスト")
 struct SignInScreenSpec {
     
-    @Test("初期表示でフォームが表示される")
-    @MainActor
-    func test1() async throws {
-        // Given - SignInScreenを準備
-        let view = SignInScreen()
-        
-        // When - ViewInspectorでビューを検査
-        let inspection = try view.inspect()
-        
-        // Then - 必要な要素が表示されていることを確認
-        let headerText = try inspection.find(text: "オンラインカレンダー")
-        #expect(try headerText.string() == "オンラインカレンダー")
-        
-        // メールアドレスとパスワードの入力フィールドが存在することを確認
-        // InputFieldは内部にTextFieldまたはSecureFieldを含んでいる
-        do {
-            _ = try inspection.find(ViewType.TextField.self)
-            _ = try inspection.find(ViewType.SecureField.self)
-        } catch {
-            #expect(Bool(false), "入力フィールドが見つかりません")
-        }
-        
-        // サインインボタンが存在することを確認
-        let signInButton = try inspection.find(button: "サインイン")
-        #expect(signInButton != nil)
-    }
-    
     @Test("有効な入力でサインインが成功する")
     @MainActor
     func test2() async throws {
@@ -48,16 +21,25 @@ struct SignInScreenSpec {
         // 初期状態：未認証
         authState.isAuthenticated = false
         
-        // ViewModelにフォームデータを設定
-        viewModel.form.email = "test@example.com"
-        viewModel.form.password = "password123"
+        let view = SignInScreen(viewModel: viewModel)
         
-        // When - signInを実行
-        do {
-            try await viewModel.signIn()
-        } catch {
-            // エラーは無視（ViewModelの動作確認のため）
-        }
+        // When - ViewInspectorでビューを検査してフォームを入力
+        let inspection = try view.inspect()
+        
+        // メールアドレス入力
+        let emailField = try inspection.find(ViewType.TextField.self)
+        try emailField.setInput("test@example.com")
+        
+        // パスワード入力
+        let passwordField = try inspection.find(ViewType.SecureField.self)
+        try passwordField.setInput("password123")
+        
+        // サインインボタンをタップ
+        let signInButton = try inspection.find(button: "サインイン")
+        try signInButton.tap()
+        
+        // 非同期処理が完了するまで待機
+        try await Task.sleep(nanoseconds: 100_000_000) // 0.1秒待機
         
         // Then - 認証状態が更新されることを確認
         #expect(authState.isAuthenticated == true)
@@ -70,19 +52,22 @@ struct SignInScreenSpec {
         // Given - SignInScreenを準備
         let mockRepository = MockAuthRepository()
         let viewModel = SignInViewModel(repository: mockRepository)
+        let view = SignInScreen(viewModel: viewModel)
         
-        // 無効なメールアドレスを設定
-        viewModel.form.email = "invalid-email"
-        viewModel.form.password = "password123"
+        // When - ViewInspectorでビューを検査して無効なメールを入力
+        let inspection = try view.inspect()
         
-        // When - フォームのバリデーションを確認
-        let isValid = viewModel.form.isValid
-        let emailError = viewModel.form.emailError
+        // 無効なメールアドレスを入力
+        let emailField = try inspection.find(ViewType.TextField.self)
+        try emailField.setInput("invalid-email")
         
-        // Then - バリデーションエラーが表示されることを確認
-        #expect(isValid == false)
-        #expect(emailError != nil)
-        #expect(emailError == "有効なメールアドレスを入力してください")
+        // パスワードを入力
+        let passwordField = try inspection.find(ViewType.SecureField.self)
+        try passwordField.setInput("password123")
+        
+        // Then - エラーメッセージが表示されることを確認
+        let errorMessage = try inspection.find(text: "有効なメールアドレスを入力してください")
+        #expect(try errorMessage.string() == "有効なメールアドレスを入力してください")
     }
     
     @Test("パスワードが短すぎる場合にエラーメッセージが表示される")
@@ -91,19 +76,22 @@ struct SignInScreenSpec {
         // Given - SignInScreenを準備
         let mockRepository = MockAuthRepository()
         let viewModel = SignInViewModel(repository: mockRepository)
+        let view = SignInScreen(viewModel: viewModel)
         
-        // 短すぎるパスワードを設定
-        viewModel.form.email = "test@example.com"
-        viewModel.form.password = "123"
+        // When - ViewInspectorでビューを検査して短いパスワードを入力
+        let inspection = try view.inspect()
         
-        // When - フォームのバリデーションを確認
-        let isValid = viewModel.form.isValid
-        let passwordError = viewModel.form.passwordError
+        // メールアドレスを入力
+        let emailField = try inspection.find(ViewType.TextField.self)
+        try emailField.setInput("test@example.com")
         
-        // Then - バリデーションエラーが表示されることを確認
-        #expect(isValid == false)
-        #expect(passwordError != nil)
-        #expect(passwordError == "パスワードは8文字以上必要です")
+        // 短すぎるパスワードを入力
+        let passwordField = try inspection.find(ViewType.SecureField.self)
+        try passwordField.setInput("123")
+        
+        // Then - エラーメッセージが表示されることを確認
+        let errorMessage = try inspection.find(text: "パスワードは8文字以上必要です")
+        #expect(try errorMessage.string() == "パスワードは8文字以上必要です")
     }
     
     @Test("APIエラー時にエラーメッセージが表示される")
@@ -114,18 +102,25 @@ struct SignInScreenSpec {
         mockRepository.signInResult = .failure(APIError.networkError("ネットワークエラーが発生しました"))
         
         let viewModel = SignInViewModel(repository: mockRepository)
+        let view = SignInScreen(viewModel: viewModel)
         
-        // 有効な入力を設定
-        viewModel.form.email = "test@example.com"
-        viewModel.form.password = "password123"
+        // When - ViewInspectorでビューを検査して有効な入力を行い、サインインを実行
+        let inspection = try view.inspect()
         
-        // When - signInを実行
-        do {
-            try await viewModel.signIn()
-            #expect(Bool(false)) // エラーが発生するはず
-        } catch {
-            // エラーが発生することを期待
-        }
+        // メールアドレスを入力
+        let emailField = try inspection.find(ViewType.TextField.self)
+        try emailField.setInput("test@example.com")
+        
+        // パスワードを入力
+        let passwordField = try inspection.find(ViewType.SecureField.self)
+        try passwordField.setInput("password123")
+        
+        // サインインボタンをタップ
+        let signInButton = try inspection.find(button: "サインイン")
+        try signInButton.tap()
+        
+        // 非同期処理が完了するまで待機
+        try await Task.sleep(nanoseconds: 100_000_000) // 0.1秒待機
         
         // Then - エラーメッセージが設定されることを確認
         #expect(viewModel.errorMessage == "ネットワークエラーが発生しました")
