@@ -706,6 +706,160 @@ Scenario: オーナーが参加者を招待する
 - **再利用可能なStep**: 汎用的なStepを作成して複数シナリオで再利用する
 - **シナリオの自己完結性**: シナリオファイルを読むだけで何が必要かわかるようにする
 
+## 🎯 TestE: iOS Frontend UT
+
+### 📋 テスト方針
+- **SwiftUI Viewの振る舞いテスト**: 各View（特にMeetingListViewなど）の振る舞いを検証
+- **ViewInspectorを使用**: SwiftUIビューの検査とインタラクションテスト
+- **ユーザー視点のテスト**: 実際のユーザー操作をシミュレート
+- **View上での操作・アサート優先**: できる限りView上で操作し、View上でアサート
+- **ViewModelアサート許可**: ViewInspectorの限界の場合はViewModel上でのイベント発火・stateアサートも許可
+
+### 🛡️ TestE実装チェックリスト
+
+#### ✅ 基本設定
+- [ ] Swift Testingフレームワーク（`@Test`）を使用
+- [ ] ViewInspectorでビューを検査
+- [ ] `@MainActor`でメインスレッドでの実行を保証
+- [ ] EnvironmentObjectの適切な注入
+
+#### ✅ テスト観点
+- [ ] **データ表示**: APIレスポンスがView上に正しく表示される
+- [ ] **空状態**: データがない場合の適切なメッセージ表示
+- [ ] **エラー表示**: APIエラー時のエラーメッセージ表示
+- [ ] **ユーザーインタラクション**: タップ、スワイプなどの操作
+- [ ] **状態変更**: ボタンタップ後の状態変化を確認
+
+#### ✅ カバレッジ戦略
+- [ ] カバレッジレポートを確認しながらテストを追加
+- [ ] 未カバーの関数・行を特定してテスト追加
+- [ ] **除外対象**: `.task`, `.refreshable`などの非同期モディファイアはカバー不要
+
+### 📝 実装例（MeetingListViewSpec）
+
+```swift
+@Suite("MeetingListView振る舞いテスト")
+struct MeetingListViewSpec {
+    
+    @Test("会議がListに表示される")
+    @MainActor
+    func test1() async throws {
+        // Given - APIレスポンスをモック
+        let mockRepository = MockMeetingRepository()
+        let mockMeeting = Meeting(
+            id: "1",
+            title: "テスト会議",
+            description: "テスト用の会議",
+            startDate: Date(),
+            endDate: Date().addingTimeInterval(3600),
+            organizer: Organizer(id: "org1", name: "テスト主催者", email: "test@example.com"),
+            participants: []
+        )
+        mockRepository.fetchMeetingsResult = .success([mockMeeting])
+        
+        // ViewModelとViewを準備
+        let viewModel = MeetingListViewModel(repository: mockRepository)
+        let authState = AuthState.shared
+        let view = MeetingListView(viewModel: viewModel).environmentObject(authState)
+
+        // When - loadMeetingsを呼び出してデータをロード
+        await viewModel.loadMeetings()
+        
+        // ViewInspectorでビューを検査
+        let inspection = try view.inspect()
+
+        // Then - ビューに会議タイトルが表示されていることを確認
+        let elem = try inspection.find(text: "テスト会議")
+        #expect(try elem.string() == "テスト会議")
+    }
+}
+```
+
+### 🎨 View操作の実装パターン
+
+#### ✅ View上での操作（推奨）
+```swift
+@Test("会議をタップするとselectMeetingが呼ばれる")
+@MainActor
+func test4() async throws {
+    // Given - 会議データをモック
+    let mockRepository = MockMeetingRepository()
+    let mockMeeting = Meeting(/* ... */)
+    mockRepository.fetchMeetingsResult = .success([mockMeeting])
+    
+    // ViewModelとViewを準備
+    let viewModel = MeetingListViewModel(repository: mockRepository)
+    let authState = AuthState.shared
+    let view = MeetingListView(viewModel: viewModel).environmentObject(authState)
+
+    // When - loadMeetingsを呼び出してデータをロード
+    await viewModel.loadMeetings()
+    
+    // ViewInspectorでビューを検査してidでMeetingRowを見つける
+    let inspection = try view.inspect()
+    let meetingRow = try inspection.find(viewWithId: "meetingRow_1")
+    
+    // Then - onTapGestureアクションを実行
+    try meetingRow.callOnTapGesture()
+    
+    // selectMeetingが呼ばれたことを確認（ViewModelの状態で確認）
+    #expect(viewModel.selectedMeeting?.id == "1")
+    #expect(viewModel.selectedMeeting?.title == "テスト会議")
+}
+```
+
+#### ✅ View内容のアサート（推奨）
+```swift
+@Test("refreshableで会議一覧が更新される")
+@MainActor
+func test5() async throws {
+    // Given - 初期データと更新後データをモック
+    let mockRepository = MockMeetingRepository()
+    let initialMeeting = Meeting(/* ... */)
+    mockRepository.fetchMeetingsResult = .success([initialMeeting])
+    
+    // ViewModelとViewを準備
+    let viewModel = MeetingListViewModel(repository: mockRepository)
+    let authState = AuthState.shared
+    let view = MeetingListView(viewModel: viewModel).environmentObject(authState)
+
+    // 初期データをロード
+    await viewModel.loadMeetings()
+    
+    // 初期データが画面に表示されていることを確認
+    let initialInspection = try view.inspect()
+    let initialMeetingText = try initialInspection.find(text: "初期会議")
+    #expect(try initialMeetingText.string() == "初期会議")
+    
+    // When - 更新後のデータを設定してrefresh
+    let updatedMeeting = Meeting(/* ... */)
+    mockRepository.fetchMeetingsResult = .success([updatedMeeting])
+    await viewModel.refreshMeetings()
+    
+    // Then - 更新後のデータが画面に表示されていることを確認
+    let updatedInspection = try view.inspect()
+    let updatedMeetingText = try updatedInspection.find(text: "更新後会議")
+    #expect(try updatedMeetingText.string() == "更新後会議")
+}
+```
+
+### 🚫 TestEアンチパターン
+- ❌ ViewModelのメソッドを直接呼ぶだけのテスト（Viewの検証なし）
+- ❌ カバレッジのためだけの意味のないテスト
+- ❌ `.task`や`.refreshable`の内部実装をテスト
+
+### 📊 カバレッジ管理
+1. **HTML Coverage Report生成**
+   ```bash
+   npm run ios:ut
+   ```
+2. **カバレッジ確認**
+   - `ios/coverage/index.html`を確認
+   - 関数レベル・行レベルのカバレッジを確認
+3. **除外設定**
+   - APIClient、Repositoryはカバレッジから除外
+   - ViewInspectorライブラリも除外
+
 ## 📂 テストファイル配置ルール
 
 - 📁 **specはコードのそばに置く**: テストファイル（`.spec.ts`）は実装ファイルと同じディレクトリに配置する
