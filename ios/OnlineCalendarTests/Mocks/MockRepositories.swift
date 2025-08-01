@@ -7,7 +7,7 @@ class MockMeetingRepository: MeetingRepositoryProtocol {
     var fetchMeetingResult: Result<Meeting, Error>?
     var createMeetingResult: Result<Meeting, Error>?
     var updateMeetingResult: Result<Meeting, Error>?
-    var deleteMeetingResult: Result<Void, Error>?
+    
     
     func fetchMeetings() async throws -> [Meeting] {
         switch fetchMeetingsResult {
@@ -40,15 +40,6 @@ class MockMeetingRepository: MeetingRepositoryProtocol {
         switch updateMeetingResult! {
         case .success(let meeting):
             return meeting
-        case .failure(let error):
-            throw error
-        }
-    }
-    
-    func deleteMeeting(id: String) async throws {
-        switch deleteMeetingResult! {
-        case .success:
-            return
         case .failure(let error):
             throw error
         }

@@ -36,7 +36,4 @@ class MeetingListViewModel: ObservableObject {
         selectedMeeting = meeting
     }
     
-    func deleteMeeting(_ meeting: Meeting) async {
-        // TODO: Implement delete functionality
-    }
 }

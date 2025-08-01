@@ -76,11 +76,6 @@ private extension MeetingListView {
                 meeting: meeting,
                 onTap: {
                     viewModel.selectMeeting(meeting)
-                },
-                onDelete: {
-                    Task {
-                        await viewModel.deleteMeeting(meeting)
-                    }
                 }
             )
         }
@@ -115,7 +110,6 @@ struct ErrorView: View {
 struct MeetingRowView: View {
     let meeting: Meeting
     let onTap: () -> Void
-    let onDelete: () -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -126,13 +120,6 @@ struct MeetingRowView: View {
         .contentShape(Rectangle())
         .onTapGesture {
             onTap()
-        }
-        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            Button(role: .destructive) {
-                onDelete()
-            } label: {
-                Label("削除", systemImage: "trash")
-            }
         }
     }
 }

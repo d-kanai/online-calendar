@@ -6,7 +6,6 @@ protocol MeetingRepositoryProtocol {
     func fetchMeeting(id: String) async throws -> Meeting
     func createMeeting(_ meeting: Meeting) async throws -> Meeting
     func updateMeeting(_ meeting: Meeting) async throws -> Meeting
-    func deleteMeeting(id: String) async throws
     func acceptInvitation(meetingId: String) async throws
     func declineInvitation(meetingId: String) async throws
 }
@@ -51,10 +50,6 @@ class MeetingRepository: MeetingRepositoryProtocol {
             type: APIResponse<MeetingResponse>.self
         )
         return Meeting(from: response.data)
-    }
-    
-    func deleteMeeting(id: String) async throws {
-        try await apiClient.delete("/meetings/\(id)")
     }
     
     // MARK: - Invitation Operations
