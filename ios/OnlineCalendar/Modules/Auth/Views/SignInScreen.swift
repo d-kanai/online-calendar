@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct SignInView: View {
+struct SignInScreen: View {
     @StateObject private var viewModel = SignInViewModel()
     @State private var signInTask: Task<Void, Error>?
     
@@ -41,7 +41,7 @@ struct SignInView: View {
 }
 
 // MARK: - View Components
-private extension SignInView {
+private extension SignInScreen {
     
     var HeaderSection: some View {
         Text("オンラインカレンダー")
@@ -95,5 +95,5 @@ private extension SignInView {
 }
 
 #Preview {
-    SignInView()
+    SignInScreen()
 }

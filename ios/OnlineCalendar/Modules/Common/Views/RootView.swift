@@ -6,10 +6,10 @@ struct RootView: View {
     
     var body: some View {
         if authState.isAuthenticated {
-            MeetingListView(viewModel: meetingListViewModel)
+            MeetingListScreen(viewModel: meetingListViewModel)
                 .environmentObject(authState)
         } else {
-            SignInView()
+            SignInScreen()
         }
     }
 }

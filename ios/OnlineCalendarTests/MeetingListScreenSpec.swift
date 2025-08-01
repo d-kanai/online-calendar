@@ -4,9 +4,9 @@ import SwiftUI
 import ViewInspector
 @testable import OnlineCalendar
 
-// MARK: - MeetingListView振る舞いテスト
-@Suite("MeetingListView振る舞いテスト")
-struct MeetingListViewSpec {
+// MARK: - MeetingListScreen振る舞いテスト
+@Suite("MeetingListScreen振る舞いテスト")
+struct MeetingListScreenSpec {
     
     @Test("会議がListに表示される")
     @MainActor
@@ -27,7 +27,7 @@ struct MeetingListViewSpec {
         // ViewModelとViewを準備
         let viewModel = MeetingListViewModel(repository: mockRepository)
         let authState = AuthState.shared
-        let view = MeetingListView(viewModel: viewModel).environmentObject(authState)
+        let view = MeetingListScreen(viewModel: viewModel).environmentObject(authState)
 
         // When - loadMeetingsを呼び出してデータをロード
         await viewModel.loadMeetings()
@@ -50,7 +50,7 @@ struct MeetingListViewSpec {
         // ViewModelとViewを準備
         let viewModel = MeetingListViewModel(repository: mockRepository)
         let authState = AuthState.shared
-        let view = MeetingListView(viewModel: viewModel).environmentObject(authState)
+        let view = MeetingListScreen(viewModel: viewModel).environmentObject(authState)
 
         // When - loadMeetingsを呼び出してエラーを発生させる
         await viewModel.loadMeetings()
@@ -73,7 +73,7 @@ struct MeetingListViewSpec {
         // ViewModelとViewを準備
         let viewModel = MeetingListViewModel(repository: mockRepository)
         let authState = AuthState.shared
-        let view = MeetingListView(viewModel: viewModel).environmentObject(authState)
+        let view = MeetingListScreen(viewModel: viewModel).environmentObject(authState)
 
         // When - loadMeetingsを呼び出して空のデータをロード
         await viewModel.loadMeetings()
@@ -105,7 +105,7 @@ struct MeetingListViewSpec {
         // ViewModelとViewを準備
         let viewModel = MeetingListViewModel(repository: mockRepository)
         let authState = AuthState.shared
-        let view = MeetingListView(viewModel: viewModel).environmentObject(authState)
+        let view = MeetingListScreen(viewModel: viewModel).environmentObject(authState)
 
         // When - loadMeetingsを呼び出してデータをロード
         await viewModel.loadMeetings()
@@ -141,7 +141,7 @@ struct MeetingListViewSpec {
         // ViewModelとViewを準備
         let viewModel = MeetingListViewModel(repository: mockRepository)
         let authState = AuthState.shared
-        let view = MeetingListView(viewModel: viewModel).environmentObject(authState)
+        let view = MeetingListScreen(viewModel: viewModel).environmentObject(authState)
 
         // 初期データをロード
         await viewModel.loadMeetings()
@@ -185,7 +185,7 @@ struct MeetingListViewSpec {
         authState.isAuthenticated = true
         #expect(authState.isAuthenticated == true)
         
-        let view = MeetingListView(viewModel: viewModel).environmentObject(authState)
+        let view = MeetingListScreen(viewModel: viewModel).environmentObject(authState)
 
         // When - ViewInspectorでビューを検査してサインアウトボタンを見つける
         let inspection = try view.inspect()

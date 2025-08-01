@@ -709,7 +709,8 @@ Scenario: オーナーが参加者を招待する
 ## 🎯 TestE: iOS Frontend UT
 
 ### 📋 テスト方針
-- **SwiftUI Viewの振る舞いテスト**: 各View（特にMeetingListViewなど）の振る舞いを検証
+- **📱 Screenコンポーネントのテスト**: XxxScreen（SignInScreen、MeetingListScreenなど）をテスト対象とする
+- **SwiftUI Viewの振る舞いテスト**: 各Screenの振る舞いを検証
 - **ViewInspectorを使用**: SwiftUIビューの検査とインタラクションテスト
 - **ユーザー視点のテスト**: 実際のユーザー操作をシミュレート
 - **View上での操作・アサート優先**: できる限りView上で操作し、View上でアサート
@@ -735,11 +736,11 @@ Scenario: オーナーが参加者を招待する
 - [ ] 未カバーの関数・行を特定してテスト追加
 - [ ] **除外対象**: `.task`, `.refreshable`などの非同期モディファイアはカバー不要
 
-### 📝 実装例（MeetingListViewSpec）
+### 📝 実装例（MeetingListScreenSpec）
 
 ```swift
-@Suite("MeetingListView振る舞いテスト")
-struct MeetingListViewSpec {
+@Suite("MeetingListScreen振る舞いテスト")
+struct MeetingListScreenSpec {
     
     @Test("会議がListに表示される")
     @MainActor
@@ -760,7 +761,7 @@ struct MeetingListViewSpec {
         // ViewModelとViewを準備
         let viewModel = MeetingListViewModel(repository: mockRepository)
         let authState = AuthState.shared
-        let view = MeetingListView(viewModel: viewModel).environmentObject(authState)
+        let view = MeetingListScreen(viewModel: viewModel).environmentObject(authState)
 
         // When - loadMeetingsを呼び出してデータをロード
         await viewModel.loadMeetings()
@@ -844,6 +845,7 @@ func test5() async throws {
 ```
 
 ### 🚫 TestEアンチパターン
+- ❌ Screen以外のViewコンポーネントを直接テスト（Screenコンポーネントのみをテスト対象とする）
 - ❌ ViewModelのメソッドを直接呼ぶだけのテスト（Viewの検証なし）
 - ❌ カバレッジのためだけの意味のないテスト
 - ❌ `.task`や`.refreshable`の内部実装をテスト

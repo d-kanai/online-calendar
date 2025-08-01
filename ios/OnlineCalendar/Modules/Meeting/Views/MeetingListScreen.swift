@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct MeetingListView: View {
+struct MeetingListScreen: View {
     @ObservedObject var viewModel: MeetingListViewModel
     @EnvironmentObject private var authState: AuthState
     @State private var loadMeetingsTask: Task<Void, Error>?
@@ -33,7 +33,7 @@ struct MeetingListView: View {
 }
 
 // MARK: - View Components
-private extension MeetingListView {
+private extension MeetingListScreen {
     
     @ViewBuilder
     var ContentView: some View {
