@@ -26,8 +26,8 @@ struct MeetingListViewSpec {
         
         // ViewModelとViewを準備
         let viewModel = MeetingListViewModel(repository: mockRepository)
-        let authManager = AuthManager.shared
-        let view = MeetingListView(viewModel: viewModel).environmentObject(authManager)
+        let authState = AuthState.shared
+        let view = MeetingListView(viewModel: viewModel).environmentObject(authState)
 
         // When - loadMeetingsを呼び出してデータをロード
         await viewModel.loadMeetings()
@@ -49,8 +49,8 @@ struct MeetingListViewSpec {
         
         // ViewModelとViewを準備
         let viewModel = MeetingListViewModel(repository: mockRepository)
-        let authManager = AuthManager.shared
-        let view = MeetingListView(viewModel: viewModel).environmentObject(authManager)
+        let authState = AuthState.shared
+        let view = MeetingListView(viewModel: viewModel).environmentObject(authState)
 
         // When - loadMeetingsを呼び出してエラーを発生させる
         await viewModel.loadMeetings()
@@ -72,8 +72,8 @@ struct MeetingListViewSpec {
         
         // ViewModelとViewを準備
         let viewModel = MeetingListViewModel(repository: mockRepository)
-        let authManager = AuthManager.shared
-        let view = MeetingListView(viewModel: viewModel).environmentObject(authManager)
+        let authState = AuthState.shared
+        let view = MeetingListView(viewModel: viewModel).environmentObject(authState)
 
         // When - loadMeetingsを呼び出して空のデータをロード
         await viewModel.loadMeetings()
@@ -104,8 +104,8 @@ struct MeetingListViewSpec {
         
         // ViewModelとViewを準備
         let viewModel = MeetingListViewModel(repository: mockRepository)
-        let authManager = AuthManager.shared
-        let view = MeetingListView(viewModel: viewModel).environmentObject(authManager)
+        let authState = AuthState.shared
+        let view = MeetingListView(viewModel: viewModel).environmentObject(authState)
 
         // When - loadMeetingsを呼び出してデータをロード
         await viewModel.loadMeetings()
@@ -140,8 +140,8 @@ struct MeetingListViewSpec {
         
         // ViewModelとViewを準備
         let viewModel = MeetingListViewModel(repository: mockRepository)
-        let authManager = AuthManager.shared
-        let view = MeetingListView(viewModel: viewModel).environmentObject(authManager)
+        let authState = AuthState.shared
+        let view = MeetingListView(viewModel: viewModel).environmentObject(authState)
 
         // 初期データをロード
         await viewModel.loadMeetings()
@@ -173,28 +173,27 @@ struct MeetingListViewSpec {
     
     @Test("サインアウトボタンをタップするとclearSessionが呼ばれる")
     @MainActor
-    func test7() async throws {
+    func test6() async throws {
         // Given - テストデータを準備
         let mockRepository = MockMeetingRepository()
         mockRepository.fetchMeetingsResult = .success([])
         
         let viewModel = MeetingListViewModel(repository: mockRepository)
-        let authManager = AuthManager.shared
-        let view = MeetingListView(viewModel: viewModel).environmentObject(authManager)
+        let authState = AuthState.shared
+        
+        // 初期状態：認証済みに設定
+        authState.isAuthenticated = true
+        #expect(authState.isAuthenticated == true)
+        
+        let view = MeetingListView(viewModel: viewModel).environmentObject(authState)
 
         // When - ViewInspectorでビューを検査してサインアウトボタンを見つける
         let inspection = try view.inspect()
         let signOutButton = try inspection.find(button: "サインアウト")
-        
-        // Then - ボタンが存在することを確認
-        #expect(try signOutButton.labelView().text().string() == "サインアウト")
-        
-        // ボタンのタップアクションを実行
         try signOutButton.tap()
-        
-        // clearSessionが呼ばれたことを確認（セッションがクリアされる）
-        // 注意: AuthManagerの実装によってはテストが困難な場合があるため、
-        // ここではボタンのタップが正常に実行されることを確認
+
+        // Then
+        #expect(authState.isAuthenticated == false)
     }
     
 }

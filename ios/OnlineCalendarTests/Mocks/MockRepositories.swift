@@ -54,9 +54,9 @@ class MockMeetingRepository: MeetingRepositoryProtocol {
     }
 }
 
-// AuthManagerのモック（プロトコルベースのモックに変更）
+// AuthStateのモック（プロトコルベースのモックに変更）
 @MainActor
-class MockAuthManager: ObservableObject {
+class MockAuthState: ObservableObject {
     @Published var isAuthenticated = false
     var clearSessionCalled = false
     

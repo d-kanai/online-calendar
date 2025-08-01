@@ -11,7 +11,7 @@ class SignInViewModel: ObservableObject {
     
     // MARK: - Dependencies
     private let repository: AuthRepositoryProtocol
-    private let authManager = AuthManager.shared
+    private let authState = AuthState.shared
     
     // MARK: - Initialization
     init(repository: AuthRepositoryProtocol = AuthRepository()) {
@@ -30,7 +30,7 @@ class SignInViewModel: ObservableObject {
         do {
             let (email, password) = form.formData
             let response = try await repository.signIn(email: email, password: password)
-            authManager.setSession(token: response.token, user: response.user)
+            authState.setSession(token: response.token, user: response.user)
         } catch {
             errorMessage = error.localizedDescription
             throw error

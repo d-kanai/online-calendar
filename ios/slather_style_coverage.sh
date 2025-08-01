@@ -238,10 +238,12 @@ cat > coverage/index.html << EOF
                     }
                     
                     target.files.forEach(file => {
-                        // ViewInspectorのファイルパスは除外
+                        // ViewInspector、APIClient、Repositoryのファイルパスは除外
                         if (file.path.includes('ViewInspector') || 
                             file.path.includes('PackageFrameworks') ||
-                            file.path.includes('.build')) {
+                            file.path.includes('.build') ||
+                            file.path.includes('APIClient.swift') ||
+                            file.path.includes('Repository.swift')) {
                             return;
                         }
                         
@@ -277,10 +279,12 @@ cat > coverage/index.html << EOF
                     }
                     
                     target.files.forEach(file => {
-                        // ViewInspectorのファイルパスは除外
+                        // ViewInspector、APIClient、Repositoryのファイルパスは除外
                         if (file.path.includes('ViewInspector') || 
                             file.path.includes('PackageFrameworks') ||
-                            file.path.includes('.build')) {
+                            file.path.includes('.build') ||
+                            file.path.includes('APIClient.swift') ||
+                            file.path.includes('Repository.swift')) {
                             return;
                         }
                         

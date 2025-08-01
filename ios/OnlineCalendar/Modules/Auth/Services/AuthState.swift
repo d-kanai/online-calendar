@@ -1,11 +1,11 @@
 import Foundation
 import SwiftUI
 
-// MARK: - AuthManager
+// MARK: - AuthState
 // 認証状態の管理とトークンの永続化を担当
 @MainActor
-class AuthManager: ObservableObject {
-    static let shared = AuthManager()
+class AuthState: ObservableObject {
+    static let shared = AuthState()
     
     // MARK: - Published Properties
     @Published var isAuthenticated = false

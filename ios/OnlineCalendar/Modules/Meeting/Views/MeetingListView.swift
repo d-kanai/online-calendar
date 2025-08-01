@@ -2,7 +2,7 @@ import SwiftUI
 
 struct MeetingListView: View {
     @ObservedObject var viewModel: MeetingListViewModel
-    @EnvironmentObject private var authManager: AuthManager
+    @EnvironmentObject private var authState: AuthState
     @State private var loadMeetingsTask: Task<Void, Error>?
     
     init(viewModel: MeetingListViewModel) {
@@ -83,7 +83,7 @@ private extension MeetingListView {
     
     var SignOutButton: some View {
         Button("サインアウト") {
-            authManager.clearSession()
+            authState.clearSession()
         }
     }
 }

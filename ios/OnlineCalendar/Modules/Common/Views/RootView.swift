@@ -1,13 +1,13 @@
 import SwiftUI
 
 struct RootView: View {
-    @StateObject private var authManager = AuthManager.shared
+    @StateObject private var authState = AuthState.shared
     @StateObject private var meetingListViewModel = MeetingListViewModel()
     
     var body: some View {
-        if authManager.isAuthenticated {
+        if authState.isAuthenticated {
             MeetingListView(viewModel: meetingListViewModel)
-                .environmentObject(authManager)
+                .environmentObject(authState)
         } else {
             SignInView()
         }
