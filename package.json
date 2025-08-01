@@ -27,7 +27,7 @@
     "e2e:install": "npx playwright install",
     "e2e:ui": "npx playwright test --ui",
     "back:ut": "yarn workspace online-calendar-backend test:run",
-    "ios:ut": "cd ios && xcodebuild test -scheme OnlineCalendar -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:OnlineCalendarTests -parallel-testing-enabled NO 2>&1 | grep -v \"^\\s*$\" | grep -E \"Test Case|failed|passed|XCTAssert|error:\"",
+    "ios:ut": "cd ios && set -o pipefail && xcodebuild test -scheme OnlineCalendar -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:OnlineCalendarTests -parallel-testing-enabled NO 2>&1 | grep -v \"^\\s*$\" | grep -E \"Test Case|failed|passed|XCTAssert|error:\"",
     "dead-code": "knip",
     "dead-code:backend": "knip --workspace backend",
     "dead-code:frontend": "knip --workspace frontend",
