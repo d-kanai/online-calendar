@@ -291,7 +291,8 @@ cat > coverage/index.html << EOF
                                 lines: file.lines || 0,
                                 relevant: file.executableLines,
                                 covered: file.coveredLines,
-                                missed: file.executableLines - file.coveredLines
+                                missed: file.executableLines - file.coveredLines,
+                                functions: file.functions || []
                             });
                         }
                     });
@@ -311,10 +312,18 @@ cat > coverage/index.html << EOF
                     numCell.textContent = index + 1;
                     row.appendChild(numCell);
                     
-                    // ファイルパス
+                    // ファイルパス（クリック可能）
                     const pathCell = document.createElement('td');
                     pathCell.className = 'file-path';
-                    pathCell.textContent = file.path;
+                    const pathLink = document.createElement('a');
+                    pathLink.href = '#';
+                    pathLink.textContent = file.path;
+                    pathLink.style.cursor = 'pointer';
+                    pathLink.onclick = function(e) {
+                        e.preventDefault();
+                        showFunctionDetails(file);
+                    };
+                    pathCell.appendChild(pathLink);
                     row.appendChild(pathCell);
                     
                     // カバレッジ率
@@ -378,6 +387,97 @@ cat > coverage/index.html << EOF
                 document.getElementById('fileList').innerHTML = 
                     '<tr><td colspan="7" style="text-align: center; color: #e74c3c;">カバレッジデータの読み込みに失敗しました</td></tr>';
             }
+        }
+        
+        // 関数レベルの詳細を表示する関数
+        function showFunctionDetails(file) {
+            // モーダルウィンドウを作成
+            const modal = document.createElement('div');
+            modal.style.cssText = \`
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+            \`;
+            
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = \`
+                background: white;
+                padding: 30px;
+                border-radius: 8px;
+                max-width: 80%;
+                max-height: 80%;
+                overflow-y: auto;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            \`;
+            
+            // 関数一覧を作成
+            let functionsHtml = \`<h3>\${file.path} - Function Coverage</h3>\`;
+            
+            if (file.functions && file.functions.length > 0) {
+                functionsHtml += \`
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                        <thead>
+                            <tr style="background: #f8f8f8;">
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Function</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Line#</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Coverage</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Exec Count</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Lines</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Covered</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Missed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                \`;
+                
+                file.functions.forEach(func => {
+                    const coverage = func.executableLines > 0 ? (func.coveredLines / func.executableLines * 100).toFixed(1) : '0.0';
+                    const coverageClass = coverage >= 80 ? 'cov_high' : coverage >= 50 ? 'cov_medium' : 'cov_low';
+                    
+                    functionsHtml += \`
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 8px; font-family: 'SF Mono', monospace; font-size: 12px;">\${func.name}</td>
+                            <td style="padding: 8px; text-align: right; color: #666;">\${func.lineNumber || '-'}</td>
+                            <td style="padding: 8px; text-align: right;"><span class="\${coverageClass}">\${coverage}%</span></td>
+                            <td style="padding: 8px; text-align: right; color: #666;">\${func.executionCount || 0}</td>
+                            <td style="padding: 8px; text-align: right;">\${func.executableLines}</td>
+                            <td style="padding: 8px; text-align: right;">\${func.coveredLines}</td>
+                            <td style="padding: 8px; text-align: right;">\${func.executableLines - func.coveredLines}</td>
+                        </tr>
+                    \`;
+                });
+                
+                functionsHtml += '</tbody></table>';
+            } else {
+                functionsHtml += '<p>No function details available for this file.</p>';
+            }
+            
+            functionsHtml += \`
+                <div style="margin-top: 20px; text-align: right;">
+                    <button onclick="this.parentElement.parentElement.parentElement.remove()" 
+                            style="padding: 8px 16px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        Close
+                    </button>
+                </div>
+            \`;
+            
+            modalContent.innerHTML = functionsHtml;
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            
+            // モーダル外クリックで閉じる
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
         }
         
         // ページ読み込み時に実行
