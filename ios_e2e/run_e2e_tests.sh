@@ -85,13 +85,13 @@ run_test() {
 echo "🚀 テストスイートを開始..."
 
 # テストケース実行
-run_test "signin" "signin_test.yaml"
+run_test "signin" "features/signin_test.yaml"
 signin_result=$?
 
 # E2Eテストモードを設定
 ./scripts/set_e2e_mode.sh
 
-run_test "meeting" "meeting_test.yaml"
+run_test "meeting" "features/meeting_test.yaml"
 meeting_result=$?
 
 # 結果サマリー
