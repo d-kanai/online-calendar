@@ -20,8 +20,12 @@ class AuthState: ObservableObject {
     // MARK: - Initialization
     private init() {
         #if targetEnvironment(simulator) && DEBUG
-        // シミュレータでのデバッグビルドでは常に認証をバイパス
-        setupE2ESession()
+        // E2Eテストモードかつバイパスが有効な場合のみ認証をバイパス
+        if ProcessInfo.processInfo.arguments.contains("E2E_AUTH_BYPASS") {
+            setupE2ESession()
+        } else {
+            loadStoredSession()
+        }
         #else
         loadStoredSession()
         #endif
