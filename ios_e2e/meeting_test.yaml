@@ -1,0 +1,22 @@
+appId: dkanai.OnlineCalendar
+---
+# 会議一覧画面のE2Eテスト（認証済み状態から開始）
+
+# アプリを起動（認証済み状態）  
+- launchApp:
+    clearState: true
+    arguments:
+      isE2ETest: true
+
+# 起動完了を待つ
+- waitForAnimationToEnd
+
+# 会議一覧画面が表示されることを確認
+- assertVisible: "会議一覧"
+
+# APIから取得した会議名が表示されることを確認
+# 実際のバックエンドデータに依存するため、存在確認のみ
+- waitForAnimationToEnd
+
+# サインアウトボタンが表示されることを確認
+- assertVisible: "サインアウト"

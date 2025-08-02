@@ -19,7 +19,23 @@ class AuthState: ObservableObject {
     
     // MARK: - Initialization
     private init() {
+        #if targetEnvironment(simulator) && DEBUG
+        // シミュレータでのデバッグビルドでは常に認証をバイパス
+        setupE2ESession()
+        #else
         loadStoredSession()
+        #endif
+    }
+    
+    private func setupE2ESession() {
+        let mockUser = User(
+            id: "e2e-test-user",
+            email: "test@example.com",
+            name: "E2E Test User"
+        )
+        self.authToken = "e2e-test-token"
+        self.currentUser = mockUser
+        self.isAuthenticated = true
     }
     
     // MARK: - Session Management

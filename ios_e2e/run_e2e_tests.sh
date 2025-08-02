@@ -13,6 +13,15 @@ fi
 
 echo "🧪 E2Eテストを実行します..."
 
+# E2Eテストユーザーのセットアップ
+echo "👤 E2Eテストユーザーをセットアップ中..."
+if ./setup_e2e_user.sh; then
+    echo "✅ ユーザーセットアップ完了"
+else
+    echo "❌ ユーザーセットアップに失敗しました"
+    exit 1
+fi
+
 # 結果を保存するディレクトリ
 RESULTS_DIR="results"
 mkdir -p $RESULTS_DIR
@@ -79,17 +88,24 @@ echo "🚀 テストスイートを開始..."
 run_test "signin" "signin_test.yaml"
 signin_result=$?
 
+# E2Eテストモードを設定
+./scripts/set_e2e_mode.sh
+
+run_test "meeting" "meeting_test.yaml"
+meeting_result=$?
+
 # 結果サマリー
 echo ""
 echo "📊 テスト結果サマリー"
 echo "================================="
 echo "サインインテスト: $([ $signin_result -eq 0 ] && echo "✅ 成功" || echo "❌ 失敗")"
+echo "会議一覧テスト: $([ $meeting_result -eq 0 ] && echo "✅ 成功" || echo "❌ 失敗")"
 echo ""
 echo "詳細ログ: $RESULTS_DIR/"
 echo ""
 
 # テストが成功した場合のみ0を返す
-if [ $signin_result -eq 0 ]; then
+if [ $signin_result -eq 0 ] && [ $meeting_result -eq 0 ]; then
     echo "🎉 テストが成功しました！"
     exit 0
 else
