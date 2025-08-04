@@ -88,9 +88,6 @@ echo "🚀 テストスイートを開始..."
 run_test "signin" "features/signin_test.yaml"
 signin_result=$?
 
-# E2Eテストモードを設定
-./scripts/set_e2e_mode.sh
-
 run_test "meeting" "features/meeting_test.yaml"
 meeting_result=$?
 
