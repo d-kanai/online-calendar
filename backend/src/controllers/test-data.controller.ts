@@ -1,5 +1,7 @@
 import { Context } from 'hono';
 import { prisma } from '../shared/database/prisma.js';
+import { UserFactory } from '../test/factories/user.factory.js';
+import { MeetingFactory } from '../test/factories/meeting.factory.js';
 
 export class TestDataController {
   async setupData(c: Context) {
@@ -21,19 +23,24 @@ export class TestDataController {
         return c.json({ error: `Table ${table} not found` }, 400);
       }
 
-      // データを作成（既存の場合は更新）
+      // ファクトリを使用してデータを作成
       let result;
-      if (data.id) {
-        // IDが指定されている場合はupsertを使用
-        result = await model.upsert({
-          where: { id: data.id },
-          update: data,
-          create: data
-        });
-      } else {
-        result = await model.create({
-          data: data
-        });
+      
+      // テーブル名に応じてファクトリを使用
+      switch (table.toLowerCase()) {
+        case 'user':
+          result = await UserFactory.create(data);
+          break;
+          
+        case 'meeting':
+          result = await MeetingFactory.create(data);
+          break;
+          
+        default:
+          // その他のテーブルは直接作成
+          result = await model.create({
+            data: data
+          });
       }
 
       return c.json({ 
