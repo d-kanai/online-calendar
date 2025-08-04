@@ -1,9 +1,14 @@
 appId: dkanai.OnlineCalendar
+env:
+  API_URL: "http://localhost:3001"
+  EMAIL: "test@example.com"
+  PASSWORD: "e2e-test-password"
+  NAME: "E2E Test User"
 ---
 # 会議一覧画面のE2Eテスト
 
 # Given: テストユーザーがバックエンドに存在する
-- runScript: ../scripts/setup_test_user_maestro.js
+- runScript: ../scripts/signup_user.js
 
 # When: 認証済み状態でアプリを起動
 - launchApp:

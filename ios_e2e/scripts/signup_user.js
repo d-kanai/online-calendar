@@ -1,9 +1,10 @@
 // E2Eテストユーザーを確認/作成 (Maestro JavaScript)
 
-var API_URL = 'http://localhost:3001';
-var EMAIL = 'test@example.com';
-var PASSWORD = 'e2e-test-password';
-var NAME = 'E2E Test User';
+// 環境変数から設定を取得
+var API_URL = API_URL || 'http://localhost:3001';
+var EMAIL = EMAIL;
+var PASSWORD = PASSWORD;
+var NAME = NAME;
 
 console.log('Setting up E2E test user: ' + EMAIL);
 
