@@ -24,7 +24,7 @@
     "e2e:develop": "npx cucumber-js e2e/features --require e2e/steps --require e2e/support --tags '@develop' --exit",
     "e2e:debug": "E2E_HEADLESS=false npx cucumber-js e2e/features --require e2e/steps --require e2e/support --tags '@develop' --exit",
     "e2e:cucumber": "npx cucumber-js e2e/features --require e2e/steps --require e2e/support",
-    "e2e:ios": "cd ios_e2e && API_URL=$API_URL ./run_e2e_tests.sh",
+    "e2e:ios": "cd ios_e2e && API_URL=${API_URL:-http://localhost:3001} ./run_e2e_tests.sh",
     "e2e:install": "npx playwright install",
     "e2e:ui": "npx playwright test --ui",
     "back:ut": "yarn workspace online-calendar-backend test:run",
