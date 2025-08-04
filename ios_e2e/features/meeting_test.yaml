@@ -2,23 +2,8 @@ appId: dkanai.OnlineCalendar
 ---
 # 会議一覧画面のE2Eテスト
 
-# Given: テストユーザーがバックエンドに存在する
-- runScript:
-    file: ../scripts/signup_user.js
-    env:
-      API_URL: "http://localhost:3001"
-      EMAIL: "test@example.com"
-      PASSWORD: "e2e-test-password"
-      NAME: "E2E Test User"
+# Given: 認証済み状態でアプリを起動
+- runFlow: ../flows/launchBypassSignin.yaml
 
-# When: 認証済み状態でアプリを起動
-- launchApp:
-    clearState: true
-    arguments:
-      E2E_AUTH_BYPASS: true
-
-# Then: 会議一覧画面が表示される
-- assertVisible: "会議一覧"
-
-# And: サインアウトボタンが表示される
+# Then: サインアウトボタンが表示される
 - assertVisible: "サインアウト"
