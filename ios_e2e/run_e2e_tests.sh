@@ -16,14 +16,7 @@ fi
 
 echo "🧪 E2Eテストを実行します... (API_URL: $API_URL)"
 
-# E2Eテストユーザーのセットアップ
-echo "👤 E2Eテストユーザーをセットアップ中..."
-if ./setup_e2e_user.sh; then
-    echo "✅ ユーザーセットアップ完了"
-else
-    echo "❌ ユーザーセットアップに失敗しました"
-    exit 1
-fi
+# E2Eテストユーザーのセットアップはマエストロで実行
 
 # 結果を保存するディレクトリ
 RESULTS_DIR="results"
