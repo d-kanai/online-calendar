@@ -1,5 +1,3 @@
-// E2Eテストユーザーを確認/作成 (Maestro JavaScript)
-
 // 環境変数から設定を取得
 var API_URL = API_URL || 'http://localhost:3001';
 var EMAIL = EMAIL;
