@@ -2,6 +2,9 @@
 
 # Maestro E2Eテスト実行スクリプト
 
+# 環境変数を受け取る
+API_URL="${API_URL:-http://localhost:3001}"
+
 # ローカルの Maestro を使用
 MAESTRO_BIN="./maestro_cli/maestro/bin/maestro"
 
@@ -11,7 +14,7 @@ if [ ! -f "$MAESTRO_BIN" ]; then
     ./install_maestro_local.sh
 fi
 
-echo "🧪 E2Eテストを実行します..."
+echo "🧪 E2Eテストを実行します... (API_URL: $API_URL)"
 
 # E2Eテストユーザーのセットアップ
 echo "👤 E2Eテストユーザーをセットアップ中..."
@@ -60,6 +63,7 @@ run_test() {
     
     # テスト実行（エラーログを含む詳細出力）
     $MAESTRO_BIN test $test_file \
+        -e API_URL="$API_URL" \
         --format junit \
         --output $RESULTS_DIR/${test_name}_${TIMESTAMP}.xml \
         2>&1 | tee $RESULTS_DIR/${test_name}_${TIMESTAMP}.log
