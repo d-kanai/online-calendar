@@ -13,14 +13,7 @@ env:
     env:
       API_URL: ${API_URL}
       TABLE: "meeting"
-      DATA: |
-        {
-          "id": "test-meeting-e2e",
-          "title": "E2Eテスト会議",
-          "startTime": "2025-12-01T10:00:00Z",
-          "endTime": "2025-12-01T11:00:00Z",
-          "ownerId": "e2e-test-user"
-        }
+      DATA: '{"title": "E2Eテスト会議", "ownerId": "e2e-test-user"}'
 
 # When: 会議一覧を更新（プルトゥリフレッシュ）
 - swipe:
