@@ -1,0 +1,32 @@
+appId: dkanai.OnlineCalendar
+env:
+  API_URL: "http://localhost:3001"
+---
+# 会議一覧画面のE2Eテスト
+
+# Given: 認証済み状態でアプリを起動
+- runFlow: ../flows/launch_bypass_signin.yaml
+
+# And: テスト用の会議が存在する
+- runScript:
+    file: ../scripts/setup_test_data.js
+    env:
+      API_URL: ${API_URL}
+      TABLE: "meeting"
+      DATA: |
+        {
+          "id": "test-meeting-e2e",
+          "title": "E2Eテスト会議",
+          "startTime": "2025-12-01T10:00:00Z",
+          "endTime": "2025-12-01T11:00:00Z",
+          "ownerId": "e2e-test-user"
+        }
+
+# When: 会議一覧を更新（プルトゥリフレッシュ）
+- swipe:
+    start: 50%, 30%
+    end: 50%, 80%
+    duration: 100
+
+# Then: 作成した会議が表示される
+- assertVisible: "E2Eテスト会議"

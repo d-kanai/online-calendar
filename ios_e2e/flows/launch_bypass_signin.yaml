@@ -1,0 +1,33 @@
+appId: dkanai.OnlineCalendar
+---
+# 認証をバイパスしてアプリを起動するサブフロー
+
+# Setup: 全てのテストデータをリセット
+- runScript:
+    file: ../scripts/reset_all_data.js
+    env:
+      API_URL: ${API_URL}
+
+# Given: テストユーザーがバックエンドに存在する
+- runScript:
+    file: ../scripts/setup_test_data.js
+    env:
+      API_URL: "http://localhost:3001"
+      TABLE: "user"
+      DATA: |
+        {
+          "id": "e2e-test-user",
+          "email": "test@example.com",
+          "password": "$2b$10$aVJHYtQWpC7ojO9rzF2s3uQtveclD8eMmpqyW7kNzN3O9VpveiGru",
+          "name": "E2E Test User"
+        }
+
+
+# When: 認証済み状態でアプリを起動
+- launchApp:
+    clearState: true
+    arguments:
+      E2E_AUTH_BYPASS: true
+
+# Then: 会議一覧画面が表示されるまで待機
+- assertVisible: "会議一覧"

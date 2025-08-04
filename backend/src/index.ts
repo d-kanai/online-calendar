@@ -5,6 +5,7 @@ import { logger } from 'hono/logger';
 import { meetingRoutes } from './modules/meeting/meeting.routes.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { statsRoutes } from './modules/stats/stats.routes.js';
+import { testDataRoutes } from './routes/test-data.routes.js';
 
 const app = new Hono();
 
@@ -30,6 +31,11 @@ app.get('/api/v1', (c) => {
 app.route('/api/v1/auth', authRoutes);
 app.route('/api/v1/meetings', meetingRoutes);
 app.route('/api/v1/stats', statsRoutes);
+
+// Test data routes (開発環境のみ)
+if (process.env.NODE_ENV !== 'production') {
+  app.route('/api/v1/test-data', testDataRoutes);
+}
 
 // 404 handler
 app.notFound((c) => {

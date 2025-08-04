@@ -14,6 +14,15 @@ export const authMiddleware = () => {
       }
 
       const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+      
+      // E2Eテストトークンの場合は固定ユーザー情報を設定
+      if (process.env.NODE_ENV !== 'production' && token === 'e2e-test-token') {
+        c.set('loginUserId', 'e2e-test-user');
+        c.set('loginUserEmail', 'test@example.com');
+        await next();
+        return;
+      }
+      
       const payload = authService.verifyToken(token);
 
       // Set authenticated user info in context

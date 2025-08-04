@@ -7,7 +7,7 @@ const meetingRoutes = new Hono();
 const meetingController = new MeetingController();
 
 // Apply authentication middleware to all routes
-// meetingRoutes.use('*', authMiddleware());
+meetingRoutes.use('*', authMiddleware());
 
 // Error handler
 meetingRoutes.onError(errorHandler);

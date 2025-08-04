@@ -80,6 +80,12 @@ class AuthState: ObservableObject {
     
     // MARK: - Token Access
     var currentToken: String? {
+        #if targetEnvironment(simulator) && DEBUG
+        // E2Eテストモードの場合は固定トークンを返す
+        if ProcessInfo.processInfo.arguments.contains("E2E_AUTH_BYPASS") {
+            return "e2e-test-token"
+        }
+        #endif
         return authToken
     }
 }

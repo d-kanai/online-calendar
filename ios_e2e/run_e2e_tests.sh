@@ -82,10 +82,10 @@ run_test() {
 echo "🚀 テストスイートを開始..."
 
 # テストケース実行
-run_test "signin" "features/signin_test.yaml"
+run_test "signin" "features/signin.yaml"
 signin_result=$?
 
-run_test "meeting" "features/meeting_test.yaml"
+run_test "meeting" "features/meeting.yaml"
 meeting_result=$?
 
 # 結果サマリー

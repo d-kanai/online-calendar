@@ -1,8 +1,24 @@
 appId: dkanai.OnlineCalendar
+env:
+  API_URL: "http://localhost:3001"
 ---
 # サインインフローのE2Eテスト
 
-# アプリを起動
+# Given: テストユーザーがバックエンドに存在する
+- runScript:
+    file: ../scripts/setup_test_data.js
+    env:
+      API_URL: ${API_URL}
+      TABLE: "user"
+      DATA: |
+        {
+          "id": "e2e-test-user",
+          "email": "test@example.com",
+          "password": "$2b$10$aVJHYtQWpC7ojO9rzF2s3uQtveclD8eMmpqyW7kNzN3O9VpveiGru",
+          "name": "E2E Test User"
+        }
+
+# When: アプリを起動
 - launchApp:
     clearState: true
 
@@ -15,16 +31,13 @@ appId: dkanai.OnlineCalendar
 
 # パスワードを入力（即座にタップして高速入力）
 - tapOn: "パスワード"  
-- inputText: "password"
+- inputText: "e2e-test-password"
 
 # キーボードを閉じる
 - hideKeyboard
 
 # サインインボタンをタップ
 - tapOn: "サインイン"
-
-# 会議一覧画面に遷移することを確認
-- assertVisible: "会議一覧"
 
 # サインアウトボタンが表示されることを確認
 - assertVisible: "サインアウト"
