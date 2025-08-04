@@ -1,0 +1,13 @@
+appId: dkanai.OnlineCalendar
+---
+# 共通サインインフロー
+# 前提: アプリが起動していること
+
+- tapOn: "メールアドレス"
+- inputText: "test@example.com"
+- tapOn: "パスワード"  
+- inputText: "password"
+- hideKeyboard
+- tapOn: "サインイン"
+- waitForAnimationToEnd
+- assertVisible: "会議一覧"  # サインイン成功を確認
