@@ -1,4 +1,6 @@
 appId: dkanai.OnlineCalendar
+env:
+  API_URL: "http://localhost:3001"
 ---
 # 会議一覧画面のE2Eテスト
 

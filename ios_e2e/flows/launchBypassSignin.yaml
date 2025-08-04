@@ -1,4 +1,6 @@
 appId: dkanai.OnlineCalendar
+env:
+  API_URL: ${API_URL}
 ---
 # 認証をバイパスしてアプリを起動するサブフロー
 
@@ -6,7 +8,7 @@ appId: dkanai.OnlineCalendar
 - runScript:
     file: ../scripts/signup_user.js
     env:
-      API_URL: "http://localhost:3001"
+      API_URL: ${API_URL}
       EMAIL: "test@example.com"
       PASSWORD: "e2e-test-password"
       NAME: "E2E Test User"
