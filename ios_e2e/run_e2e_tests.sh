@@ -2,7 +2,7 @@
 
 # Maestro E2Eテスト実行スクリプト
 
-# 環境変数を受け取る
+# 環境変数を受け取る（デフォルト: http://localhost:3001）
 API_URL="${API_URL:-http://localhost:3001}"
 
 # ローカルの Maestro を使用
