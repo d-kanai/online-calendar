@@ -68,21 +68,24 @@ let package = Package(
             dependencies: [
                 "Auth",
                 .product(name: "ViewInspector", package: "ViewInspector")
-            ]
+            ],
+            path: "Tests/Features/Auth"
         ),
         .testTarget(
             name: "MeetingTests",
             dependencies: [
                 "Meeting",
                 .product(name: "ViewInspector", package: "ViewInspector")
-            ]
+            ],
+            path: "Tests/Features/Meeting"
         ),
         .testTarget(
             name: "StatsTests",
             dependencies: [
                 "Stats",
                 .product(name: "ViewInspector", package: "ViewInspector")
-            ]
+            ],
+            path: "Tests/Features/Stats"
         ),
     ]
 )

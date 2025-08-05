@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 
 @MainActor
-public class MeetingListViewModel: MeetingListViewModelProtocol {
+public class MeetingListViewModel: ObservableObject {
     // MARK: - Published Properties
     @Published public var meetings: [Meeting] = []
     @Published public var errorMessage: String?

@@ -6,7 +6,7 @@ public class APIClient {
     
     let baseURL = "http://localhost:3001/api/v1"
     private let session = URLSession.shared
-    public var tokenProvider: TokenProvider?
+    // Token is retrieved directly from AuthState.shared
     
     public init() {}
     
@@ -51,8 +51,7 @@ public class APIClient {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         // Add auth token if available
-        if let tokenProvider = tokenProvider,
-           let token = await tokenProvider.currentToken {
+        if let token = await AuthState.shared.currentToken {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             print("📡 [APIClient] Using auth token")
         }

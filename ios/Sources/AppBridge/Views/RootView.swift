@@ -7,10 +7,7 @@ import Stats
 public struct RootView: View {
     @StateObject private var authState = AuthState.shared
     
-    public init() {
-        // Set up the token provider for APIClient
-        APIClient.shared.tokenProvider = AuthState.shared
-    }
+    public init() {}
     
     public var body: some View {
         if authState.isAuthenticated {

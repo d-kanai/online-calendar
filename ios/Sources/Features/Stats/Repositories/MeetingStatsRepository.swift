@@ -8,15 +8,13 @@ public protocol MeetingStatsRepositoryProtocol {
 
 // MARK: - Repository Implementation
 public class MeetingStatsRepository: MeetingStatsRepositoryProtocol {
-    private let apiClient: APIClientProtocol
+    private let apiClient = APIClient.shared
     
-    public init(apiClient: APIClientProtocol = APIClient()) {
-        self.apiClient = apiClient
-    }
+    public init() {}
     
     public func fetchMeetingStats(days: Int) async throws -> MeetingStatsResponse {
         let endpoint = "/stats/daily-average?days=\(days)"
-        let apiResponse: MeetingStatsAPIResponse = try await apiClient.request(endpoint: endpoint, method: .get)
+        let apiResponse = try await apiClient.get(endpoint, type: MeetingStatsAPIResponse.self)
         return apiResponse.data
     }
 }

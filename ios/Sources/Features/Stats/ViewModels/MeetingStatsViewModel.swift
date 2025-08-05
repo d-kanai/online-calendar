@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 
 @MainActor
-public class MeetingStatsViewModel: MeetingStatsViewModelProtocol {
+public class MeetingStatsViewModel: ObservableObject {
     // MARK: - Published Properties
     @Published public var averageDailyMinutes: Double = 0.0
     @Published public var averageDailyMinutesText: String = "0.0分"

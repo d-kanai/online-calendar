@@ -8,7 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		1A5837912E3B528A00188A49 /* ViewInspector in Frameworks */ = {isa = PBXBuildFile; productRef = 1A5837902E3B528A00188A49 /* ViewInspector */; };
-		1AD7790D2E419816003600F1 /* AppCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1AD7790C2E419816003600F1 /* AppCore */; };
+		1A713AD62E42CB3B001F00DD /* AppBridge in Frameworks */ = {isa = PBXBuildFile; productRef = 1A713AD52E42CB3B001F00DD /* AppBridge */; };
+		1A713AD82E42CB3B001F00DD /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 1A713AD72E42CB3B001F00DD /* Auth */; };
+		1A713ADA2E42CB3B001F00DD /* Core in Frameworks */ = {isa = PBXBuildFile; productRef = 1A713AD92E42CB3B001F00DD /* Core */; };
+		1A713ADC2E42CB3B001F00DD /* Meeting in Frameworks */ = {isa = PBXBuildFile; productRef = 1A713ADB2E42CB3B001F00DD /* Meeting */; };
+		1A713ADE2E42CB3B001F00DD /* Stats in Frameworks */ = {isa = PBXBuildFile; productRef = 1A713ADD2E42CB3B001F00DD /* Stats */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,7 +51,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1AD7790D2E419816003600F1 /* AppCore in Frameworks */,
+				1A713ADE2E42CB3B001F00DD /* Stats in Frameworks */,
+				1A713ADA2E42CB3B001F00DD /* Core in Frameworks */,
+				1A713AD62E42CB3B001F00DD /* AppBridge in Frameworks */,
+				1A713ADC2E42CB3B001F00DD /* Meeting in Frameworks */,
+				1A713AD82E42CB3B001F00DD /* Auth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -107,7 +115,11 @@
 			);
 			name = OnlineCalendar;
 			packageProductDependencies = (
-				1AD7790C2E419816003600F1 /* AppCore */,
+				1A713AD52E42CB3B001F00DD /* AppBridge */,
+				1A713AD72E42CB3B001F00DD /* Auth */,
+				1A713AD92E42CB3B001F00DD /* Core */,
+				1A713ADB2E42CB3B001F00DD /* Meeting */,
+				1A713ADD2E42CB3B001F00DD /* Stats */,
 			);
 			productName = OnlineCalendar;
 			productReference = 1A96B5102E3AEFA100FCC261 /* OnlineCalendar.app */;
@@ -188,7 +200,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				1A58378F2E3B528A00188A49 /* XCRemoteSwiftPackageReference "ViewInspector" */,
-				1AD7790B2E419816003600F1 /* XCLocalSwiftPackageReference "../../ios" */,
+				1A713AD42E42CB3B001F00DD /* XCLocalSwiftPackageReference "../../ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1A96B5112E3AEFA100FCC261 /* Products */;
@@ -559,7 +571,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		1AD7790B2E419816003600F1 /* XCLocalSwiftPackageReference "../../ios" */ = {
+		1A713AD42E42CB3B001F00DD /* XCLocalSwiftPackageReference "../../ios" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../../ios;
 		};
@@ -582,9 +594,25 @@
 			package = 1A58378F2E3B528A00188A49 /* XCRemoteSwiftPackageReference "ViewInspector" */;
 			productName = ViewInspector;
 		};
-		1AD7790C2E419816003600F1 /* AppCore */ = {
+		1A713AD52E42CB3B001F00DD /* AppBridge */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = AppCore;
+			productName = AppBridge;
+		};
+		1A713AD72E42CB3B001F00DD /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Auth;
+		};
+		1A713AD92E42CB3B001F00DD /* Core */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Core;
+		};
+		1A713ADB2E42CB3B001F00DD /* Meeting */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Meeting;
+		};
+		1A713ADD2E42CB3B001F00DD /* Stats */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Stats;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

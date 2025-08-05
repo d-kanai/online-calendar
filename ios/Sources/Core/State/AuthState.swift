@@ -4,7 +4,7 @@ import SwiftUI
 // MARK: - AuthState
 // 認証状態の管理とトークンの永続化を担当
 @MainActor
-public class AuthState: ObservableObject, TokenProvider {
+public class AuthState: ObservableObject {
     public static let shared = AuthState()
     
     // MARK: - Published Properties
