@@ -10,35 +10,22 @@ public struct MeetingListScreen: View {
     }
     
     public var body: some View {
-        NavigationView {
-            List {
-                ContentView
+        List {
+            ContentView
+        }
+        .navigationTitle("会議一覧")
+        .toolbar {
+            ToolbarItem(placement: .automatic) {
+                SignOutButton
             }
-            .navigationTitle("会議一覧")
-            .toolbar {
-                ToolbarItem(placement: {
-                    #if os(iOS)
-                    return .navigationBarLeading
-                    #else
-                    return .navigation
-                    #endif
-                }()) {
-                    NavigationLink("統計") {
-                        MeetingStatsScreen(viewModel: MeetingStatsViewModel())
-                    }
-                }
-                ToolbarItem(placement: .automatic) {
-                    SignOutButton
-                }
+        }
+        .task {
+            loadMeetingsTask = Task {
+                await viewModel.loadMeetings()
             }
-            .task {
-                loadMeetingsTask = Task {
-                    await viewModel.loadMeetings()
-                }
-            }
-            .refreshable {
-                await viewModel.refreshMeetings()
-            }
+        }
+        .refreshable {
+            await viewModel.refreshMeetings()
         }
     }
 }

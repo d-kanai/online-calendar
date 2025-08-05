@@ -18,8 +18,8 @@ struct MeetingStatsScreenSpec {
         // When
         let inspection = try view.inspect()
         
-        // Then - タイトルが表示される
-        _ = try inspection.find(ViewType.NavigationView.self)
+        // Then - ZStackが表示される（NavigationViewの代わりに）
+        _ = try inspection.find(ViewType.ZStack.self)
     }
     
     @Test("ローディング中はLoadingViewが表示される")
