@@ -41,8 +41,16 @@ fi
 if [ "${FORCE_BUILD}" = "true" ] || [ ! -d /Users/d.kanai/Library/Developer/Xcode/DerivedData/OnlineCalendar-* ]; then
     echo "🔨 アプリをビルドします..."
     cd ../ios
-    xcodebuild -project OnlineCalendar.xcodeproj -scheme OnlineCalendar -destination 'platform=iOS Simulator,name=iPhone 16' clean build -quiet
+    xcodebuild -workspace . -scheme OnlineCalendar -destination 'platform=iOS Simulator,name=iPhone 16' clean build -quiet
+    BUILD_EXIT_CODE=$?
     cd ../ios_e2e
+    
+    if [ $BUILD_EXIT_CODE -ne 0 ]; then
+        echo "❌ ビルドに失敗しました (exit code: $BUILD_EXIT_CODE)"
+        echo "⚠️  ビルドエラーのため、テストを中止します"
+        exit 1
+    fi
+    
     echo "✅ ビルド完了"
 else
     echo "ℹ️  既存のビルドを使用します (最新ビルドを使用するには FORCE_BUILD=true を設定してください)"

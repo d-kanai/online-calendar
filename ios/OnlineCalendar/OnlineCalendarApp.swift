@@ -6,14 +6,13 @@
 //
 
 import SwiftUI
-// import Core // TODO: Add local SPM package to Xcode project
+import Core
 
 @main
 struct OnlineCalendarApp: App {
     var body: some Scene {
         WindowGroup {
-            // RootView() // TODO: Use RootView from Core package
-            ContentView()
+            RootView()
         }
     }
 }
