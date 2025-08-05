@@ -6,10 +6,10 @@
 //
 
 import SwiftUI
-import Core
+import AppBridge
 
 @main
-struct OnlineCalendarApp: App {
+struct OnlineCalendarApp: App {    
     var body: some Scene {
         WindowGroup {
             RootView()

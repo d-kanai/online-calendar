@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1A5837912E3B528A00188A49 /* ViewInspector in Frameworks */ = {isa = PBXBuildFile; productRef = 1A5837902E3B528A00188A49 /* ViewInspector */; };
-		1AD7790D2E419816003600F1 /* AppCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1AD7790C2E419816003600F1 /* AppCore */; };
+		1AD7790D2E419816003600F1 /* Core in Frameworks */ = {isa = PBXBuildFile; productRef = 1AD7790C2E419816003600F1 /* Core */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,7 +47,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1AD7790D2E419816003600F1 /* AppCore in Frameworks */,
+				1AD7790D2E419816003600F1 /* Core in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -107,7 +107,7 @@
 			);
 			name = OnlineCalendar;
 			packageProductDependencies = (
-				1AD7790C2E419816003600F1 /* AppCore */,
+				1AD7790C2E419816003600F1 /* Core */,
 			);
 			productName = OnlineCalendar;
 			productReference = 1A96B5102E3AEFA100FCC261 /* OnlineCalendar.app */;
@@ -582,9 +582,9 @@
 			package = 1A58378F2E3B528A00188A49 /* XCRemoteSwiftPackageReference "ViewInspector" */;
 			productName = ViewInspector;
 		};
-		1AD7790C2E419816003600F1 /* AppCore */ = {
+		1AD7790C2E419816003600F1 /* Core */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = AppCore;
+			productName = Core;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
