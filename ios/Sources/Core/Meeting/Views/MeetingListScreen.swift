@@ -16,19 +16,17 @@ struct MeetingListScreen: View {
             }
             .navigationTitle("会議一覧")
             .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: {
+                    #if os(iOS)
+                    return .navigationBarLeading
+                    #else
+                    return .navigation
+                    #endif
+                }()) {
                     NavigationLink("統計") {
                         MeetingStatsScreen(viewModel: MeetingStatsViewModel())
                     }
                 }
-                #else
-                ToolbarItem(placement: .navigation) {
-                    NavigationLink("統計") {
-                        MeetingStatsScreen(viewModel: MeetingStatsViewModel())
-                    }
-                }
-                #endif
                 ToolbarItem(placement: .automatic) {
                     SignOutButton
                 }
