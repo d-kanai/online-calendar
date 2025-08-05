@@ -130,6 +130,24 @@ struct MeetingStatsViewModelSpec {
     }
 }
 
+    @Test("週次データが正しく設定される")
+    @MainActor
+    func test_weeklyDataIsSet() async throws {
+        // Given
+        let mockRepository = MockMeetingStatsRepository()
+        mockRepository.dailyMeetingMinutes = [60, 30, 90, 0, 45, 0, 120]
+        
+        let viewModel = MeetingStatsViewModel(repository: mockRepository)
+        
+        // When
+        await viewModel.loadStats()
+        
+        // Then
+        #expect(viewModel.weeklyData.count == 7)
+        #expect(viewModel.weeklyData[0].totalMinutes == 60)
+        #expect(viewModel.weeklyData[6].totalMinutes == 120)
+    }
+
 // MARK: - Mock Repository
 class MockMeetingStatsRepository: MeetingStatsRepositoryProtocol {
     var dailyMeetingMinutes: [Int] = []

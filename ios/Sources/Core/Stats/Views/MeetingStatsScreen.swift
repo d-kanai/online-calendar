@@ -19,21 +19,22 @@ public struct MeetingStatsScreen: View {
                 #endif
                 
                 if viewModel.isLoading {
-                    ProgressView("読み込み中...")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    LoadingView()
+                } else if let errorMessage = viewModel.errorMessage {
+                    StatsErrorView(message: errorMessage)
                 } else {
-                    VStack(spacing: 20) {
-                        statsCard
-                        
-                        if let errorMessage = viewModel.errorMessage {
-                            Text(errorMessage)
-                                .foregroundColor(.red)
-                                .padding()
+                    ScrollView {
+                        VStack(spacing: 20) {
+                            AverageTimeCard(averageMinutes: viewModel.averageDailyMinutes)
+                            
+                            if !viewModel.weeklyData.isEmpty {
+                                SimpleBarChart(weeklyData: viewModel.weeklyData)
+                                
+                                DailyBreakdownCard(weeklyData: viewModel.weeklyData)
+                            }
                         }
-                        
-                        Spacer()
+                        .padding()
                     }
-                    .padding()
                 }
             }
             .navigationTitle("会議統計")
@@ -44,22 +45,5 @@ public struct MeetingStatsScreen: View {
         .task {
             await viewModel.loadStats()
         }
-    }
-    
-    private var statsCard: some View {
-        VStack(spacing: 16) {
-            Text("1日あたりの平均会議時間")
-                .font(.headline)
-                .foregroundColor(.secondary)
-            
-            Text(viewModel.averageDailyMinutesText)
-                .font(.system(size: 48, weight: .bold, design: .rounded))
-                .foregroundColor(.primary)
-        }
-        .padding(30)
-        .frame(maxWidth: .infinity)
-        .background(Color.white)
-        .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 4)
     }
 }

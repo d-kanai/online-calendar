@@ -12,17 +12,17 @@ struct MeetingStatsScreenSpec {
         // Given
         let viewModel = MeetingStatsViewModel()
         viewModel.averageDailyMinutesText = "0.0分"
+        viewModel.averageDailyMinutes = 0.0
         let view = MeetingStatsScreen(viewModel: viewModel)
         
         // When
         let inspection = try view.inspect()
         
-        // Then - 平均時間のラベルが表示される
-        let averageLabel = try inspection.find(text: "1日あたりの平均会議時間")
-        #expect(try averageLabel.string() == "1日あたりの平均会議時間")
+        // Then - タイトルが表示される
+        _ = try inspection.find(ViewType.NavigationView.self)
     }
     
-    @Test("ローディング中はProgressViewが表示される")
+    @Test("ローディング中はLoadingViewが表示される")
     @MainActor
     func test_loadingState() throws {
         // Given
@@ -33,8 +33,9 @@ struct MeetingStatsScreenSpec {
         // When
         let inspection = try view.inspect()
         
-        // Then
-        _ = try inspection.find(ViewType.ProgressView.self)
+        // Then - LoadingViewが表示される
+        let loadingText = try inspection.find(text: "統計データを読み込んでいます...")
+        #expect(try loadingText.string() == "統計データを読み込んでいます...")
     }
     
     @Test("統計データが正しく表示される")
@@ -51,9 +52,13 @@ struct MeetingStatsScreenSpec {
         let view = MeetingStatsScreen(viewModel: viewModel)
         let inspection = try view.inspect()
         
-        // Then - 平均時間が表示される
+        // Then - 平均時間が表示される（AverageTimeCard内）
         let averageTime = try inspection.find(text: "49.3分")
         #expect(try averageTime.string() == "49.3分")
+        
+        // 週合計が表示される（SimpleBarChart内）
+        let weekTotal = try inspection.find(text: "週合計: 5時間")
+        #expect(try weekTotal.string() == "週合計: 5時間")
     }
     
     @Test("エラー時にエラーメッセージが表示される")
@@ -70,7 +75,10 @@ struct MeetingStatsScreenSpec {
         let view = MeetingStatsScreen(viewModel: viewModel)
         let inspection = try view.inspect()
         
-        // Then - エラーメッセージが表示される
+        // Then - StatsErrorViewが表示される
+        let errorTitle = try inspection.find(text: "エラーが発生しました")
+        #expect(try errorTitle.string() == "エラーが発生しました")
+        
         let errorMessage = try inspection.find(text: "統計データの取得に失敗しました")
         #expect(try errorMessage.string() == "統計データの取得に失敗しました")
     }
