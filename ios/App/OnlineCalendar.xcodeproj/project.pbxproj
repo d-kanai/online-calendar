@@ -188,7 +188,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				1A58378F2E3B528A00188A49 /* XCRemoteSwiftPackageReference "ViewInspector" */,
-				1AD7790B2E419816003600F1 /* XCLocalSwiftPackageReference "../ios" */,
+				1AD7790B2E419816003600F1 /* XCLocalSwiftPackageReference "../../ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1A96B5112E3AEFA100FCC261 /* Products */;
@@ -551,9 +551,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		1AD7790B2E419816003600F1 /* XCLocalSwiftPackageReference "../ios" */ = {
+		1AD7790B2E419816003600F1 /* XCLocalSwiftPackageReference "../../ios" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = ../ios;
+			relativePath = ../../ios;
 		};
 /* End XCLocalSwiftPackageReference section */
 

@@ -29,7 +29,7 @@ env:
     clearState: true
 
 # サインイン画面が表示されることを確認
-- assertVisible: "オンラインカレンダー"
+- assertVisible: "Online Calendar"
 
 # メールアドレスを入力（即座にタップして高速入力）
 - tapOn: "メールアドレス"

@@ -40,10 +40,10 @@ fi
 # 最新のビルドを使用するオプション（環境変数で制御）
 if [ "${FORCE_BUILD}" = "true" ] || [ ! -d /Users/d.kanai/Library/Developer/Xcode/DerivedData/OnlineCalendar-* ]; then
     echo "🔨 アプリをビルドします..."
-    cd ../ios
+    cd ../ios/App
     xcodebuild -project OnlineCalendar.xcodeproj -scheme OnlineCalendar -destination 'platform=iOS Simulator,name=iPhone 16' -configuration Debug clean build -quiet
     BUILD_EXIT_CODE=$?
-    cd ../ios_e2e
+    cd ../../ios_e2e
     
     if [ $BUILD_EXIT_CODE -ne 0 ]; then
         echo "❌ ビルドに失敗しました (exit code: $BUILD_EXIT_CODE)"
@@ -91,7 +91,8 @@ run_test() {
         --output $RESULTS_DIR/${test_name}_${TIMESTAMP}.xml \
         2>&1 | tee $RESULTS_DIR/${test_name}_${TIMESTAMP}.log
     
-    local exit_code=$?
+    # PIPESTATUSを使ってmaestroコマンドの実際の終了コードを取得
+    local exit_code=${PIPESTATUS[0]}
     
     if [ $exit_code -eq 0 ]; then
         echo "✅ $test_name: 成功"
