@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct MeetingListScreen: View {
+public struct MeetingListScreen: View {
     @ObservedObject var viewModel: MeetingListViewModel
     @EnvironmentObject private var authState: AuthState
     @State private var loadMeetingsTask: Task<Void, Error>?
@@ -9,7 +9,7 @@ struct MeetingListScreen: View {
         self.viewModel = viewModel
     }
     
-    var body: some View {
+    public var body: some View {
         NavigationView {
             List {
                 ContentView
