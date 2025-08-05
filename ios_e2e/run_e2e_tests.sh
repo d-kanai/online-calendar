@@ -41,7 +41,7 @@ fi
 if [ "${FORCE_BUILD}" = "true" ] || [ ! -d /Users/d.kanai/Library/Developer/Xcode/DerivedData/OnlineCalendar-* ]; then
     echo "🔨 アプリをビルドします..."
     cd ../ios
-    xcodebuild -workspace . -scheme OnlineCalendar -destination 'platform=iOS Simulator,name=iPhone 16' clean build -quiet
+    xcodebuild -project OnlineCalendar.xcodeproj -scheme OnlineCalendar -destination 'platform=iOS Simulator,name=iPhone 16' -configuration Debug clean build -quiet
     BUILD_EXIT_CODE=$?
     cd ../ios_e2e
     
@@ -52,6 +52,25 @@ if [ "${FORCE_BUILD}" = "true" ] || [ ! -d /Users/d.kanai/Library/Developer/Xcod
     fi
     
     echo "✅ ビルド完了"
+    
+    echo "📱 アプリをシミュレータにインストールします..."
+    # ビルドされたアプリのパスを探す
+    APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "OnlineCalendar.app" -type d | grep "Build/Products/Debug-iphonesimulator" | head -1)
+    
+    if [ -z "$APP_PATH" ]; then
+        echo "❌ ビルドされたアプリが見つかりません"
+        exit 1
+    fi
+    
+    xcrun simctl install "iPhone 16" "$APP_PATH"
+    INSTALL_EXIT_CODE=$?
+    
+    if [ $INSTALL_EXIT_CODE -ne 0 ]; then
+        echo "❌ アプリのインストールに失敗しました (exit code: $INSTALL_EXIT_CODE)"
+        exit 1
+    fi
+    
+    echo "✅ インストール完了"
 else
     echo "ℹ️  既存のビルドを使用します (最新ビルドを使用するには FORCE_BUILD=true を設定してください)"
 fi
