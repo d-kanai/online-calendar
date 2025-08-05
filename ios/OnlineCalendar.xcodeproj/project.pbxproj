@@ -40,11 +40,6 @@
 			path = OnlineCalendar;
 			sourceTree = "<group>";
 		};
-		1A96B5252E3AEFA200FCC261 /* OnlineCalendarTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = OnlineCalendarTests;
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -78,7 +73,6 @@
 			isa = PBXGroup;
 			children = (
 				1A96B5122E3AEFA100FCC261 /* OnlineCalendar */,
-				1A96B5252E3AEFA200FCC261 /* OnlineCalendarTests */,
 				1A96B5112E3AEFA100FCC261 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -131,9 +125,6 @@
 			);
 			dependencies = (
 				1A96B5242E3AEFA200FCC261 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				1A96B5252E3AEFA200FCC261 /* OnlineCalendarTests */,
 			);
 			name = OnlineCalendarTests;
 			packageProductDependencies = (

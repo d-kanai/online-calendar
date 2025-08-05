@@ -48,7 +48,7 @@ public struct SignInScreen: View {
 private extension SignInScreen {
     
     var HeaderSection: some View {
-        Text("オンラインカレンダー")
+        Text("Online Calendar")
             .font(.largeTitle)
             .fontWeight(.bold)
     }
