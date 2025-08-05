@@ -1,4 +1,7 @@
 appId: dkanai.OnlineCalendar
+tags:
+  - auth
+  - signin
 env:
   API_URL: "http://localhost:3001"
 ---

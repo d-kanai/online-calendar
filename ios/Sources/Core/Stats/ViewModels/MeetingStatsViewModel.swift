@@ -7,7 +7,6 @@ public class MeetingStatsViewModel: ObservableObject {
     @Published public var averageDailyMinutes: Double = 0.0
     @Published public var averageDailyMinutesText: String = "0.0分"
     @Published public var weeklyData: [DailyMeetingMinutes] = []
-    @Published public var isLoading: Bool = false
     @Published public var errorMessage: String?
     
     // MARK: - Dependencies
@@ -20,7 +19,6 @@ public class MeetingStatsViewModel: ObservableObject {
     
     // MARK: - Public Methods
     public func loadStats() async {
-        isLoading = true
         errorMessage = nil
         
         do {
@@ -40,7 +38,5 @@ public class MeetingStatsViewModel: ObservableObject {
             averageDailyMinutesText = "0.0分"
             weeklyData = []
         }
-        
-        isLoading = false
     }
 }

@@ -351,6 +351,29 @@ class MeetingListViewModel: ObservableObject {
 }
 ```
 
+### ✅ モダンな非同期処理パターン（Taskパターン）チェックリスト
+- [ ] **View層でTask管理**
+  - [ ] `@State private var xxxTask: Task<Void, Error>?` でタスク状態を管理
+  - [ ] タスク実行前に既存タスクをキャンセル（`xxxTask?.cancel()`）
+  - [ ] タスク完了後にnilに設定（成功・エラー両方）
+  - [ ] `if xxxTask != nil` でローディング状態を宣言的に表現
+
+- [ ] **ViewModel層の簡潔化**
+  - [ ] `@Published var isLoading: Bool` を削除（不要）
+  - [ ] `@Published var errorMessage: String?` は維持（エラー表示用）
+  - [ ] 非同期メソッドは `async throws` で実装
+  - [ ] isLoading = true/false の手動管理を削除
+
+- [ ] **UIの宣言的制御**
+  - [ ] `.disabled(xxxTask != nil)` でボタン無効化
+  - [ ] `.overlay { if xxxTask != nil { ProgressView() } }` でローディング表示
+  - [ ] エラーは`viewModel.errorMessage`で表示（Alertやメッセージ）
+
+- [ ] **禁止事項**
+  - [ ] ViewModelでの`isLoading`プロパティ使用禁止
+  - [ ] 命令的なローディング状態管理禁止
+  - [ ] 複数の状態フラグ（isLoading, isProcessing等）の併用禁止
+
 ## 🔄 今後の改善点
 1. **状態管理の強化**
    - Redux パターンの導入検討

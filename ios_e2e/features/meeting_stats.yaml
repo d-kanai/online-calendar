@@ -1,4 +1,6 @@
 appId: dkanai.OnlineCalendar
+tags:
+  - develop
 ---
 
 # Feature: 会議統計表示

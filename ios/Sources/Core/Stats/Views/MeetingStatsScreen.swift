@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct MeetingStatsScreen: View {
     @ObservedObject private var viewModel: MeetingStatsViewModel
+    @State private var loadStatsTask: Task<Void, Error>?
     
     public init(viewModel: MeetingStatsViewModel) {
         self.viewModel = viewModel
@@ -18,7 +19,7 @@ public struct MeetingStatsScreen: View {
                     .ignoresSafeArea()
                 #endif
                 
-                if viewModel.isLoading {
+                if loadStatsTask != nil {
                     LoadingView()
                 } else if let errorMessage = viewModel.errorMessage {
                     StatsErrorView(message: errorMessage)
@@ -43,7 +44,10 @@ public struct MeetingStatsScreen: View {
             #endif
         }
         .task {
-            await viewModel.loadStats()
+            loadStatsTask = Task {
+                await viewModel.loadStats()
+                loadStatsTask = nil
+            }
         }
     }
 }

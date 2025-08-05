@@ -865,6 +865,11 @@ Scenario: オーナーが参加者を招待する
 - [ ] `@MainActor`でメインスレッドでの実行を保証
 - [ ] EnvironmentObjectの適切な注入
 
+#### ✅ テスト対象
+- [ ] **Screenコンポーネントのみをテスト対象とする**（SignInScreen、MeetingListScreen、MeetingStatsScreenなど）
+- [ ] **個別のUIコンポーネントはテストしない**（AverageTimeCard、SimpleBarChartなどは対象外）
+- [ ] **Screenを通じて間接的に全コンポーネントをテスト**
+
 #### ✅ テスト観点
 - [ ] **データ表示**: APIレスポンスがView上に正しく表示される（動的データのみ）
 - [ ] **空状態**: データがない場合の適切なメッセージ表示
@@ -877,6 +882,7 @@ Scenario: オーナーが参加者を招待する
 - [ ] カバレッジレポートを確認しながらテストを追加
 - [ ] 未カバーの関数・行を特定してテスト追加
 - [ ] **除外対象**: `.task`, `.refreshable`などの非同期モディファイアはカバー不要
+- [ ] **Screenテストを通じてコンポーネントのカバレッジも向上させる**
 
 ### 📝 実装例（MeetingListScreenSpec）
 
@@ -992,6 +998,7 @@ func test5() async throws {
 - ❌ カバレッジのためだけの意味のないテスト
 - ❌ `.task`や`.refreshable`の内部実装をテスト
 - ❌ **静的な表示確認テスト**（例：「オンラインカレンダー」というタイトルが表示されることの確認）
+- ❌ **コンポーネントに対する個別テスト**（AverageTimeCard、SimpleBarChartなど個別コンポーネントのテストは書かない）
 
 ### 📊 カバレッジ管理
 1. **HTML Coverage Report生成**

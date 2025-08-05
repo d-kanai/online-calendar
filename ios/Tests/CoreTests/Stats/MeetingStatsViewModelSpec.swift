@@ -81,34 +81,22 @@ struct MeetingStatsViewModelSpec {
         #expect(viewModel.averageDailyMinutesText == "0.0分")
     }
     
-    @Test("ローディング状態が正しく管理される")
+    @Test("データ取得が正しく行われる")
     @MainActor
-    func test_loadingState() async throws {
+    func test_dataFetch() async throws {
         // Given
         let mockRepository = MockMeetingStatsRepository()
-        mockRepository.delay = 0.1 // 遅延を追加してローディング状態をテスト
+        mockRepository.delay = 0.1 // 遅延を追加
         mockRepository.dailyMeetingMinutes = [60, 30, 90, 0, 45, 0, 120]
         
         let viewModel = MeetingStatsViewModel(repository: mockRepository)
         
-        // 初期状態
-        #expect(viewModel.isLoading == false)
+        // When - loadStatsを実行
+        await viewModel.loadStats()
         
-        // When - 非同期でloadStatsを開始
-        let task = Task {
-            await viewModel.loadStats()
-        }
-        
-        // ローディング中
-        try await Task.sleep(nanoseconds: 10_000_000) // 0.01秒待機
-        #expect(viewModel.isLoading == true)
-        
-        // 完了を待つ
-        await task.value
-        
-        // Then - ローディング完了
-        #expect(viewModel.isLoading == false)
+        // Then - データが正しく設定される
         #expect(viewModel.averageDailyMinutes == 49.3)
+        #expect(viewModel.errorMessage == nil)
     }
     
     @Test("エラー時の処理が正しく行われる")

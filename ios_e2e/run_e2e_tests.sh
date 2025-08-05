@@ -84,12 +84,16 @@ run_test() {
     echo "📱 テスト実行: $test_name"
     echo "================================="
     
+    # Maestroコマンドの構築
+    local maestro_cmd="$MAESTRO_BIN test $test_file -e API_URL='$API_URL' --format junit --output $RESULTS_DIR/${test_name}_${TIMESTAMP}.xml"
+    
+    # タグが指定されている場合は追加
+    if [ -n "$TEST_TAGS" ]; then
+        maestro_cmd="$maestro_cmd --include-tags=$TEST_TAGS"
+    fi
+    
     # テスト実行（エラーログを含む詳細出力）
-    $MAESTRO_BIN test $test_file \
-        -e API_URL="$API_URL" \
-        --format junit \
-        --output $RESULTS_DIR/${test_name}_${TIMESTAMP}.xml \
-        2>&1 | tee $RESULTS_DIR/${test_name}_${TIMESTAMP}.log
+    eval "$maestro_cmd 2>&1" | tee $RESULTS_DIR/${test_name}_${TIMESTAMP}.log
     
     # PIPESTATUSを使ってmaestroコマンドの実際の終了コードを取得
     local exit_code=${PIPESTATUS[0]}
@@ -112,28 +116,52 @@ run_test() {
 # 各テストを実行
 echo "🚀 テストスイートを開始..."
 
-# テストケース実行
-run_test "signin" "features/signin.yaml"
-signin_result=$?
+# タグが指定されている場合は表示
+if [ -n "$TEST_TAGS" ]; then
+    echo "🏷️  タグ指定: $TEST_TAGS"
+fi
 
-run_test "meeting" "features/meeting.yaml"
-meeting_result=$?
+# 全体の成功/失敗を判定するフラグ
+all_passed=true
+
+# タグが指定されている場合は、featuresディレクトリ全体を一度に実行
+if [ -n "$TEST_TAGS" ]; then
+    # Maestroのタグフィルタリングは、ディレクトリ単位で動作
+    $MAESTRO_BIN test features/ \
+        -e API_URL="$API_URL" \
+        --include-tags=$TEST_TAGS \
+        --format junit \
+        --output $RESULTS_DIR/test_${TIMESTAMP}.xml \
+        2>&1 | tee $RESULTS_DIR/test_${TIMESTAMP}.log
+    
+    if [ ${PIPESTATUS[0]} -ne 0 ]; then
+        all_passed=false
+    fi
+else
+    # タグ指定がない場合は、従来通り個別に実行
+    for test_file in features/*.yaml; do
+        if [ -f "$test_file" ]; then
+            test_name=$(basename "$test_file" .yaml)
+            run_test "$test_name" "$test_file"
+            if [ $? -ne 0 ]; then
+                all_passed=false
+            fi
+        fi
+    done
+fi
 
 # 結果サマリー
 echo ""
 echo "📊 テスト結果サマリー"
 echo "================================="
-echo "サインインテスト: $([ $signin_result -eq 0 ] && echo "✅ 成功" || echo "❌ 失敗")"
-echo "会議一覧テスト: $([ $meeting_result -eq 0 ] && echo "✅ 成功" || echo "❌ 失敗")"
-echo ""
 echo "詳細ログ: $RESULTS_DIR/"
 echo ""
 
 # テストが成功した場合のみ0を返す
-if [ $signin_result -eq 0 ] && [ $meeting_result -eq 0 ]; then
-    echo "🎉 テストが成功しました！"
+if [ "$all_passed" = true ]; then
+    echo "🎉 すべてのテストが成功しました！"
     exit 0
 else
-    echo "⚠️  テストが失敗しました"
+    echo "⚠️  一部のテストが失敗しました"
     exit 1
 fi
