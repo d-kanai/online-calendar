@@ -12,23 +12,41 @@
 
 ### 📁 ディレクトリ構造
 ```
-ios/OnlineCalendar/
-├── Modules/
-│   ├── Auth/                    # 認証関連
-│   │   ├── Views/              # 認証画面
-│   │   ├── Services/           # 認証ロジック
-│   │   └── Models/             # 認証モデル
-│   ├── Meeting/                 # 会議関連
-│   │   ├── Views/              # 会議画面
-│   │   ├── Services/           # 会議ロジック
-│   │   └── Models/             # 会議モデル
-│   └── Common/                  # 共通コンポーネント
-│       ├── Views/              # 共通View
-│       ├── Services/           # 共通サービス
-│       └── Models/             # 共通モデル
-├── ContentView.swift            # アプリのエントリーポイント
-├── OnlineCalendarApp.swift      # アプリ設定
-└── Assets.xcassets/            # アセット
+ios/Sources/Core/
+├── Auth/                        # 認証関連
+│   ├── Views/                  # 認証画面
+│   ├── Services/               # 認証ロジック
+│   └── Models/                 # 認証モデル
+├── Meeting/                     # 会議関連
+│   ├── Views/                  # 会議画面・コンポーネント
+│   │   ├── MeetingListScreen.swift
+│   │   └── Components/         # 会議関連のUIコンポーネント
+│   │       ├── MeetingRowView.swift
+│   │       ├── MeetingEmptyStateView.swift
+│   │       ├── MeetingLoadingView.swift
+│   │       └── MeetingErrorView.swift
+│   ├── Services/               # 会議ロジック
+│   └── Models/                 # 会議モデル
+├── Stats/                       # 統計関連
+│   ├── Views/                  # 統計画面・コンポーネント
+│   │   ├── MeetingStatsScreen.swift
+│   │   └── Components/         # 統計関連のUIコンポーネント
+│   │       ├── AverageTimeCard.swift
+│   │       ├── DailyBreakdownCard.swift
+│   │       ├── SimpleBarChart.swift
+│   │       ├── ErrorView.swift
+│   │       └── LoadingView.swift
+│   ├── Services/               # 統計ロジック
+│   └── Models/                 # 統計モデル
+└── Common/                      # 共通コンポーネント
+    ├── Views/                  # 共通View・コンポーネント
+    │   ├── Components/         # 汎用UIコンポーネント
+    │   │   ├── InputField.swift
+    │   │   ├── PrimaryButton.swift
+    │   │   └── ErrorMessage.swift
+    │   └── Utils/              # UI関連ユーティリティ
+    ├── Services/               # 共通サービス
+    └── Models/                 # 共通モデル
 ```
 
 ### 🏗️ アーキテクチャ原則
@@ -59,6 +77,11 @@ ios/OnlineCalendar/
   - [x] 他ドメインのアクション（認証等）は直接EnvironmentObjectから呼ぶ
   - [x] フォームロジックは専用のFormクラスに分離（例：SignInForm）
   - [x] 必要最低限のプロパティのみ`@Published`にする（UIに影響するもののみ）
+  - [x] **UIコンポーネントの組織化**
+    - [x] 各モジュール内のコンポーネントは `Views/Components/` ディレクトリに配置
+    - [x] 機能固有のコンポーネント（MeetingRowView等）は該当モジュールのComponents内
+    - [x] 汎用コンポーネント（InputFieldやButton等）は `Common/Views/Components/` に配置
+    - [x] 各コンポーネントにはSwiftUI Previewを含める（開発効率向上）
 
 ### 📡 API通信
 - [x] **APIClient**
@@ -94,6 +117,8 @@ ios/OnlineCalendar/
   - [ ] 統一されたスペーシング
   - [x] 再利用可能なUIコンポーネント
     - [x] Atomコンポーネント（InputField, PrimaryButton, ErrorMessage）
+    - [x] 機能固有コンポーネント（MeetingRowView, MeetingErrorView等）
+    - [x] SwiftUI Previewによる開発・デザイン確認の効率化
     - [ ] Moleculeコンポーネント
     - [ ] Organismコンポーネント
 
@@ -125,9 +150,11 @@ ios/OnlineCalendar/
 ### Atomicデザイン
 - [x] **コンポーネント階層**
   - [x] Atoms: 最小単位のUI部品（Button、InputField等）
+  - [x] 機能固有コンポーネント: モジュール内の専用UI部品
   - [ ] Molecules: Atomsを組み合わせた小さなコンポーネント
   - [ ] Organisms: 複雑な機能を持つコンポーネント
-  - [x] 共通コンポーネントは`Modules/Common/Views/`配下に配置
+  - [x] 共通コンポーネントは`Common/Views/Components/`配下に配置
+  - [x] モジュール固有コンポーネントは各モジュールの`Views/Components/`配下に配置
 
 ### View設計
 - [x] **内部Viewの管理**
@@ -136,6 +163,12 @@ ios/OnlineCalendar/
   - [x] 子Viewへの依存はコールバックで解決
   - [x] View内のコンポーネントは大文字始まり（例：`HeaderSection`、`FormSection`）
   - [x] コンポーネントは純粋なUIのみ返し、レイアウト（spacing、padding）は親で制御
+
+- [x] **コンポーネント分離の基準**
+  - [x] 再利用性のあるコンポーネントは独立したファイルに分離
+  - [x] ロジックを持つコンポーネント（エラー処理、ローディング状態等）は分離
+  - [x] SwiftUI Previewを活用した開発効率向上のため、複雑なコンポーネントは分離
+  - [x] 分離したコンポーネントには必ずPreviewを含める
 
 - [x] **ユーティリティ関数**
   - [x] 日付フォーマット等の純粋関数はExtensionとしてUtilsに配置

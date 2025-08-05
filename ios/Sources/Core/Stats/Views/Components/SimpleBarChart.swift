@@ -99,3 +99,72 @@ struct SimpleBarChart: View {
         return "\(hours)時間"
     }
 }
+
+// MARK: - SwiftUI Previews
+#if DEBUG
+#Preview("標準的な週") {
+    SimpleBarChart(weeklyData: [
+        DailyMeetingMinutes(date: "2024-12-30", dayName: "月", totalMinutes: 120),
+        DailyMeetingMinutes(date: "2024-12-31", dayName: "火", totalMinutes: 60),
+        DailyMeetingMinutes(date: "2025-01-01", dayName: "水", totalMinutes: 180),
+        DailyMeetingMinutes(date: "2025-01-02", dayName: "木", totalMinutes: 90),
+        DailyMeetingMinutes(date: "2025-01-03", dayName: "金", totalMinutes: 150),
+        DailyMeetingMinutes(date: "2025-01-04", dayName: "土", totalMinutes: 30),
+        DailyMeetingMinutes(date: "2025-01-05", dayName: "日", totalMinutes: 45)
+    ])
+    .padding()
+}
+
+#Preview("忙しい週") {
+    SimpleBarChart(weeklyData: [
+        DailyMeetingMinutes(date: "2024-12-30", dayName: "月", totalMinutes: 300),
+        DailyMeetingMinutes(date: "2024-12-31", dayName: "火", totalMinutes: 240),
+        DailyMeetingMinutes(date: "2025-01-01", dayName: "水", totalMinutes: 360),
+        DailyMeetingMinutes(date: "2025-01-02", dayName: "木", totalMinutes: 180),
+        DailyMeetingMinutes(date: "2025-01-03", dayName: "金", totalMinutes: 420),
+        DailyMeetingMinutes(date: "2025-01-04", dayName: "土", totalMinutes: 120),
+        DailyMeetingMinutes(date: "2025-01-05", dayName: "日", totalMinutes: 60)
+    ])
+    .padding()
+}
+
+#Preview("軽い週") {
+    SimpleBarChart(weeklyData: [
+        DailyMeetingMinutes(date: "2024-12-30", dayName: "月", totalMinutes: 30),
+        DailyMeetingMinutes(date: "2024-12-31", dayName: "火", totalMinutes: 15),
+        DailyMeetingMinutes(date: "2025-01-01", dayName: "水", totalMinutes: 45),
+        DailyMeetingMinutes(date: "2025-01-02", dayName: "木", totalMinutes: 0),
+        DailyMeetingMinutes(date: "2025-01-03", dayName: "金", totalMinutes: 60),
+        DailyMeetingMinutes(date: "2025-01-04", dayName: "土", totalMinutes: 0),
+        DailyMeetingMinutes(date: "2025-01-05", dayName: "日", totalMinutes: 30)
+    ])
+    .padding()
+}
+
+#Preview("会議のない週") {
+    SimpleBarChart(weeklyData: [
+        DailyMeetingMinutes(date: "2024-12-30", dayName: "月", totalMinutes: 0),
+        DailyMeetingMinutes(date: "2024-12-31", dayName: "火", totalMinutes: 0),
+        DailyMeetingMinutes(date: "2025-01-01", dayName: "水", totalMinutes: 0),
+        DailyMeetingMinutes(date: "2025-01-02", dayName: "木", totalMinutes: 0),
+        DailyMeetingMinutes(date: "2025-01-03", dayName: "金", totalMinutes: 0),
+        DailyMeetingMinutes(date: "2025-01-04", dayName: "土", totalMinutes: 0),
+        DailyMeetingMinutes(date: "2025-01-05", dayName: "日", totalMinutes: 0)
+    ])
+    .padding()
+}
+
+#Preview("変動の大きい週") {
+    SimpleBarChart(weeklyData: [
+        DailyMeetingMinutes(date: "2024-12-30", dayName: "月", totalMinutes: 5),
+        DailyMeetingMinutes(date: "2024-12-31", dayName: "火", totalMinutes: 360),
+        DailyMeetingMinutes(date: "2025-01-01", dayName: "水", totalMinutes: 15),
+        DailyMeetingMinutes(date: "2025-01-02", dayName: "木", totalMinutes: 480),
+        DailyMeetingMinutes(date: "2025-01-03", dayName: "金", totalMinutes: 30),
+        DailyMeetingMinutes(date: "2025-01-04", dayName: "土", totalMinutes: 0),
+        DailyMeetingMinutes(date: "2025-01-05", dayName: "日", totalMinutes: 240)
+    ])
+    .padding()
+}
+
+#endif

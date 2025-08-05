@@ -39,3 +39,38 @@ struct LoadingView: View {
         }
     }
 }
+
+// MARK: - SwiftUI Previews
+#if DEBUG
+#Preview("デフォルトローディング") {
+    LoadingView()
+}
+
+#Preview("背景色付き") {
+    ZStack {
+        Color.gray.opacity(0.1)
+            .ignoresSafeArea()
+        LoadingView()
+    }
+}
+
+#Preview("カード内") {
+    LoadingView()
+        .padding(40)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.white)
+                .shadow(color: .black.opacity(0.1), radius: 10)
+        )
+        .padding()
+}
+
+#Preview("小さいサイズ") {
+    LoadingView()
+        .frame(width: 200, height: 200)
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(radius: 5)
+}
+
+#endif

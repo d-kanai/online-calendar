@@ -47,3 +47,32 @@ struct AverageTimeCard: View {
         }
     }
 }
+
+// MARK: - SwiftUI Previews
+#if DEBUG
+#Preview("標準的な時間") {
+    AverageTimeCard(averageMinutes: 125.5)
+        .padding()
+}
+
+#Preview("短時間") {
+    AverageTimeCard(averageMinutes: 30.0)
+        .padding()
+}
+
+#Preview("長時間") {
+    AverageTimeCard(averageMinutes: 180.0)
+        .padding()
+}
+
+#Preview("ゼロ時間") {
+    AverageTimeCard(averageMinutes: 0.0)
+        .padding()
+}
+
+#Preview("1時間以上") {
+    AverageTimeCard(averageMinutes: 95.5)
+        .padding()
+}
+
+#endif
