@@ -173,4 +173,34 @@ struct SignInScreenSpec {
         // signInが呼ばれていないことを確認
         #expect(mockRepository.signInCalled == false)
     }
+    
+    @Test("無効なフォームでサインイン試行時にバリデーションエラーが発生する")
+    @MainActor
+    func test8_invalidFormValidation() async throws {
+        // Given - 無効なフォームでViewModelを準備
+        let mockRepository = MockAuthRepository()
+        let viewModel = SignInViewModel(repository: mockRepository)
+        
+        // フォームを無効な状態にする（空のまま）
+        viewModel.form.email = ""
+        viewModel.form.password = ""
+        
+        // When - signInを直接呼び出す（ViewInspectorではボタンが無効なのでタップできない）
+        // Note: このテストはViewModelの単体テストとして実施
+        // UI統合テストはtest3, test4でカバーされている
+        do {
+            try await viewModel.signIn()
+            #expect(Bool(false), "バリデーションエラーが発生するはずだった")
+        } catch let error as ValidationError {
+            // Then - ValidationError.invalidFormがスローされることを確認
+            #expect(error == ValidationError.invalidForm)
+            #expect(viewModel.errorMessage == "メールアドレスとパスワードを正しく入力してください")
+        } catch {
+            #expect(Bool(false), "予期しないエラータイプ: \(error)")
+        }
+        
+        // signInが呼ばれていないことを確認
+        #expect(mockRepository.signInCalled == false)
+    }
+    
 }

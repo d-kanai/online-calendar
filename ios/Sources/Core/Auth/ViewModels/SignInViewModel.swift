@@ -22,8 +22,9 @@ public class SignInViewModel: ObservableObject {
     @available(iOS 15.0, macOS 12.0, *)
     public func signIn() async throws {
         guard form.isValid else {
-            errorMessage = "メールアドレスとパスワードを正しく入力してください"
-            throw ValidationError.invalidForm
+            let error = ValidationError.invalidForm
+            errorMessage = error.localizedDescription
+            throw error
         }
         
         errorMessage = nil
@@ -45,13 +46,13 @@ public class SignInViewModel: ObservableObject {
 }
 
 // MARK: - Validation Error
-enum ValidationError: LocalizedError {
+enum ValidationError: LocalizedError, Equatable {
     case invalidForm
     
     var errorDescription: String? {
         switch self {
         case .invalidForm:
-            return "入力内容を確認してください"
+            return "メールアドレスとパスワードを正しく入力してください"
         }
     }
 }
