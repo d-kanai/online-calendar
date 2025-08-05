@@ -32,6 +32,14 @@ struct MainTabView: View {
                     Image(systemName: "chart.bar.fill")
                     Text("統計")
                 }
+            
+            #if DEBUG
+            DevTab
+                .tabItem {
+                    Image(systemName: "hammer.fill")
+                    Text("開発")
+                }
+            #endif
         }
     }
 }
@@ -49,4 +57,12 @@ private extension MainTabView {
             MeetingStatsScreen(viewModel: meetingStatsViewModel)
         }
     }
+    
+    #if DEBUG
+    var DevTab: some View {
+        NavigationView {
+            PreviewCatalogScreen()
+        }
+    }
+    #endif
 }
