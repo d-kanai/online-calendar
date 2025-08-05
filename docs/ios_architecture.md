@@ -2,51 +2,94 @@
 
 ## 📋 アーキテクチャチェックリスト
 
+### ✅ Swift Package Manager (SPM) 構造
+- [x] **SPM中心のアーキテクチャ**
+  - [x] ビジネスロジックとUIは Swift Package として実装
+  - [x] Xcode プロジェクトはプラットフォーム固有の設定のみ
+  - [x] 各機能は独立したSPMターゲットとして分離
+  - [x] 再利用可能なモジュール設計
+
+### 🔗 モジュール依存関係ルール
+
+#### 依存関係の階層
+```
+AppBridge
+    ↓
+Auth, Meeting, Stats (Features/*)
+    ↓
+Core
+```
+
+#### 依存関係ルール
+1. **Core** は他のモジュールに依存しない（最下層）
+2. **Features/*** モジュールはCoreにのみ依存できる
+3. **Features/*** モジュール同士は相互に依存できない
+4. **AppBridge** はすべてのモジュールに依存できる（アプリ全体の調整役）
+
+#### 禁止事項
+- ❌ Core → Features/* への依存
+- ❌ Features/Auth → Features/Meeting への依存
+- ❌ 循環依存
+
 ### ✅ モジュール構造
 - [x] **モジュールベースのディレクトリ構造**
-  - [x] 各機能は独立したモジュールとして `Modules/` 配下に配置
-  - [x] モジュールは `Views/`, `Services/`, `Models/` のサブディレクトリを持つ
-  - [x] 共通コンポーネントは `Modules/Common/` に配置
+  - [x] 各機能は独立したSPMターゲットとして `Sources/Features/` 配下に配置
+  - [x] モジュールは `Views/`, `Repositories/`, `ViewModels/`, `Models/` のサブディレクトリを持つ
+  - [x] 共通コンポーネントは `Core` モジュールに配置
   - [x] ViewModels と Repositories でロジックを分離
   - [x] 1ファイルからしか使わないコンポーネントは分割しない
 
 ### 📁 ディレクトリ構造
 ```
-ios/Sources/Core/
-├── Auth/                        # 認証関連
-│   ├── Views/                  # 認証画面
-│   ├── Services/               # 認証ロジック
-│   └── Models/                 # 認証モデル
-├── Meeting/                     # 会議関連
-│   ├── Views/                  # 会議画面・コンポーネント
-│   │   ├── MeetingListScreen.swift
-│   │   └── Components/         # 会議関連のUIコンポーネント
-│   │       ├── MeetingRowView.swift
-│   │       ├── MeetingEmptyStateView.swift
-│   │       ├── MeetingLoadingView.swift
-│   │       └── MeetingErrorView.swift
-│   ├── Services/               # 会議ロジック
-│   └── Models/                 # 会議モデル
-├── Stats/                       # 統計関連
-│   ├── Views/                  # 統計画面・コンポーネント
-│   │   ├── MeetingStatsScreen.swift
-│   │   └── Components/         # 統計関連のUIコンポーネント
-│   │       ├── AverageTimeCard.swift
-│   │       ├── DailyBreakdownCard.swift
-│   │       ├── SimpleBarChart.swift
-│   │       ├── ErrorView.swift
-│   │       └── LoadingView.swift
-│   ├── Services/               # 統計ロジック
-│   └── Models/                 # 統計モデル
-└── Common/                      # 共通コンポーネント
-    ├── Views/                  # 共通View・コンポーネント
-    │   ├── Components/         # 汎用UIコンポーネント
-    │   │   ├── InputField.swift
-    │   │   ├── PrimaryButton.swift
-    │   │   └── ErrorMessage.swift
-    │   └── Utils/              # UI関連ユーティリティ
-    ├── Services/               # 共通サービス
-    └── Models/                 # 共通モデル
+ios/
+├── 📦 Package.swift                 # Swift Packageマニフェスト
+├── 📂 Sources/                     # Swift Packageソース
+│   ├── 🔧 Core/                    # コアライブラリモジュール
+│   │   ├── Models/                 # 共通データモデル (User)
+│   │   ├── Services/               # 共通サービス (APIClient)
+│   │   ├── State/                  # アプリ状態管理 (AuthState)
+│   │   ├── Utils/                  # ユーティリティ
+│   │   └── Views/                  # 再利用可能UIコンポーネント
+│   │       └── Atoms/              # 基本コンポーネント
+│   │
+│   ├── 📂 Features/                # 機能モジュール
+│   │   ├── 🔐 Auth/                # 認証機能
+│   │   │   ├── Models/             # データモデル
+│   │   │   ├── Repositories/       # API層
+│   │   │   ├── ViewModels/         # プレゼンテーションロジック
+│   │   │   └── Views/              # SwiftUIビュー
+│   │   │       └── Components/     # 画面固有コンポーネント
+│   │   │
+│   │   ├── 📅 Meeting/             # 会議管理機能
+│   │   │   ├── Models/             # 会議データモデル
+│   │   │   ├── Repositories/       # 会議API層
+│   │   │   ├── ViewModels/         # 会議プレゼンテーションロジック
+│   │   │   └── Views/              # 会議UI
+│   │   │       └── Components/     # 会議固有コンポーネント
+│   │   │
+│   │   └── 📊 Stats/               # 統計機能
+│   │       ├── Models/             # 統計データモデル
+│   │       ├── Repositories/       # 統計API層
+│   │       ├── ViewModels/         # 統計プレゼンテーションロジック
+│   │       └── Views/              # 統計UI
+│   │           └── Components/     # 統計固有コンポーネント
+│   │
+│   └── 🌉 AppBridge/               # アプリケーション調整モジュール
+│       └── Views/                  # アプリレベルビュー
+│           ├── RootView.swift      # アプリルートビュー
+│           └── Components/         # アプリ共通コンポーネント
+│
+├── 🍎 App/                         # Xcode固有ファイル
+│   ├── OnlineCalendar.xcodeproj    # Xcodeプロジェクトファイル
+│   └── OnlineCalendar/             # iOSアプリターゲット
+│       └── OnlineCalendarApp.swift # アプリエントリーポイント
+│
+└── 🧪 Tests/                       # Swift Packageテスト
+    ├── CoreTests/                  # Coreモジュールテスト
+    └── Features/                   # 機能モジュールテスト
+        ├── AuthTests/              # 認証テスト
+        ├── MeetingTests/           # 会議テスト
+        └── StatsTests/             # 統計テスト
 ```
 
 ### 🏗️ アーキテクチャ原則

@@ -1,102 +1,150 @@
-# 📱 iOS Project Structure
+# 📱 iOSプロジェクト構成
 
-This iOS project follows a **Swift Package Manager (SPM) centered architecture**, cleanly separating the reusable Swift Package from the Xcode-specific app project.
+このiOSプロジェクトは **Swift Package Manager (SPM) 中心のアーキテクチャ** を採用し、再利用可能なSwift PackageとXcode固有のアプリプロジェクトを明確に分離しています。
 
-## 🏗️ Directory Structure
+## 🏗️ ディレクトリ構造
 
 ```
 ios/
-├── 📦 Package.swift                 # Swift Package manifest
-├── 📄 Package.resolved             # Resolved package dependencies
+├── 📦 Package.swift                 # Swift Packageマニフェスト
+├── 📄 Package.resolved             # 解決済みパッケージ依存関係
 │
-├── 📂 Sources/                     # Swift Package sources
-│   └── 📚 Core/                    # Core library module
-│       ├── 🔐 Auth/                # Authentication features
-│       │   ├── Models/             # Data models (SignInForm)
-│       │   ├── Repositories/       # API layer (AuthRepository)
-│       │   ├── Services/           # Business logic (AuthState)
-│       │   ├── ViewModels/         # Presentation logic (SignInViewModel)
-│       │   └── Views/              # SwiftUI views (SignInScreen)
-│       │
-│       ├── 🧩 Common/              # Shared components
-│       │   ├── Models/             # Common data models (User, APIResponse)
-│       │   ├── Services/           # Shared services (APIClient)
-│       │   ├── Utils/              # Utilities (DateFormatter+Extensions)
-│       │   └── Views/              # Reusable UI components
-│       │       ├── Atoms/          # Basic components (PrimaryButton, InputField)
-│       │       └── RootView.swift  # App root view
-│       │
-│       └── 📅 Meeting/             # Meeting management features
-│           ├── Models/             # Meeting data models
-│           ├── Repositories/       # Meeting API layer
-│           ├── ViewModels/         # Meeting presentation logic
-│           └── Views/              # Meeting UI (MeetingListScreen)
+├── 📂 Sources/                     # Swift Packageソース
+│   ├── 🔧 Core/                    # コアライブラリモジュール
+│   │   ├── Models/                 # 共通データモデル (User, APIResponse)
+│   │   ├── Services/               # 共通サービス (APIClient)
+│   │   ├── State/                  # アプリ状態管理 (AuthState)
+│   │   ├── Utils/                  # ユーティリティ (DateFormatter+Extensions)
+│   │   └── Views/                  # 再利用可能UIコンポーネント
+│   │       └── Atoms/              # 基本コンポーネント (PrimaryButton, InputField, ErrorMessage)
+│   │
+│   ├── 📂 Features/                # 機能モジュール
+│   │   ├── 🔐 Auth/                # 認証機能
+│   │   │   ├── Models/             # データモデル (SignInForm)
+│   │   │   ├── Repositories/       # API層 (AuthRepository)
+│   │   │   ├── ViewModels/         # プレゼンテーションロジック (SignInViewModel)
+│   │   │   └── Views/              # SwiftUIビュー (SignInScreen)
+│   │   │       └── Components/     # 画面固有コンポーネント
+│   │   │
+│   │   ├── 📅 Meeting/             # 会議管理機能
+│   │   │   ├── Models/             # 会議データモデル (Meeting, Organizer, Participant)
+│   │   │   ├── Repositories/       # 会議API層 (MeetingRepository)
+│   │   │   ├── ViewModels/         # 会議プレゼンテーションロジック
+│   │   │   └── Views/              # 会議UI (MeetingListScreen)
+│   │   │       └── Components/     # 会議固有コンポーネント
+│   │   │
+│   │   └── 📊 Stats/               # 統計機能
+│   │       ├── Models/             # 統計データモデル (MeetingStats)
+│   │       ├── Repositories/       # 統計API層 (MeetingStatsRepository)
+│   │       ├── ViewModels/         # 統計プレゼンテーションロジック
+│   │       └── Views/              # 統計UI (MeetingStatsScreen)
+│   │           └── Components/     # 統計固有コンポーネント
+│   │
+│   └── 🌉 AppBridge/               # アプリケーション調整モジュール
+│       └── Views/                  # アプリレベルビュー
+│           ├── RootView.swift      # アプリルートビュー
+│           ├── Components/         # アプリ共通コンポーネント (AppHeader)
+│           └── PreviewCatalogScreen.swift # プレビューカタログ
 │
-├── 🧪 Tests/                       # Swift Package tests
-│   └── CoreTests/                  # Core module tests
-│       ├── MeetingListScreenSpec.swift
-│       ├── SignInScreenSpec.swift
-│       └── Mocks/                  # Test doubles
+├── 🧪 Tests/                       # Swift Packageテスト
+│   ├── CoreTests/                  # Coreモジュールテスト
+│   └── Features/                   # 機能モジュールテスト
+│       ├── Auth/                   # 認証テスト
+│       ├── Meeting/                # 会議テスト
+│       └── Stats/                  # 統計テスト
 │
-├── 🍎 App/                         # Xcode-specific files
-│   ├── 📱 OnlineCalendar.xcodeproj # Xcode project file
-│   └── 📂 OnlineCalendar/          # iOS app target
-│       ├── OnlineCalendarApp.swift # App entry point
-│       ├── Assets.xcassets/        # App assets
-│       └── Preview Content/        # SwiftUI preview assets
+├── 🍎 App/                         # Xcode固有ファイル
+│   ├── 📱 OnlineCalendar.xcodeproj # Xcodeプロジェクトファイル
+│   └── 📂 OnlineCalendar/          # iOSアプリターゲット
+│       ├── OnlineCalendarApp.swift # アプリエントリーポイント
+│       ├── Assets.xcassets/        # アプリアセット
+│       └── Preview Content/        # SwiftUIプレビューアセット
 │
-├── 🛠️ build/                       # Build artifacts
-├── 📊 coverage/                    # Test coverage reports
-└── 🧹 .gitignore                  # Git ignore rules
+├── 🛠️ build/                       # ビルド成果物
+├── 📊 coverage/                    # テストカバレッジレポート
+└── 🧹 .gitignore                  # Git無視ルール
 ```
 
-## 🎯 Architecture Overview
+## 🎯 アーキテクチャ概要
 
-### 📦 Swift Package (`Sources/Core/`)
-- **Platform-independent** business logic and UI components
-- Can be imported into other Swift projects
-- Follows standard SPM directory structure
-- Contains all the app's core functionality
+### 📦 Swift Package (`Sources/`)
+- **プラットフォーム非依存** のビジネスロジックとUIコンポーネント
+- 他のSwiftプロジェクトにインポート可能
+- 標準的なSPMディレクトリ構造に準拠
+- アプリのコア機能をすべて含む
 
 ### 🍎 Xcode App (`App/`)
-- Platform-specific configuration
-- App lifecycle management
-- Asset catalogs and resources
-- Xcode project settings
+- プラットフォーム固有の設定
+- アプリライフサイクル管理
+- アセットカタログとリソース
+- Xcodeプロジェクト設定
 
-## 🔧 Key Commands
+## 🔗 モジュール依存関係ルール
+
+### 依存関係の階層
+```
+AppBridge
+    ↓
+Auth, Meeting, Stats (Features/*)
+    ↓
+Core
+```
+
+### 依存関係ルール
+1. **Core** は他のモジュールに依存しない
+2. **Features/*** モジュールはCoreにのみ依存できる
+3. **Features/*** モジュール同士は相互に依存できない
+4. **AppBridge** はすべてのモジュールに依存できる（アプリ全体の調整役）
+
+### 禁止事項
+- ❌ Core → Features/* への依存
+- ❌ Features/Auth → Features/Meeting への依存
+- ❌ 循環依存
+
+## 🔧 主要コマンド
 
 ```bash
-# Run Swift Package tests
+# Swift Packageテストを実行
 swift test
 
-# Build Swift Package
+# Swift Packageをビルド
 swift build
 
-# Open Xcode project
+# カバレッジ付きでテストを実行
+swift test --enable-code-coverage
+
+# Xcodeプロジェクトを開く
 open App/OnlineCalendar.xcodeproj
 
-# Or better, open via Package.swift for SPM integration
+# または、SPM統合のためPackage.swift経由で開く
 open Package.swift
 ```
 
-## 🏛️ Module Architecture
+## 🏛️ モジュールアーキテクチャ
 
-Each feature module follows a consistent structure:
+各機能モジュールは一貫した構造に従います：
 
-- **📁 Models/** - Data structures and DTOs
-- **📁 Repositories/** - API communication layer
-- **📁 Services/** - Business logic and state management
-- **📁 ViewModels/** - Presentation logic (MVVM pattern)
-- **📁 Views/** - SwiftUI views and components
+- **📁 Models/** - データ構造とDTO
+- **📁 Repositories/** - API通信層
+- **📁 ViewModels/** - プレゼンテーションロジック (MVVMパターン)
+- **📁 Views/** - SwiftUIビューとコンポーネント
+  - **📁 Components/** - 画面固有のコンポーネント
 
-## 🧪 Testing
+## 🧪 テスト
 
-- Unit tests use Apple's native Testing framework
-- UI tests use ViewInspector for SwiftUI view testing
-- E2E tests use Maestro (see `/ios_e2e` directory)
+- ユニットテストはAppleのネイティブTestingフレームワークを使用
+- UIテストはSwiftUIビューテスト用のViewInspectorを使用
+- E2EテストはMaestroを使用（`/ios_e2e`ディレクトリ参照）
 
-## 📚 Dependencies
+## 📚 依存関係
 
-- **ViewInspector** - SwiftUI view testing framework
-- All dependencies managed via Swift Package Manager
+- **ViewInspector** - SwiftUIビューテストフレームワーク
+- すべての依存関係はSwift Package Manager経由で管理
+
+## 🚀 開発ワークフロー
+
+1. **機能開発**: 適切なFeatures/*モジュールに実装
+2. **共通コンポーネント**: Core/Views/Atomsに配置
+3. **画面固有コンポーネント**: Features/*/Views/Componentsに配置
+4. **テスト**: Tests/Features/*に対応するテストを作成
+5. **ビルド確認**: `swift test`と`xcodebuild`の両方で確認
