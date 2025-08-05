@@ -18,7 +18,7 @@ appId: dkanai.OnlineCalendar
         {
           "id": "e2e-test-user",
           "email": "test@example.com",
-          "password": "$2b$10$aVJHYtQWpC7ojO9rzF2s3uQtveclD8eMmpqyW7kNzN3O9VpveiGru",
+          "password": "e2e-test-password",
           "name": "E2E Test User"
         }
 

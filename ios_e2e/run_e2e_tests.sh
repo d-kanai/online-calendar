@@ -37,12 +37,15 @@ if ! xcrun simctl list devices booted | grep -q "iPhone 16"; then
     sleep 5
 fi
 
-# アプリがビルドされていることを確認
-if ! ls /Users/d.kanai/Library/Developer/Xcode/DerivedData/OnlineCalendar-* >/dev/null 2>&1; then
-    echo "⚠️  アプリがビルドされていません。ビルドを実行します..."
+# 最新のビルドを使用するオプション（環境変数で制御）
+if [ "${FORCE_BUILD}" = "true" ] || [ ! -d /Users/d.kanai/Library/Developer/Xcode/DerivedData/OnlineCalendar-* ]; then
+    echo "🔨 アプリをビルドします..."
     cd ../ios
-    xcodebuild -project OnlineCalendar.xcodeproj -scheme OnlineCalendar -destination 'platform=iOS Simulator,name=iPhone 16' build -quiet
+    xcodebuild -project OnlineCalendar.xcodeproj -scheme OnlineCalendar -destination 'platform=iOS Simulator,name=iPhone 16' clean build -quiet
     cd ../ios_e2e
+    echo "✅ ビルド完了"
+else
+    echo "ℹ️  既存のビルドを使用します (最新ビルドを使用するには FORCE_BUILD=true を設定してください)"
 fi
 
 # テスト実行関数

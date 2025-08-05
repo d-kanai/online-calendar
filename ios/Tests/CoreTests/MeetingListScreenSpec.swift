@@ -2,7 +2,7 @@
 import Testing
 import SwiftUI
 import ViewInspector
-@testable import OnlineCalendar
+@testable import Core
 
 // MARK: - MeetingListScreen振る舞いテスト
 @Suite("MeetingListScreen振る舞いテスト")

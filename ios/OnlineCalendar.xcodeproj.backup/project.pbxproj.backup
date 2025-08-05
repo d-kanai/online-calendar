@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		1A5837912E3B528A00188A49 /* ViewInspector in Frameworks */ = {isa = PBXBuildFile; productRef = 1A5837902E3B528A00188A49 /* ViewInspector */; };
-		1AD7790D2E419816003600F1 /* Core in Frameworks */ = {isa = PBXBuildFile; productRef = 1AD7790C2E419816003600F1 /* Core */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +44,11 @@
 			path = OnlineCalendarTests;
 			sourceTree = "<group>";
 		};
+		1A96B52F2E3AEFA200FCC261 /* OnlineCalendarUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = OnlineCalendarUITests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,7 +56,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1AD7790D2E419816003600F1 /* Core in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -79,6 +82,7 @@
 			children = (
 				1A96B5122E3AEFA100FCC261 /* OnlineCalendar */,
 				1A96B5252E3AEFA200FCC261 /* OnlineCalendarTests */,
+				1A96B52F2E3AEFA200FCC261 /* OnlineCalendarUITests */,
 				1A96B5112E3AEFA100FCC261 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -113,7 +117,6 @@
 			);
 			name = OnlineCalendar;
 			packageProductDependencies = (
-				1AD7790C2E419816003600F1 /* Core */,
 			);
 			productName = OnlineCalendar;
 			productReference = 1A96B5102E3AEFA100FCC261 /* OnlineCalendar.app */;
@@ -156,6 +159,9 @@
 			dependencies = (
 				1A96B52E2E3AEFA200FCC261 /* PBXTargetDependency */,
 			);
+			fileSystemSynchronizedGroups = (
+				1A96B52F2E3AEFA200FCC261 /* OnlineCalendarUITests */,
+			);
 			name = OnlineCalendarUITests;
 			packageProductDependencies = (
 			);
@@ -197,7 +203,6 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				1A58378F2E3B528A00188A49 /* XCRemoteSwiftPackageReference "ViewInspector" */,
-				1AD7790B2E419816003600F1 /* XCLocalSwiftPackageReference "../ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1A96B5112E3AEFA100FCC261 /* Products */;
@@ -559,13 +564,6 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		1AD7790B2E419816003600F1 /* XCLocalSwiftPackageReference "../ios" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ../ios;
-		};
-/* End XCLocalSwiftPackageReference section */
-
 /* Begin XCRemoteSwiftPackageReference section */
 		1A58378F2E3B528A00188A49 /* XCRemoteSwiftPackageReference "ViewInspector" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -582,10 +580,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1A58378F2E3B528A00188A49 /* XCRemoteSwiftPackageReference "ViewInspector" */;
 			productName = ViewInspector;
-		};
-		1AD7790C2E419816003600F1 /* Core */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = Core;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

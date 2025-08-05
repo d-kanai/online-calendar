@@ -6,11 +6,15 @@ import { meetingRoutes } from './modules/meeting/meeting.routes.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { statsRoutes } from './modules/stats/stats.routes.js';
 import { testDataRoutes } from './routes/test-data.routes.js';
+import { errorHandler } from './middleware/error-handler.js';
+import { requestLogger } from './middleware/request-logger.js';
 
 const app = new Hono();
 
 // Middleware
-app.use('*', logger());
+app.use('*', requestLogger);  // カスタムリクエストロガー
+app.use('*', logger());       // 標準のロガーも併用
+app.use('*', errorHandler);   // エラーハンドリング
 app.use('*', cors({
   origin: ['http://localhost:3000'], // Frontend URL
   allowHeaders: ['Content-Type', 'Authorization'],
@@ -42,10 +46,21 @@ app.notFound((c) => {
   return c.json({ error: 'Not Found' }, 404);
 });
 
-// Error handler
+// Global error handler (errorHandlerミドルウェアで処理されなかったエラー用)
 app.onError((err, c) => {
-  console.error('Error:', err);
-  return c.json({ error: 'Internal Server Error' }, 500);
+  console.error('🚨 Unhandled error in onError:');
+  console.error('  Error:', err);
+  console.error('  Stack:', err.stack);
+  console.error('  Request:', {
+    method: c.req.method,
+    url: c.req.url,
+    headers: Object.fromEntries(c.req.raw.headers.entries())
+  });
+  
+  return c.json({ 
+    error: 'Internal Server Error',
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+  }, 500);
 });
 
 const port = Number(process.env.PORT) || 3001;

@@ -4,6 +4,12 @@ env:
 ---
 # サインインフローのE2Eテスト
 
+# Setup: 全てのテストデータをリセット
+- runScript:
+    file: ../scripts/reset_all_data.js
+    env:
+      API_URL: ${API_URL}
+
 # Given: テストユーザーがバックエンドに存在する
 - runScript:
     file: ../scripts/setup_test_data.js
@@ -41,7 +47,7 @@ env:
 
 # 認証処理が完了するまで待機（最大10秒）
 - waitForAnimationToEnd:
-    timeout: 10000
+    timeout: 3000
 
 # サインアウトボタンが表示されることを確認
 - assertVisible: "サインアウト"
