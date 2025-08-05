@@ -35,7 +35,7 @@
     "ios:typecheck:verbose": "cd ios && ./tools/xcode_build_verbose.sh",
     "ios:preview": "cd ios && ./tools/xcode_build_preview.sh",
     "ios:preview:check": "cd ios && ./tools/check_preview_diagnostics.sh",
-    "ios:ut": "cd ios && swift test --enable-code-coverage && echo \"\\n📊 Coverage Report:\\n\" && xcrun llvm-cov export -instr-profile=.build/arm64-apple-macosx/debug/codecov/default.profdata .build/arm64-apple-macosx/debug/OnlineCalendarPackageTests.xctest/Contents/MacOS/OnlineCalendarPackageTests -ignore-filename-regex=\".build|Tests|Repository\\.swift|APIClient\\.swift|RootView\\.swift\" -format=text | jq -r '.data[0].totals.lines | \"  Line Coverage: \" + (.percent | tostring | .[0:5]) + \"%\"' && echo \"\\n🎨 Generating HTML Coverage Report...\" && xcrun llvm-cov show -instr-profile=.build/arm64-apple-macosx/debug/codecov/default.profdata -format=html -output-dir=coverage .build/arm64-apple-macosx/debug/OnlineCalendarPackageTests.xctest/Contents/MacOS/OnlineCalendarPackageTests -ignore-filename-regex=\".build|Tests|Repository\\.swift|APIClient\\.swift|RootView\\.swift\" -use-color && echo \"✅ HTML Coverage Report: ios/coverage/index.html\" && open coverage/index.html",
+    "ios:ut": "cd ios && ./tools/run_tests_with_coverage.sh",
     "ios:coverage:html": "cd ios && ./slather_style_coverage.sh && open coverage/index.html",
     "dead-code": "knip",
     "dead-code:backend": "knip --workspace backend",
