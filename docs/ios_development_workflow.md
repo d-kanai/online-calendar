@@ -171,8 +171,55 @@ yarn ios:ut
 yarn e2e:ios
 
 # 特定のテストだけ実行する場合
-cd ios_e2e && ./maestro_cli/maestro/bin/maestro test flows/create_meeting.yaml
+cd ios_e2e && maestro test flows/create_meeting.yaml
 ```
+
+#### 4.1 Maestroテストがfailした場合のデバッグチェックリスト
+
+Maestroテストが失敗した場合は、以下の順番で確認します：
+
+1. **スクリーンショットの確認**
+   ```bash
+   # 最新のテスト結果のスクリーンショットを確認
+   ls -la ~/.maestro/tests/*/screenshot-*.png
+   open ~/.maestro/tests/[最新のディレクトリ]/screenshot-*.png
+   ```
+
+2. **Maestroログの確認**
+   ```bash
+   # 詳細なログを確認
+   cat ~/.maestro/tests/[最新のディレクトリ]/maestro.log
+   
+   # エラー部分だけを抽出
+   grep -E "(ERROR|FAILED|Failed)" ~/.maestro/tests/[最新のディレクトリ]/maestro.log
+   ```
+
+3. **バックエンドログの確認**
+   ```bash
+   # バックエンドをログ出力付きで起動している場合
+   tail -f backend.log
+   
+   # APIエラーレスポンスを確認
+   grep -E "(error|Error|ERROR|4[0-9]{2}|5[0-9]{2})" backend.log
+   ```
+
+4. **一般的な問題と解決策**
+   - **要素が見つからない**: スクリーンショットで実際のUI要素を確認
+   - **APIエラー**: バックエンドログでエンドポイントとレスポンスを確認
+   - **データ不整合**: テストデータのセットアップスクリプトを確認
+   - **タイミング問題**: `waitForAnimationToEnd` や `waitFor` を追加
+
+5. **デバッグ例**
+   ```yaml
+   # デバッグ用の待機時間を追加
+   - waitForAnimationToEnd
+   - waitFor:
+       visible: "要素名"
+       timeout: 5000
+   
+   # スクリーンショットを明示的に取得
+   - takeScreenshot: "debug-point-1"
+   ```
 
 ## 利点
 

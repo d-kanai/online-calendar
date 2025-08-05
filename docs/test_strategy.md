@@ -656,6 +656,147 @@ export * from '@testing-library/react';
 - **エラー表示確認**: ErrorBoundaryコンポーネントの表示を確認
 - **注意**: テスト環境でのSuspense/ErrorBoundaryの動作は実環境と異なる場合がある
 
+## 🎯 TestF: E2E iOS Scenario Test
+
+### 📋 テスト方針
+- **Maestroフレームワーク使用**: iOS E2EテストにはMaestroを使用
+- **ガーキン記法でシナリオ定義**: 振る舞いを自然言語で定義
+- **YAMLでテスト実装**: Maestroの宣言的な記法でテスト作成
+- **実機・シミュレーター両対応**: 開発時はシミュレーター、CI/CDでは実機も対応
+
+### 🛡️ TestF実装チェックリスト
+
+#### ✅ 基本設定
+- [ ] アプリ起動は必ず`launch_bypass_signin.yaml`を使用
+- [ ] テストデータセットアップは`runScript`で`setup_test_data.js`を使用
+- [ ] appIdに`dkanai.OnlineCalendar`を指定
+- [ ] ガーキンコメントでシナリオを明確に記述
+
+#### ✅ アプリ起動パターン
+```yaml
+# ✅ 正しい起動方法 - launch_bypass_signin.yamlを使用
+- runFlow: ../flows/launch_bypass_signin.yaml
+
+# ❌ 間違った起動方法 - 手動でサインイン操作をしない
+- tapOn: "メールアドレス"
+- inputText: "test@example.com"
+- tapOn: "パスワード"
+- inputText: "password123"
+- tapOn: "サインイン"
+```
+
+#### ✅ テストデータセットアップ
+```yaml
+# ✅ 正しいデータセットアップ方法
+- runScript:
+    file: ../scripts/setup_meeting_stats_data.js
+    env:
+      API_URL: "http://localhost:3001"
+
+# ❌ 間違った方法 - 手動でデータを作成しない
+- tapOn: "新規作成"
+- inputText: "テスト会議"
+```
+
+#### ✅ Maestroデバッグ時のチェックリスト
+
+Maestroテストが失敗した場合は、以下の順番で確認します：
+
+1. **スクリーンショットの確認**
+   ```bash
+   # 最新のテスト結果のスクリーンショットを確認
+   ls -la ~/.maestro/tests/*/screenshot-*.png
+   open ~/.maestro/tests/[最新のディレクトリ]/screenshot-*.png
+   ```
+
+2. **Maestroログの確認**
+   ```bash
+   # 詳細なログを確認
+   cat ~/.maestro/tests/[最新のディレクトリ]/maestro.log
+   
+   # エラー部分だけを抽出
+   grep -E "(ERROR|FAILED|Failed)" ~/.maestro/tests/[最新のディレクトリ]/maestro.log
+   ```
+
+3. **バックエンドログの確認**
+   ```bash
+   # バックエンドをログ出力付きで起動している場合
+   tail -f backend.log
+   
+   # APIエラーレスポンスを確認
+   grep -E "(error|Error|ERROR|4[0-9]{2}|5[0-9]{2})" backend.log
+   ```
+
+4. **一般的な問題と解決策**
+   - **要素が見つからない**: スクリーンショットで実際のUI要素を確認
+   - **APIエラー**: バックエンドログでエンドポイントとレスポンスを確認
+   - **データ不整合**: テストデータのセットアップスクリプトを確認
+   - **タイミング問題**: `waitForAnimationToEnd` や `waitFor` を追加
+
+5. **デバッグ例**
+   ```yaml
+   # デバッグ用の待機時間を追加
+   - waitForAnimationToEnd
+   - waitFor:
+       visible: "要素名"
+       timeout: 5000
+   
+   # スクリーンショットを明示的に取得
+   - takeScreenshot: "debug-point-1"
+   ```
+
+### 📝 TestF実装例
+
+```yaml
+# ios_e2e/flows/meeting_stats.yaml
+appId: dkanai.OnlineCalendar
+---
+
+# Feature: 会議統計表示機能
+# Scenario: 過去7日間の平均会議時間を確認する
+
+# Given: 認証済み状態でアプリを起動
+- runFlow: ../flows/launch_bypass_signin.yaml
+
+# Given: 過去7日間の会議データをセットアップ
+- runScript:
+    file: ../scripts/setup_meeting_stats_data.js
+    env:
+      API_URL: "http://localhost:3001"
+
+# When: 統計画面へ遷移する
+- tapOn: "統計"
+- waitForAnimationToEnd
+
+# Then: 平均会議時間が表示される
+- assertVisible: "1日あたりの平均会議時間"
+- assertVisible: "49.3分"
+
+# And: 週次データが表示される
+- assertVisible: "過去7日間の会議時間"
+- assertVisible: "月"
+- assertVisible: "火"
+```
+
+### 🚫 TestFアンチパターン
+- ❌ 手動でサインイン操作を実装（launch_bypass_signin.yamlを使用すること）
+- ❌ runScriptを使わずに手動でテストデータを作成
+- ❌ clearText, clearKeyboardなどの無効なMaestroコマンドの使用
+- ❌ ハードコーディングされた待機時間（`sleep`）の多用
+- ❌ エラーケースの考慮不足
+
+### 🏃 TestF実行コマンド
+```bash
+# iOS E2Eテスト全体を実行
+yarn e2e:ios
+
+# 特定のテストファイルのみ実行
+cd ios_e2e && maestro test flows/meeting_stats.yaml
+
+# デバッグモードで実行（より詳細なログ）
+maestro test --debug flows/meeting_stats.yaml
+```
+
 ## 🎭 E2Eテスト特別ルール
 
 ### 🚫 条件分岐禁止
