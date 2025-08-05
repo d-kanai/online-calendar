@@ -1,0 +1,40 @@
+appId: dkanai.OnlineCalendar
+---
+
+# Feature: 会議統計表示
+# ユーザーとして自分の毎日の会議時間を閲覧したい
+
+# Given: 認証済み状態でアプリを起動
+- runFlow: ../flows/launch_bypass_signin.yaml
+
+# Given: 過去7日間の会議データをセットアップ
+- runScript:
+    file: ../scripts/setup_meeting_stats_data.js
+    env:
+      API_URL: "http://localhost:3001"
+
+# Rule: 日次会議時間の平均表示
+# 過去1週間の各日の会議時間合計を算出し、その平均を表示する
+# オーナーとして作成した会議と参加者として"yes"で回答した会議が対象
+# 会議がない日は0分として扱う
+# 計算式: (day1合計 + day2合計 + ... + day7合計) ÷ 7日 = 1日あたりの平均時間
+
+# Scenario: 過去7日間の会議データから平均時間を計算する
+# Given 過去7日間の会議時間が以下の通りである:
+# (テストデータはバックエンドで事前設定済み)
+# | 日前 | 合計時間(分) |
+# | 7   | 60           |
+# | 6   | 30           |
+# | 5   | 90           |
+# | 4   | 0            |
+# | 3   | 45           |
+# | 2   | 0            |
+# | 1   | 120          |
+
+# When 会議統計画面を開く
+- assertVisible: "会議一覧"
+- tapOn: "統計"
+
+# Then 1日あたりの平均会議時間は "49.3分" と表示される
+- assertVisible: "1日あたりの平均会議時間"
+- assertVisible: "49.3分"
