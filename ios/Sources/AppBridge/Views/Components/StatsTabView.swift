@@ -1,5 +1,6 @@
 import SwiftUI
 import Stats
+import Core
 
 struct StatsTabView: View {
     let meetingStatsViewModel: MeetingStatsViewModel

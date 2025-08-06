@@ -1,8 +1,9 @@
 import Foundation
-import Core
+import SwiftUI
 
 // MARK: - Navigation State
 
+@MainActor
 public class NavigationState: ObservableObject, NavigationHandler {
     @Published public var selectedTab: Int = 0
     
@@ -18,5 +19,4 @@ public class NavigationState: ObservableObject, NavigationHandler {
             selectedTab = 2
         }
     }
-    
 }

@@ -1,5 +1,6 @@
 import SwiftUI
 import Home
+import Core
 
 struct HomeTabView: View {
     let homeViewModel: HomeViewModel

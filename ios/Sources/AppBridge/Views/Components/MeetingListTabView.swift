@@ -1,5 +1,6 @@
 import SwiftUI
 import Meeting
+import Core
 
 struct MeetingListTabView: View {
     let meetingListViewModel: MeetingListViewModel

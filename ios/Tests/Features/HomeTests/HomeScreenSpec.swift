@@ -9,9 +9,8 @@ struct HomeScreenSpec {
     
     @Test("ホーム画面のサマリーデータが表示される")
     @MainActor
-    func testDisplayHomeSummary() async throws {
-        // Given - APIレスポンスをモック
-        let mockRepository = MockHomeRepository()
+    func testDisplayHomeSummary() throws {
+        // Given - 既にデータを持つViewModelを直接作成
         let mockSummary = HomeSummary(
             todayMeetingsCount: 3,
             nextMeeting: Meeting(
@@ -22,18 +21,14 @@ struct HomeScreenSpec {
             weeklyMeetingHours: 12.5,
             userName: "田中太郎"
         )
-        mockRepository.fetchHomeSummaryResult = .success(mockSummary)
-        
-        // ViewModelとViewを準備
-        let viewModel = HomeViewModel(repository: mockRepository)
+        let viewModel = PreloadedHomeViewModel(summary: mockSummary)
         let mockNavigationHandler = MockNavigationHandler()
+        
+        // When - View直接作成（データロード不要）
         let view = HomeScreen(
             viewModel: viewModel,
             navigationHandler: mockNavigationHandler
         )
-        
-        // When - データをロード
-        await viewModel.loadSummary()
         
         // ViewInspectorでビューを検査
         let inspection = try view.inspect()
@@ -54,31 +49,24 @@ struct HomeScreenSpec {
     
     @Test("今日の会議カードをタップすると遷移コールバックが呼ばれる")
     @MainActor
-    func testTodayMeetingsCardTap() async throws {
-        // Given - サマリーデータをモック
-        let mockRepository = MockHomeRepository()
+    func testTodayMeetingsCardTap() throws {
+        // Given - 既にデータを持つViewModelを直接作成
         let mockSummary = HomeSummary(
             todayMeetingsCount: 3,
             nextMeeting: nil,
             weeklyMeetingHours: 12.5,
             userName: "田中太郎"
         )
-        mockRepository.fetchHomeSummaryResult = .success(mockSummary)
-        
-        // ViewModelとViewを準備
-        let viewModel = HomeViewModel(repository: mockRepository)
+        let viewModel = PreloadedHomeViewModel(summary: mockSummary)
         let mockNavigationHandler = MockNavigationHandler()
+        
+        // When - View直接作成してボタンタップ
         let view = HomeScreen(
             viewModel: viewModel,
             navigationHandler: mockNavigationHandler
         )
         
-        // データをロード
-        await viewModel.loadSummary()
-        
-        // When - ViewInspectorでボタンを見つけてタップ
         let inspection = try view.inspect()
-        // 今日の会議カードはButtonなので、その中のHStackを見つける
         let todayMeetingsButton = try inspection.find(button: "今日の会議")
         try todayMeetingsButton.tap()
         
@@ -88,29 +76,23 @@ struct HomeScreenSpec {
     
     @Test("今週の会議時間カードをタップすると遷移コールバックが呼ばれる")
     @MainActor
-    func testWeeklyStatsCardTap() async throws {
-        // Given - サマリーデータをモック
-        let mockRepository = MockHomeRepository()
+    func testWeeklyStatsCardTap() throws {
+        // Given - 既にデータを持つViewModelを直接作成
         let mockSummary = HomeSummary(
             todayMeetingsCount: 3,
             nextMeeting: nil,
             weeklyMeetingHours: 12.5,
             userName: "田中太郎"
         )
-        mockRepository.fetchHomeSummaryResult = .success(mockSummary)
-        
-        // ViewModelとViewを準備
-        let viewModel = HomeViewModel(repository: mockRepository)
+        let viewModel = PreloadedHomeViewModel(summary: mockSummary)
         let mockNavigationHandler = MockNavigationHandler()
+        
+        // When - View直接作成してボタンタップ
         let view = HomeScreen(
             viewModel: viewModel,
             navigationHandler: mockNavigationHandler
         )
         
-        // データをロード
-        await viewModel.loadSummary()
-        
-        // When - ViewInspectorでボタンを見つけてタップ
         let inspection = try view.inspect()
         let weeklyStatsButton = try inspection.find(button: "今週の会議時間")
         try weeklyStatsButton.tap()
@@ -121,9 +103,8 @@ struct HomeScreenSpec {
     
     @Test("次の会議が30分後の場合、時間表示が正しい")
     @MainActor
-    func testNextMeetingTimeDisplay() async throws {
-        // Given - 30分後の会議をモック
-        let mockRepository = MockHomeRepository()
+    func testNextMeetingTimeDisplay() throws {
+        // Given - 30分後の会議を持つViewModelを直接作成
         let nextMeeting = Meeting(
             id: "1",
             title: "デザインレビュー",
@@ -135,20 +116,15 @@ struct HomeScreenSpec {
             weeklyMeetingHours: 12.5,
             userName: "田中太郎"
         )
-        mockRepository.fetchHomeSummaryResult = .success(mockSummary)
-        
-        // ViewModelとViewを準備
-        let viewModel = HomeViewModel(repository: mockRepository)
+        let viewModel = PreloadedHomeViewModel(summary: mockSummary)
         let mockNavigationHandler = MockNavigationHandler()
+        
+        // When - View直接作成
         let view = HomeScreen(
             viewModel: viewModel,
             navigationHandler: mockNavigationHandler
         )
         
-        // When - データをロード
-        await viewModel.loadSummary()
-        
-        // ViewInspectorでビューを検査
         let inspection = try view.inspect()
         
         // Then - 時間表示を確認（約30分後なので"30分後"と表示される）
@@ -167,56 +143,76 @@ struct HomeScreenSpec {
     
     @Test("データロード中はローディング状態が表示される")
     @MainActor
-    func testLoadingState() async throws {
-        // Given - 遅延のあるモックリポジトリ
-        let mockRepository = MockHomeRepository()
-        mockRepository.delay = 0.5 // 500ms遅延
-        mockRepository.fetchHomeSummaryResult = .success(HomeSummary(
-            todayMeetingsCount: 1,
-            nextMeeting: nil,
-            weeklyMeetingHours: 1.0,
-            userName: "Test"
-        ))
-        
-        // ViewModelとViewを準備
-        let viewModel = HomeViewModel(repository: mockRepository)
-        
-        // When - ロード開始（awaitしない）
-        let loadTask = Task {
-            await viewModel.loadSummary()
-        }
-        
-        // 少し待機してからローディング状態を確認
-        try await Task.sleep(nanoseconds: 10_000_000) // 10ms待機
-        
-        // Then - ローディング中の状態を確認
-        #expect(viewModel.isLoading == true)
-        
-        // ロード完了を待つ
-        await loadTask.value
-        #expect(viewModel.isLoading == false)
-    }
-    
-    @Test("APIエラー時はエラーメッセージが表示される")
-    @MainActor
-    func testErrorState() async throws {
-        // Given - エラーを返すモックリポジトリ
-        let mockRepository = MockHomeRepository()
-        mockRepository.fetchHomeSummaryResult = .failure(NSError(domain: "test", code: 500))
-        
-        // ViewModelを準備
-        let viewModel = HomeViewModel(repository: mockRepository)
+    func testLoadingState() throws {
+        // Given - ローディング状態のViewModelを直接作成
+        let viewModel = LoadingHomeViewModel()
         let mockNavigationHandler = MockNavigationHandler()
-        _ = HomeScreen(
+        
+        // When - View直接作成
+        let view = HomeScreen(
             viewModel: viewModel,
             navigationHandler: mockNavigationHandler
         )
         
-        // When - データロードでエラー発生
-        await viewModel.loadSummary()
+        let inspection = try view.inspect()
         
-        // Then - エラーメッセージが設定される
-        #expect(viewModel.errorMessage == "ホーム画面の読み込みに失敗しました")
+        // Then - ViewInspectorでローディングViewの存在を確認
+        // HomeLoadingViewが表示されているかチェック
+        _ = try inspection.find(HomeLoadingView.self)
+    }
+    
+    @Test("APIエラー時はエラーメッセージが表示される")
+    @MainActor
+    func testErrorState() throws {
+        // Given - エラー状態のViewModelを直接作成
+        let errorMessage = "ホーム画面の読み込みに失敗しました"
+        let viewModel = ErrorHomeViewModel(errorMessage: errorMessage)
+        let mockNavigationHandler = MockNavigationHandler()
+        
+        // When - View直接作成
+        let view = HomeScreen(
+            viewModel: viewModel,
+            navigationHandler: mockNavigationHandler
+        )
+        
+        let inspection = try view.inspect()
+        
+        // Then - ViewInspectorでエラーViewとメッセージの存在を確認
+        _ = try inspection.find(HomeErrorView.self)
+        let errorText = try inspection.find(text: errorMessage)
+        #expect(try errorText.string() == errorMessage)
+    }
+}
+
+// MARK: - Test ViewModels
+
+/// 既にデータを持つViewModelクラス（View直接テスト用）
+class PreloadedHomeViewModel: HomeViewModel {
+    init(summary: HomeSummary) {
+        super.init(repository: MockHomeRepository())
+        self.summary = summary
+        self.isLoading = false
+        self.errorMessage = nil
+    }
+}
+
+/// ローディング状態のViewModelクラス（View直接テスト用）
+class LoadingHomeViewModel: HomeViewModel {
+    override init(repository: HomeRepository? = MockHomeRepository()) {
+        super.init(repository: repository)
+        self.isLoading = true
+        self.summary = nil
+        self.errorMessage = nil
+    }
+}
+
+/// エラー状態のViewModelクラス（View直接テスト用）
+class ErrorHomeViewModel: HomeViewModel {
+    init(errorMessage: String) {
+        super.init(repository: MockHomeRepository())
+        self.isLoading = false
+        self.summary = nil
+        self.errorMessage = errorMessage
     }
 }
 

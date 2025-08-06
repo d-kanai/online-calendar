@@ -10,6 +10,7 @@ public enum NavigationAction {
 
 // MARK: - Navigation Handler Protocol
 
+@MainActor
 public protocol NavigationHandler {
     func navigate(to action: NavigationAction)
 }
