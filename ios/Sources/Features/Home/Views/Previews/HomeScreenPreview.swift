@@ -2,19 +2,22 @@ import SwiftUI
 @testable import Home
 @testable import Core
 
+// MARK: - Preview Navigation Handler
+
+struct PreviewNavigationHandler: NavigationHandler {
+    func navigate(to action: NavigationAction) {
+        print("📍 Navigation: \(action)")
+    }
+}
+
 struct HomeScreenPreview: View {
     var body: some View {
         TabView {
-            // 通常の状態
+            // 通常の状態（型安全なNavigationHandler使用）
             NavigationView {
                 HomeScreen(
                     viewModel: HomeViewModel(repository: MockHomeRepository.success),
-                    onTodayMeetingsTapped: {
-                        print("📅 今日の会議タップ")
-                    },
-                    onWeeklyStatsTapped: {
-                        print("📊 今週の統計タップ")
-                    }
+                    navigationHandler: PreviewNavigationHandler()
                 )
             }
             .tabItem {
@@ -25,8 +28,7 @@ struct HomeScreenPreview: View {
             NavigationView {
                 HomeScreen(
                     viewModel: HomeViewModel(repository: MockHomeRepository.loading),
-                    onTodayMeetingsTapped: {},
-                    onWeeklyStatsTapped: {}
+                    navigationHandler: PreviewNavigationHandler()
                 )
             }
             .tabItem {
@@ -37,8 +39,7 @@ struct HomeScreenPreview: View {
             NavigationView {
                 HomeScreen(
                     viewModel: HomeViewModel(repository: MockHomeRepository.error),
-                    onTodayMeetingsTapped: {},
-                    onWeeklyStatsTapped: {}
+                    navigationHandler: PreviewNavigationHandler()
                 )
             }
             .tabItem {
@@ -49,8 +50,7 @@ struct HomeScreenPreview: View {
             NavigationView {
                 HomeScreen(
                     viewModel: HomeViewModel(repository: MockHomeRepository.noNextMeeting),
-                    onTodayMeetingsTapped: {},
-                    onWeeklyStatsTapped: {}
+                    navigationHandler: PreviewNavigationHandler()
                 )
             }
             .tabItem {
@@ -128,12 +128,7 @@ private class MockHomeRepository: HomeRepository {
     NavigationView {
         HomeScreen(
             viewModel: HomeViewModel(repository: MockHomeRepository.success),
-            onTodayMeetingsTapped: {
-                print("今日の会議タップ")
-            },
-            onWeeklyStatsTapped: {
-                print("今週の統計タップ")
-            }
+            navigationHandler: PreviewNavigationHandler()
         )
     }
     .environmentObject(AuthState.shared)
@@ -143,8 +138,7 @@ private class MockHomeRepository: HomeRepository {
     NavigationView {
         HomeScreen(
             viewModel: HomeViewModel(repository: MockHomeRepository.success),
-            onTodayMeetingsTapped: {},
-            onWeeklyStatsTapped: {}
+            navigationHandler: PreviewNavigationHandler()
         )
     }
     .environmentObject(AuthState.shared)
@@ -155,8 +149,7 @@ private class MockHomeRepository: HomeRepository {
     NavigationView {
         HomeScreen(
             viewModel: HomeViewModel(repository: MockHomeRepository.success),
-            onTodayMeetingsTapped: {},
-            onWeeklyStatsTapped: {}
+            navigationHandler: PreviewNavigationHandler()
         )
     }
     .environmentObject(AuthState.shared)

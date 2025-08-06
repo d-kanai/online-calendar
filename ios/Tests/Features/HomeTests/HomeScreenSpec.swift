@@ -26,10 +26,10 @@ struct HomeScreenSpec {
         
         // ViewModelとViewを準備
         let viewModel = HomeViewModel(repository: mockRepository)
+        let mockNavigationHandler = MockNavigationHandler()
         let view = HomeScreen(
             viewModel: viewModel,
-            onTodayMeetingsTapped: {},
-            onWeeklyStatsTapped: {}
+            navigationHandler: mockNavigationHandler
         )
         
         // When - データをロード
@@ -65,17 +65,12 @@ struct HomeScreenSpec {
         )
         mockRepository.fetchHomeSummaryResult = .success(mockSummary)
         
-        // コールバックの呼び出しを記録
-        var todayMeetingsTapped = false
-        
         // ViewModelとViewを準備
         let viewModel = HomeViewModel(repository: mockRepository)
+        let mockNavigationHandler = MockNavigationHandler()
         let view = HomeScreen(
             viewModel: viewModel,
-            onTodayMeetingsTapped: {
-                todayMeetingsTapped = true
-            },
-            onWeeklyStatsTapped: {}
+            navigationHandler: mockNavigationHandler
         )
         
         // データをロード
@@ -87,8 +82,8 @@ struct HomeScreenSpec {
         let todayMeetingsButton = try inspection.find(button: "今日の会議")
         try todayMeetingsButton.tap()
         
-        // Then - コールバックが呼ばれたことを確認
-        #expect(todayMeetingsTapped == true)
+        // Then - 正しいNavigationActionが呼ばれたことを確認
+        #expect(mockNavigationHandler.navigatedActions.contains(.todayMeetings))
     }
     
     @Test("今週の会議時間カードをタップすると遷移コールバックが呼ばれる")
@@ -104,17 +99,12 @@ struct HomeScreenSpec {
         )
         mockRepository.fetchHomeSummaryResult = .success(mockSummary)
         
-        // コールバックの呼び出しを記録
-        var weeklyStatsTapped = false
-        
         // ViewModelとViewを準備
         let viewModel = HomeViewModel(repository: mockRepository)
+        let mockNavigationHandler = MockNavigationHandler()
         let view = HomeScreen(
             viewModel: viewModel,
-            onTodayMeetingsTapped: {},
-            onWeeklyStatsTapped: {
-                weeklyStatsTapped = true
-            }
+            navigationHandler: mockNavigationHandler
         )
         
         // データをロード
@@ -125,8 +115,8 @@ struct HomeScreenSpec {
         let weeklyStatsButton = try inspection.find(button: "今週の会議時間")
         try weeklyStatsButton.tap()
         
-        // Then - コールバックが呼ばれたことを確認
-        #expect(weeklyStatsTapped == true)
+        // Then - 正しいNavigationActionが呼ばれたことを確認
+        #expect(mockNavigationHandler.navigatedActions.contains(.weeklyStats))
     }
     
     @Test("次の会議が30分後の場合、時間表示が正しい")
@@ -149,10 +139,10 @@ struct HomeScreenSpec {
         
         // ViewModelとViewを準備
         let viewModel = HomeViewModel(repository: mockRepository)
+        let mockNavigationHandler = MockNavigationHandler()
         let view = HomeScreen(
             viewModel: viewModel,
-            onTodayMeetingsTapped: {},
-            onWeeklyStatsTapped: {}
+            navigationHandler: mockNavigationHandler
         )
         
         // When - データをロード
@@ -216,10 +206,10 @@ struct HomeScreenSpec {
         
         // ViewModelを準備
         let viewModel = HomeViewModel(repository: mockRepository)
+        let mockNavigationHandler = MockNavigationHandler()
         _ = HomeScreen(
             viewModel: viewModel,
-            onTodayMeetingsTapped: {},
-            onWeeklyStatsTapped: {}
+            navigationHandler: mockNavigationHandler
         )
         
         // When - データロードでエラー発生
@@ -247,5 +237,15 @@ class MockHomeRepository: HomeRepository {
         case .failure(let error):
             throw error
         }
+    }
+}
+
+// MARK: - Mock Navigation Handler
+
+class MockNavigationHandler: NavigationHandler {
+    private(set) var navigatedActions: [NavigationAction] = []
+    
+    func navigate(to action: NavigationAction) {
+        navigatedActions.append(action)
     }
 }

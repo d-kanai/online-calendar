@@ -1,22 +1,21 @@
 import SwiftUI
 import Core
 
+// MARK: - HomeScreen
+
 public struct HomeScreen: View {
     @StateObject private var viewModel: HomeViewModel
     @State private var loadTask: Task<Void, Error>?
     
-    // Navigation callbacks for cross-module navigation
-    private let onTodayMeetingsTapped: () -> Void
-    private let onWeeklyStatsTapped: () -> Void
+    // Type-safe navigation handler for cross-module navigation
+    private let navigationHandler: NavigationHandler
     
     public init(
         viewModel: HomeViewModel,
-        onTodayMeetingsTapped: @escaping () -> Void,
-        onWeeklyStatsTapped: @escaping () -> Void
+        navigationHandler: NavigationHandler
     ) {
         self._viewModel = StateObject(wrappedValue: viewModel)
-        self.onTodayMeetingsTapped = onTodayMeetingsTapped
-        self.onWeeklyStatsTapped = onWeeklyStatsTapped
+        self.navigationHandler = navigationHandler
     }
     
     public var body: some View {
@@ -102,7 +101,9 @@ private extension HomeScreen {
             systemImage: "calendar",
             value: todayMeetingsValue,
             isLoading: viewModel.isLoading,
-            onTap: onTodayMeetingsTapped
+            onTap: {
+                navigationHandler.navigate(to: .todayMeetings)
+            }
         )
     }
     
@@ -112,7 +113,9 @@ private extension HomeScreen {
             systemImage: "chart.bar",
             value: weeklyMeetingHoursValue,
             isLoading: viewModel.isLoading,
-            onTap: onWeeklyStatsTapped
+            onTap: {
+                navigationHandler.navigate(to: .weeklyStats)
+            }
         )
     }
 }
@@ -152,3 +155,4 @@ private extension HomeScreen {
         loadTask?.cancel()
     }
 }
+

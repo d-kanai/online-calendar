@@ -1,16 +1,22 @@
 import Foundation
+import Core
 
-// Navigation State for cross-module navigation
-public class NavigationState: ObservableObject {
+// MARK: - Navigation State
+
+public class NavigationState: ObservableObject, NavigationHandler {
     @Published public var selectedTab: Int = 0
     
     public init() {}
     
-    public func navigateToTodayMeetings() {
-        selectedTab = 1 // Meeting tab
+    public func navigate(to action: NavigationAction) {
+        switch action {
+        case .home:
+            selectedTab = 0
+        case .todayMeetings:
+            selectedTab = 1
+        case .weeklyStats:
+            selectedTab = 2
+        }
     }
     
-    public func navigateToWeeklyStats() {
-        selectedTab = 2 // Stats tab
-    }
 }

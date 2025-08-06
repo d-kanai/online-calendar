@@ -9,12 +9,7 @@ struct HomeTabView: View {
         NavigationView {
             HomeScreen(
                 viewModel: homeViewModel,
-                onTodayMeetingsTapped: {
-                    navigationState.navigateToTodayMeetings()
-                },
-                onWeeklyStatsTapped: {
-                    navigationState.navigateToWeeklyStats()
-                }
+                navigationHandler: navigationState
             )
         }
     }
