@@ -9,7 +9,6 @@ struct HomeHeaderView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            GreetingText
             CurrentDateText
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -20,17 +19,6 @@ struct HomeHeaderView: View {
 
 // MARK: - Components
 private extension HomeHeaderView {
-    var GreetingText: some View {
-        Group {
-            if let userName = userName {
-                Text("こんにちは、\(userName)さん")
-            } else {
-                Text("こんにちは")
-            }
-        }
-        .font(.largeTitle.bold())
-    }
-    
     var CurrentDateText: some View {
         Text(Date(), style: .date)
             .font(.subheadline)

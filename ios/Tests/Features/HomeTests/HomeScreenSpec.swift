@@ -39,10 +39,6 @@ struct HomeScreenSpec {
         let inspection = try view.inspect()
         
         // Then - 動的データのみアサート（静的な文字列はアサートしない）
-        // ユーザー名を含む挨拶文
-        let greetingText = try inspection.find(text: "こんにちは、田中太郎さん")
-        #expect(try greetingText.string() == "こんにちは、田中太郎さん")
-        
         // 今日の会議数
         let todayMeetingsCount = try inspection.find(text: "3件")
         #expect(try todayMeetingsCount.string() == "3件")
