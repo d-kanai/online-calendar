@@ -12,6 +12,8 @@ public struct PreviewCatalogScreen: View {
     
     public var body: some View {
         List {
+            homeScreensSection
+            homeComponentsSection
             meetingScreensSection
             meetingComponentsSection
             statsScreensSection
@@ -26,6 +28,62 @@ public struct PreviewCatalogScreen: View {
 
 // MARK: - Sections
 private extension PreviewCatalogScreen {
+    var homeScreensSection: some View {
+        Section("ホーム画面") {
+            NavigationLink("ホーム画面 - 通常状態") {
+                Text("HomeScreen - 通常状態")
+                    .padding()
+            }
+            
+            NavigationLink("ホーム画面 - ローディング") {
+                Text("HomeScreen - ローディング中")
+                    .padding()
+            }
+            
+            NavigationLink("ホーム画面 - エラー") {
+                Text("HomeScreen - エラー")
+                    .padding()
+            }
+            
+            NavigationLink("ホーム画面 - 会議なし") {
+                Text("HomeScreen - 次の会議なし")
+                    .padding()
+            }
+        }
+    }
+    
+    var homeComponentsSection: some View {
+        Section("ホームコンポーネント") {
+            NavigationLink("次の会議カード - 30分後") {
+                PreviewWrapper {
+                    Text("NextMeetingCard - 30分後")
+                        .padding()
+                }
+            }
+            
+            NavigationLink("次の会議カード - 開催中") {
+                PreviewWrapper {
+                    Text("NextMeetingCard - 開催中")
+                        .padding()
+                }
+            }
+            
+            NavigationLink("次の会議カード - まもなく") {
+                PreviewWrapper {
+                    Text("NextMeetingCard - まもなく")
+                        .padding()
+                }
+            }
+            
+            NavigationLink("次の会議カード - 2時間後") {
+                PreviewWrapper {
+                    Text("NextMeetingCard - 2時間後")
+                        .padding()
+                }
+            }
+        }
+    }
+    
     var meetingScreensSection: some View {
         Section("会議画面") {
             NavigationLink("会議リスト - データあり") {

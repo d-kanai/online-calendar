@@ -25,6 +25,10 @@ let package = Package(
             targets: ["Stats"]
         ),
         .library(
+            name: "Home",
+            targets: ["Home"]
+        ),
+        .library(
             name: "AppBridge",
             targets: ["AppBridge"]
         ),
@@ -53,15 +57,21 @@ let package = Package(
             path: "Sources/Features/Stats"
         ),
         .target(
+            name: "Home",
+            dependencies: ["Core"],
+            path: "Sources/Features/Home"
+        ),
+        .target(
             name: "AppBridge",
-            dependencies: ["Core", "Auth", "Meeting", "Stats"]
+            dependencies: ["Core", "Auth", "Meeting", "Stats", "Home"]
         ),
         .testTarget(
             name: "CoreTests",
             dependencies: [
                 "Core",
                 .product(name: "ViewInspector", package: "ViewInspector")
-            ]
+            ],
+            path: "Tests/CoreTests"
         ),
         .testTarget(
             name: "AuthTests",
@@ -86,6 +96,14 @@ let package = Package(
                 .product(name: "ViewInspector", package: "ViewInspector")
             ],
             path: "Tests/Features/Stats"
+        ),
+        .testTarget(
+            name: "HomeTests",
+            dependencies: [
+                "Home",
+                .product(name: "ViewInspector", package: "ViewInspector")
+            ],
+            path: "Tests/Features/HomeTests"
         ),
     ]
 )
