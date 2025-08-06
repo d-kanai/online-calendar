@@ -28,6 +28,3 @@ appId: dkanai.OnlineCalendar
     clearState: true
     arguments:
       E2E_AUTH_BYPASS: true
-
-# Then: 会議一覧画面が表示されるまで待機
-- assertVisible: "会議一覧"

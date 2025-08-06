@@ -52,5 +52,5 @@ env:
 - waitForAnimationToEnd:
     timeout: 3000
 
-# サインアウトボタンが表示されることを確認
-- assertVisible: "サインアウト"
+# ホームタブが表示されることを確認（サインイン成功）
+- assertVisible: "ホーム"

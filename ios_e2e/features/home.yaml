@@ -1,0 +1,22 @@
+appId: dkanai.OnlineCalendar
+env:
+  API_URL: "http://localhost:3001"
+---
+# ホーム画面のE2Eテスト
+
+# Given: 認証済み状態でアプリを起動
+- runFlow: ../flows/launch_bypass_signin.yaml
+
+# And: テスト用の会議データをセットアップ
+- runScript:
+    file: ../scripts/setup_test_data.js
+    env:
+      API_URL: ${API_URL}
+      TABLE: "meeting"
+      DATA: '{"title": "ホームテスト会議", "ownerId": "e2e-test-user"}'
+
+# Then: ホーム画面で今日の会議カードが表示される
+- assertVisible: "今日の会議"
+
+# And: 会議件数が表示される
+- assertVisible: "3件" # TODO: ハードコードされている

@@ -15,6 +15,14 @@ env:
       TABLE: "meeting"
       DATA: '{"title": "E2Eテスト会議", "ownerId": "e2e-test-user"}'
 
+# When: 会議タブに移動
+- tapOn: "会議"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Then: 会議一覧画面が表示される
+- assertVisible: "会議一覧"
+
 # When: 会議一覧を更新（プルトゥリフレッシュ）
 - swipe:
     start: 50%, 30%
