@@ -1,0 +1,74 @@
+appId: dkanai.OnlineCalendar
+---
+
+# Test 1: ホーム画面から会議作成モーダルを開く
+- launchApp
+- runFlow: ../flows/launch_bypass_signin.yaml
+
+# ホーム画面で会議作成ボタンをタップ
+- assertVisible: "今日の会議"
+- tapOn:
+    id: "createMeetingButtonHome"
+
+# モーダルが表示される
+- assertVisible: "新規会議作成"
+- assertVisible:
+    id: "titleField"
+- assertVisible: "期間"
+- assertVisible: "重要な会議"
+
+---
+
+# Test 2: ホーム画面から会議を作成する
+- launchApp
+- runFlow: ../flows/launch_bypass_signin.yaml
+
+# 初期の会議数を確認（今日の会議カードで確認）
+- assertVisible: "今日の会議"
+
+# 会議作成ボタンをタップ
+- tapOn:
+    id: "createMeetingButtonHome"
+
+# フォームに入力
+- assertVisible: "新規会議作成"
+- tapOn:
+    id: "titleField"
+- inputText: "企画会議"
+
+# 期間を60分に設定
+- tapOn: "期間"
+- tapOn: "60分"
+
+# 重要フラグをON
+- tapOn: "重要な会議"
+
+# 作成
+- tapOn: "作成"
+
+# モーダルが閉じてホーム画面に戻る
+- assertVisible: "今日の会議"
+- assertNotVisible: "新規会議作成"
+
+---
+
+# Test 3: ホーム画面から会議作成をキャンセルする
+- launchApp
+- runFlow: ../flows/launch_bypass_signin.yaml
+
+# ホーム画面で会議作成ボタンをタップ
+- assertVisible: "今日の会議"
+- tapOn:
+    id: "createMeetingButtonHome"
+
+# フォームに入力
+- tapOn:
+    id: "titleField"
+- inputText: "テスト会議"
+
+# キャンセル
+- tapOn: "キャンセル"
+
+# モーダルが閉じてホーム画面に戻る
+- assertVisible: "今日の会議"
+- assertNotVisible: "新規会議作成"

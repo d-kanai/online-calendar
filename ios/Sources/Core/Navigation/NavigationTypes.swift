@@ -6,6 +6,7 @@ public enum NavigationAction {
     case todayMeetings
     case weeklyStats
     case home
+    case createMeeting  // 新規会議作成モーダル
 }
 
 // MARK: - Navigation Handler Protocol

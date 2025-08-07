@@ -6,6 +6,7 @@ import SwiftUI
 @MainActor
 public class NavigationState: ObservableObject, NavigationHandler {
     @Published public var selectedTab: Int = 0
+    @Published public var showCreateMeetingModal: Bool = false
     
     public init() {}
     
@@ -17,6 +18,8 @@ public class NavigationState: ObservableObject, NavigationHandler {
             selectedTab = 1
         case .weeklyStats:
             selectedTab = 2
+        case .createMeeting:
+            showCreateMeetingModal = true
         }
     }
 }

@@ -77,6 +77,10 @@ private extension HomeScreen {
     
     var SummaryCardsSection: some View {
         VStack(spacing: 16) {
+            // 会議作成ボタン
+            CreateMeetingButton
+            
+            // サマリーカード
             TodayMeetingsCard
             WeeklyStatsCard
         }
@@ -90,6 +94,30 @@ private extension HomeScreen {
                     .padding(.horizontal)
             }
         }
+    }
+}
+
+// MARK: - Action Buttons
+private extension HomeScreen {
+    var CreateMeetingButton: some View {
+        Button(action: {
+            navigationHandler.navigate(to: .createMeeting)
+        }) {
+            HStack {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title2)
+                Text("新規会議作成")
+                    .font(.headline)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding()
+            .background(Color.blue.opacity(0.1))
+            .cornerRadius(12)
+        }
+        .accessibilityIdentifier("createMeetingButtonHome")
     }
 }
 
