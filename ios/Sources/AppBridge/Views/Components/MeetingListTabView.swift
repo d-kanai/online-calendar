@@ -4,17 +4,34 @@ import Core
 
 struct MeetingListTabView: View {
     let meetingListViewModel: MeetingListViewModel
-    let navigationState: NavigationState
+    @ObservedObject var navigationState: NavigationState
+    @State private var showCreateModal = false
+    @StateObject private var createMeetingViewModel = CreateMeetingViewModel()
+    @EnvironmentObject private var toastManager: ToastManager
     
     var body: some View {
         NavigationView {
-            MeetingListScreen(viewModel: meetingListViewModel)
-                .toolbar {
-                    AppHeader()
+            MeetingListScreen(
+                viewModel: meetingListViewModel,
+                onCreateMeeting: {
+                    showCreateModal = true
                 }
-                .onAppear {
-                    handleNavigationFromHome()
+            )
+            .toolbar {
+                AppHeader()
+            }
+            .onAppear {
+                handleNavigationFromHome()
+            }
+        }
+        .sheet(isPresented: $showCreateModal) {
+            CreateMeetingModalView(
+                viewModel: createMeetingViewModel,
+                isPresented: $showCreateModal,
+                onSuccess: {
+                    toastManager.showSuccess("会議を作成しました")
                 }
+            )
         }
     }
 }

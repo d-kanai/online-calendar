@@ -50,6 +50,9 @@ appId: dkanai.OnlineCalendar
 - assertVisible: "今日の会議"
 - assertNotVisible: "新規会議作成"
 
+# トーストが表示される
+- assertVisible: "会議を作成しました"
+
 ---
 
 # Test 3: ホーム画面から会議作成をキャンセルする

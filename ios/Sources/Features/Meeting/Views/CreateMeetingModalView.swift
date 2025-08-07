@@ -3,17 +3,20 @@ import SwiftUI
 public struct CreateMeetingModalView: View {
     @ObservedObject var viewModel: CreateMeetingViewModel
     @Binding var isPresented: Bool
+    var onSuccess: (() -> Void)? = nil
     
     // 外部からViewModelを受け取る
-    public init(viewModel: CreateMeetingViewModel, isPresented: Binding<Bool>) {
+    public init(viewModel: CreateMeetingViewModel, isPresented: Binding<Bool>, onSuccess: (() -> Void)? = nil) {
         self.viewModel = viewModel
         self._isPresented = isPresented
+        self.onSuccess = onSuccess
     }
     
     // 後方互換性のため、ViewModelを内部で作成するイニシャライザも残す
-    public init(isPresented: Binding<Bool>) {
+    public init(isPresented: Binding<Bool>, onSuccess: (() -> Void)? = nil) {
         self.viewModel = CreateMeetingViewModel()
         self._isPresented = isPresented
+        self.onSuccess = onSuccess
     }
     
     public var body: some View {
@@ -157,6 +160,7 @@ private extension CreateMeetingModalView {
         viewModel.createTask = Task {
             do {
                 try await viewModel.createMeeting()
+                onSuccess?()  // 成功時のコールバック
                 isPresented = false
             } catch {
                 // エラーはViewModelで処理済み

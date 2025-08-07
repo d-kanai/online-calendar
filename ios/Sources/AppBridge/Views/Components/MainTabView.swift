@@ -9,6 +9,7 @@ struct MainTabView: View {
     @StateObject private var homeViewModel = HomeViewModel()
     @StateObject private var meetingListViewModel = MeetingListViewModel()
     @StateObject private var meetingStatsViewModel = MeetingStatsViewModel()
+    @StateObject private var toastManager = ToastManager()
     @EnvironmentObject private var navigationState: NavigationState
     
     var body: some View {
@@ -51,6 +52,8 @@ struct MainTabView: View {
                 .tag(3)
             #endif
         }
+        .toastManager(toastManager)
+        .environmentObject(toastManager)
     }
 }
 

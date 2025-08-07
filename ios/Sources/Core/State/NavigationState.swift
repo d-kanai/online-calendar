@@ -7,6 +7,7 @@ import SwiftUI
 public class NavigationState: ObservableObject, NavigationHandler {
     @Published public var selectedTab: Int = 0
     @Published public var showCreateMeetingModal: Bool = false
+    @Published public var activeHomeModal: HomeModal? = nil  // 将来の拡張に備えて
     
     public init() {}
     
@@ -20,6 +21,7 @@ public class NavigationState: ObservableObject, NavigationHandler {
             selectedTab = 2
         case .createMeeting:
             showCreateMeetingModal = true
+            // または: activeHomeModal = .createMeeting
         }
     }
 }

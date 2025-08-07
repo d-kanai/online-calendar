@@ -4,11 +4,11 @@ import Core
 public struct MeetingListScreen: View {
     @ObservedObject var viewModel: MeetingListViewModel
     @State private var loadMeetingsTask: Task<Void, Error>?
-    @State private var showCreateModal = false
-    @StateObject private var createMeetingViewModel = CreateMeetingViewModel()
+    private let onCreateMeeting: (() -> Void)?
     
-    public init(viewModel: MeetingListViewModel) {
+    public init(viewModel: MeetingListViewModel, onCreateMeeting: (() -> Void)? = nil) {
         self.viewModel = viewModel
+        self.onCreateMeeting = onCreateMeeting
     }
     
     public var body: some View {
@@ -19,18 +19,12 @@ public struct MeetingListScreen: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button(action: {
-                    showCreateModal = true
+                    onCreateMeeting?()
                 }) {
                     Image(systemName: "plus")
                 }
                 .accessibilityIdentifier("addMeetingButton")
             }
-        }
-        .sheet(isPresented: $showCreateModal) {
-            CreateMeetingModalView(
-                viewModel: createMeetingViewModel,
-                isPresented: $showCreateModal
-            )
         }
         .task {
             loadMeetingsTask = Task {

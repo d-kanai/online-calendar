@@ -34,12 +34,15 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/nalexn/ViewInspector", from: "0.10.2")
+        .package(url: "https://github.com/nalexn/ViewInspector", from: "0.10.2"),
+        .package(url: "https://github.com/elai950/AlertToast", from: "1.3.9")
     ],
     targets: [
         .target(
             name: "Core",
-            dependencies: []
+            dependencies: [
+                .product(name: "AlertToast", package: "AlertToast")
+            ]
         ),
         .target(
             name: "Auth",

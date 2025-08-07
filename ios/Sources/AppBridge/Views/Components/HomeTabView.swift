@@ -7,6 +7,7 @@ struct HomeTabView: View {
     let homeViewModel: HomeViewModel
     @ObservedObject var navigationState: NavigationState
     @StateObject private var createMeetingViewModel = CreateMeetingViewModel()
+    @EnvironmentObject private var toastManager: ToastManager
     
     var body: some View {
         NavigationView {
@@ -18,7 +19,10 @@ struct HomeTabView: View {
         .sheet(isPresented: $navigationState.showCreateMeetingModal) {
             CreateMeetingModalView(
                 viewModel: createMeetingViewModel,
-                isPresented: $navigationState.showCreateMeetingModal
+                isPresented: $navigationState.showCreateMeetingModal,
+                onSuccess: {
+                    toastManager.showSuccess("会議を作成しました")
+                }
             )
         }
     }
