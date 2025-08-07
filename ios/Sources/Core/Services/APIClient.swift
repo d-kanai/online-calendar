@@ -18,13 +18,15 @@ public class APIClient {
     
     @available(iOS 15.0, macOS 12.0, *)
     public func post<T: Decodable, U: Encodable>(_ endpoint: String, body: U, type: T.Type) async throws -> T {
-        let data = try JSONEncoder().encode(body)
+        let encoder = createJSONEncoder()
+        let data = try encoder.encode(body)
         return try await request(endpoint: endpoint, method: "POST", body: data, type: type)
     }
     
     @available(iOS 15.0, macOS 12.0, *)
     public func put<T: Decodable, U: Encodable>(_ endpoint: String, body: U, type: T.Type) async throws -> T {
-        let data = try JSONEncoder().encode(body)
+        let encoder = createJSONEncoder()
+        let data = try encoder.encode(body)
         return try await request(endpoint: endpoint, method: "PUT", body: data, type: type)
     }
     
@@ -108,6 +110,12 @@ public class APIClient {
     }
     
     // MARK: - Helper Methods
+    func createJSONEncoder() -> JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        return encoder
+    }
+    
     func createJSONDecoder() -> JSONDecoder {
         let decoder = JSONDecoder()
         let dateFormatter = DateFormatter()

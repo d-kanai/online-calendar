@@ -4,6 +4,8 @@ import Core
 public struct MeetingListScreen: View {
     @ObservedObject var viewModel: MeetingListViewModel
     @State private var loadMeetingsTask: Task<Void, Error>?
+    @State private var showCreateModal = false
+    @StateObject private var createMeetingViewModel = CreateMeetingViewModel()
     
     public init(viewModel: MeetingListViewModel) {
         self.viewModel = viewModel
@@ -14,6 +16,22 @@ public struct MeetingListScreen: View {
             ContentView
         }
         .navigationTitle("会議一覧")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: {
+                    showCreateModal = true
+                }) {
+                    Image(systemName: "plus")
+                }
+                .accessibilityIdentifier("addMeetingButton")
+            }
+        }
+        .sheet(isPresented: $showCreateModal) {
+            CreateMeetingModalView(
+                viewModel: createMeetingViewModel,
+                isPresented: $showCreateModal
+            )
+        }
         .task {
             loadMeetingsTask = Task {
                 await viewModel.loadMeetings()
@@ -21,6 +39,11 @@ public struct MeetingListScreen: View {
         }
         .refreshable {
             await viewModel.refreshMeetings()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .meetingCreated)) { _ in
+            Task {
+                await viewModel.refreshMeetings()
+            }
         }
     }
 }

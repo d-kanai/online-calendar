@@ -13,6 +13,8 @@ public protocol MeetingRepositoryProtocol {
 
 // MARK: - Meeting Repository Implementation
 public class MeetingRepository: MeetingRepositoryProtocol {
+    public static let shared = MeetingRepository()
+    
     public init() {}
     private let apiClient = APIClient.shared
     
@@ -42,6 +44,15 @@ public class MeetingRepository: MeetingRepositoryProtocol {
             type: APIResponse<MeetingResponse>.self
         )
         return Meeting(from: response.data)
+    }
+    
+    public func createMeeting(_ request: Meeting.CreateMeetingRequest) async throws {
+        print("📝 [MeetingRepository] Sending request with startTime: \(request.startTime), endTime: \(request.endTime)")
+        let _ = try await apiClient.post(
+            "/meetings",
+            body: request,
+            type: APIResponse<MeetingResponse>.self
+        )
     }
     
     public func updateMeeting(_ meeting: Meeting) async throws -> Meeting {

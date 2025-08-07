@@ -73,3 +73,23 @@ public struct Participant: Codable {
         self.name = name
     }
 }
+
+// MARK: - Create Meeting Request
+public extension Meeting {
+    struct CreateMeetingRequest: Codable {
+        public let title: String
+        public let startTime: String  // ISO8601形式の文字列
+        public let endTime: String    // ISO8601形式の文字列
+        public let isImportant: Bool
+        
+        public init(title: String, startTime: Date, endTime: Date, isImportant: Bool) {
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            
+            self.title = title
+            self.startTime = formatter.string(from: startTime)
+            self.endTime = formatter.string(from: endTime)
+            self.isImportant = isImportant
+        }
+    }
+}

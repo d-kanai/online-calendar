@@ -2,7 +2,11 @@ appId: dkanai.OnlineCalendar
 env:
   API_URL: "http://localhost:3001"
 ---
-# 会議一覧画面のE2Eテスト
+# 会議機能のE2Eテスト
+
+# ========================================
+# Test 1: 会議一覧表示
+# ========================================
 
 # Given: 認証済み状態でアプリを起動
 - runFlow: ../flows/launch_bypass_signin.yaml
@@ -17,8 +21,6 @@ env:
 
 # When: 会議タブに移動
 - tapOn: "会議"
-- waitForAnimationToEnd:
-    timeout: 2000
 
 # Then: 会議一覧画面が表示される
 - assertVisible: "会議一覧"
@@ -31,3 +33,25 @@ env:
 
 # Then: 作成した会議が表示される
 - assertVisible: "E2Eテスト会議"
+
+# ========================================
+# Test 2: 会議作成
+# ========================================
+
+# When: 会議作成モーダルを開く
+- tapOn:
+    id: "addMeetingButton"
+
+# Then: モーダルが表示される
+- assertVisible: "新規会議作成"
+
+# When: タイトルを入力
+- tapOn:
+    id: "titleField"
+- inputText: "定例MTG"
+
+# And: 作成ボタンをタップ
+- tapOn: "作成"
+
+# Then: 会議が正常に作成される
+- assertVisible: "定例MTG"
