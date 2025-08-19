@@ -1,4 +1,5 @@
 import SwiftUI
+import Core
 
 struct SummaryCard: View {
     let title: String
@@ -6,6 +7,8 @@ struct SummaryCard: View {
     let value: String?
     let isLoading: Bool
     let onTap: () -> Void
+    
+    @Themed private var theme
     
     init(
         title: String,
@@ -28,10 +31,15 @@ struct SummaryCard: View {
                 Spacer()
                 ChevronIcon
             }
-            .padding()
+            .padding(theme.spacing.medium)
             .background(CardBackground)
-            .cornerRadius(12)
-            .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+            .cornerRadius(theme.radius.large)
+            .shadow(
+                color: Color.black.opacity(0.1),
+                radius: 4,
+                x: 0,
+                y: 2
+            )
         }
         .buttonStyle(PlainButtonStyle())
     }
@@ -40,7 +48,7 @@ struct SummaryCard: View {
 // MARK: - Components
 private extension SummaryCard {
     var ContentSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: theme.spacing.small) {
             TitleLabel
             ValueText
         }
@@ -48,8 +56,8 @@ private extension SummaryCard {
     
     var TitleLabel: some View {
         Label(title, systemImage: systemImage)
-            .font(.headline)
-            .foregroundColor(.primary)
+            .font(theme.font(.headline))
+            .foregroundColor(theme.primaryColor)
     }
     
     @ViewBuilder
@@ -60,22 +68,23 @@ private extension SummaryCard {
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else if let value = value {
             Text(value)
-                .font(.title.weight(.semibold))
-                .foregroundColor(.primary)
+                .font(theme.font(.title))
+                .fontWeight(.semibold)
+                .foregroundColor(Color.primary)
         } else {
             Text("-")
-                .font(.title)
-                .foregroundColor(.secondary)
+                .font(theme.font(.title))
+                .foregroundColor(Color.secondary)
         }
     }
     
     var ChevronIcon: some View {
         Image(systemName: "chevron.right")
-            .foregroundColor(.secondary)
+            .foregroundColor(Color.secondary)
     }
     
     var CardBackground: some View {
-        Color.gray.opacity(0.1)
+        theme.surfaceColor
     }
 }
 

@@ -1,7 +1,9 @@
 import SwiftUI
+import Core
 
 struct NextMeetingCard: View {
     let meeting: Meeting
+    @Themed private var theme
     
     private var timeUntilMeeting: String {
         let interval = meeting.startTime.timeIntervalSinceNow
@@ -20,31 +22,31 @@ struct NextMeetingCard: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: theme.spacing.medium) {
             HStack {
                 Label("次の会議", systemImage: "clock")
-                    .font(.headline)
-                    .foregroundColor(.orange)
+                    .font(theme.font(.headline))
+                    .foregroundColor(theme.warningColor)
                 
                 Spacer()
                 
                 Text(timeUntilMeeting)
-                    .font(.subheadline)
-                    .foregroundColor(.orange)
+                    .font(theme.font(.subheadline))
+                    .foregroundColor(theme.warningColor)
                     .fontWeight(.semibold)
             }
             
             Text(meeting.title)
-                .font(.title3)
+                .font(theme.font(.title3))
                 .fontWeight(.medium)
             
             Text(meeting.startTime, style: .time)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+                .font(theme.font(.subheadline))
+                .foregroundColor(Color.secondary)
         }
-        .padding()
-        .background(Color.orange.opacity(0.1))
-        .cornerRadius(12)
+        .padding(theme.spacing.medium)
+        .background(theme.warningColor.opacity(0.1))
+        .cornerRadius(theme.radius.large)
     }
 }
 

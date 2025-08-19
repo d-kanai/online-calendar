@@ -1,19 +1,21 @@
 import SwiftUI
+import Core
 
 struct HomeHeaderView: View {
     let userName: String?
+    @Themed private var theme
     
     init(userName: String? = nil) {
         self.userName = userName
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: theme.spacing.small) {
             CurrentDateText
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal)
-        .padding(.top, 20)
+        .padding(.horizontal, theme.spacing.medium)
+        .padding(.top, theme.spacing.large)
     }
 }
 
@@ -21,8 +23,8 @@ struct HomeHeaderView: View {
 private extension HomeHeaderView {
     var CurrentDateText: some View {
         Text(Date(), style: .date)
-            .font(.subheadline)
-            .foregroundColor(.secondary)
+            .font(theme.font(.subheadline))
+            .foregroundColor(Color.secondary)
     }
 }
 

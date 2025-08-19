@@ -6,6 +6,7 @@ import Core
 public struct HomeScreen: View {
     @StateObject private var viewModel: HomeViewModel
     @State private var loadTask: Task<Void, Error>?
+    @Themed private var theme
     
     // Type-safe navigation handler for cross-module navigation
     private let navigationHandler: NavigationHandler
@@ -28,6 +29,7 @@ public struct HomeScreen: View {
                 ContentView
             }
         }
+        .background(theme.backgroundColor)
 #if !os(macOS)
         .navigationBarHidden(shouldHideNavigationBar)
         #endif
@@ -44,11 +46,11 @@ public struct HomeScreen: View {
 private extension HomeScreen {
     var ContentView: some View {
         ScrollView {
-            VStack(spacing: 24) {
+            VStack(spacing: theme.spacing.large) {
                 HeaderSection
                 SummaryCardsSection
                 NextMeetingSection
-                Spacer(minLength: 40)
+                Spacer(minLength: theme.spacing.xxLarge)
             }
         }
         .refreshable {
@@ -76,7 +78,7 @@ private extension HomeScreen {
     }
     
     var SummaryCardsSection: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: theme.spacing.medium) {
             // 会議作成ボタン
             CreateMeetingButton
             
@@ -84,14 +86,14 @@ private extension HomeScreen {
             TodayMeetingsCard
             WeeklyStatsCard
         }
-        .padding(.horizontal)
+        .padding(.horizontal, theme.spacing.medium)
     }
     
     var NextMeetingSection: some View {
         Group {
             if let nextMeeting = viewModel.summary?.nextMeeting {
                 NextMeetingCard(meeting: nextMeeting)
-                    .padding(.horizontal)
+                    .padding(.horizontal, theme.spacing.medium)
             }
         }
     }
@@ -105,17 +107,18 @@ private extension HomeScreen {
         }) {
             HStack {
                 Image(systemName: "plus.circle.fill")
-                    .font(.title2)
+                    .font(theme.font(.title2))
                 Text("新規会議作成")
-                    .font(.headline)
+                    .font(theme.font(.headline))
                 Spacer()
                 Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(theme.font(.caption))
+                    .foregroundColor(theme.primaryColor.opacity(0.7))
             }
-            .padding()
-            .background(Color.blue.opacity(0.1))
-            .cornerRadius(12)
+            .padding(theme.spacing.medium)
+            .foregroundColor(theme.primaryColor)
+            .background(theme.primaryColor.opacity(0.1))
+            .cornerRadius(theme.radius.large)
         }
         .accessibilityIdentifier("createMeetingButtonHome")
     }
@@ -183,4 +186,56 @@ private extension HomeScreen {
         loadTask?.cancel()
     }
 }
+
+// MARK: - Previews
+#if DEBUG
+struct HomeScreen_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            NavigationView {
+                HomeScreen(
+                    viewModel: MockHomeViewModel(),
+                    navigationHandler: MockNavigationHandler()
+                )
+            }
+            .withDynamicTheme()
+            .preferredColorScheme(.light)
+            .previewDisplayName("Light Mode")
+            
+            NavigationView {
+                HomeScreen(
+                    viewModel: MockHomeViewModel(),
+                    navigationHandler: MockNavigationHandler()
+                )
+            }
+            .withDynamicTheme()
+            .preferredColorScheme(.dark)
+            .previewDisplayName("Dark Mode")
+        }
+    }
+}
+
+// MARK: - Mock Classes for Preview
+private class MockHomeViewModel: HomeViewModel {
+    init() {
+        super.init()
+        self.summary = HomeSummary(
+            todayMeetingsCount: 5,
+            nextMeeting: Meeting(
+                id: "1",
+                title: "デザインレビュー",
+                startTime: Date().addingTimeInterval(30 * 60)
+            ),
+            weeklyMeetingHours: 12.5,
+            userName: "テストユーザー"
+        )
+    }
+}
+
+private class MockNavigationHandler: NavigationHandler {
+    func navigate(to action: NavigationAction) {
+        print("Navigate to: \(action)")
+    }
+}
+#endif
 
