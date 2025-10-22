@@ -4,6 +4,7 @@ import SignUpPage from './page';
 import { authApi } from '@/app/auth/apis/auth.api';
 import { toast } from 'sonner';
 import { resetAllMocks } from '@/test/setup-mocks';
+import { authRoutes } from '@/lib/routes';
 
 // モック化する関数
 const mockPush = jest.fn();
@@ -92,7 +93,7 @@ describe('SignUpPage - ユーザー登録フローの振る舞い', () => {
 
       // ② 成功時のルーティング
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/auth/signin');
+        expect(mockPush).toHaveBeenCalledWith(authRoutes.signin());
       });
 
       // ③ トースト通知
@@ -155,7 +156,7 @@ describe('SignUpPage - ユーザー登録フローの振る舞い', () => {
       await user.click(screen.getByRole('button', { name: 'ログイン' }));
 
       // Then - サインインページへ遷移
-      expect(mockPush).toHaveBeenCalledWith('/auth/signin');
+      expect(mockPush).toHaveBeenCalledWith(authRoutes.signin());
     });
   });
 });

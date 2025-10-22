@@ -3,6 +3,7 @@ import { screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { renderWithAuthProvider } from '@/test/test-utils';
 import Home from './page';
+import { authRoutes, calendarRoutes } from '@/lib/routes';
 
 // Next.jsのnavigationをモック
 const mockPush = jest.fn();
@@ -29,7 +30,7 @@ describe('Home Page', () => {
   });
 
   describe('認証済みユーザー', () => {
-    it('認証済みの場合、/calendarにリダイレクトされる', async () => {
+    it('認証済みの場合、カレンダー画面にリダイレクトされる', async () => {
       // Given - 認証済み状態をモック
       useAuth.mockReturnValue({
         isAuthenticated: true,
@@ -40,15 +41,15 @@ describe('Home Page', () => {
       // When - ページをレンダリング
       renderWithAuthProvider(<Home />);
 
-      // Then - /calendarへのリダイレクトを確認
+      // Then - カレンダー画面へのリダイレクトを確認
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/calendar');
+        expect(mockPush).toHaveBeenCalledWith(calendarRoutes.root());
       });
     });
   });
 
   describe('未認証ユーザー', () => {
-    it('未認証の場合、/auth/signinにリダイレクトされる', async () => {
+    it('未認証の場合、サインイン画面にリダイレクトされる', async () => {
       // Given - 未認証状態をモック
       useAuth.mockReturnValue({
         isAuthenticated: false,
@@ -59,9 +60,9 @@ describe('Home Page', () => {
       // When - ページをレンダリング
       renderWithAuthProvider(<Home />);
 
-      // Then - /auth/signinへのリダイレクトを確認
+      // Then - サインイン画面へのリダイレクトを確認
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/auth/signin');
+        expect(mockPush).toHaveBeenCalledWith(authRoutes.signin());
       });
     });
   });
@@ -107,9 +108,9 @@ describe('Home Page', () => {
 
       rerender(<Home />);
 
-      // Then - /auth/signinへリダイレクト
+      // Then - サインイン画面へリダイレクト
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/auth/signin');
+        expect(mockPush).toHaveBeenCalledWith(authRoutes.signin());
       });
     });
   });

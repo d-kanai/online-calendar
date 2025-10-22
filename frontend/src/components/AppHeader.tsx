@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/lib/ui/dropdown-menu';
+import { authRoutes } from '@/lib/routes';
 
 type AppScreen = 'calendar' | 'stats';
 
@@ -36,7 +37,7 @@ export const AppHeader = React.forwardRef<HTMLDivElement, AppHeaderProps>(
 
     const handleSignOut = async () => {
       await signOut();
-      router.push('/auth/signin');
+      router.push(authRoutes.signin());
     };
 
     return (

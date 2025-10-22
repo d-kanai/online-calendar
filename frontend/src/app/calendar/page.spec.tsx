@@ -5,6 +5,7 @@ import CalendarPage from './page';
 import { meetingApi } from './apis/meeting.api';
 import { resetAllMocks } from '@/test/setup-mocks';
 import { ApiMeeting } from '@/types/api';
+import { calendarRoutes } from '@/lib/routes';
 
 // Auth Contextのモック
 jest.mock('@/contexts/AuthContext', () => ({
@@ -47,7 +48,7 @@ jest.mock('next/navigation', () => ({
   useSearchParams: () => ({
     get: jest.fn(),
   }),
-  usePathname: () => '/calendar',
+  usePathname: () => calendarRoutes.root(),
 }));
 
 // 3. ErrorBoundary

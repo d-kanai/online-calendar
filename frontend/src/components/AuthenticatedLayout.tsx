@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { AppHeader } from '@/components/AppHeader';
+import { calendarRoutes, statsRoutes } from '@/lib/routes';
 
 interface AuthenticatedLayoutProps {
   children: React.ReactNode;
@@ -15,15 +16,15 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
   // ナビゲーションハンドラー
   const handleNavigate = (screen: 'calendar' | 'stats') => {
     if (screen === 'calendar') {
-      router.push('/calendar');
+      router.push(calendarRoutes.root());
     } else if (screen === 'stats') {
-      router.push('/stats');
+      router.push(statsRoutes.root());
     }
   };
 
   // 現在のページを判定
   const getCurrentScreen = (): 'calendar' | 'stats' => {
-    if (pathname?.includes('/stats')) return 'stats';
+    if (pathname?.startsWith(statsRoutes.root())) return 'stats';
     return 'calendar';
   };
 

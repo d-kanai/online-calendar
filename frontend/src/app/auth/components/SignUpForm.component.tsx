@@ -11,6 +11,7 @@ import { Label } from '@/lib/ui/label';
 import { Alert, AlertDescription } from '@/lib/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { AlertCircle, User, Mail, Lock } from 'lucide-react';
+import { authRoutes } from '@/app/auth/routes';
 
 // Zodスキーマ定義
 const SignUpSchema = z.object({
@@ -156,9 +157,9 @@ function SignInLink({ onSwitchToSignIn, isLoading }: { onSwitchToSignIn?: () => 
       <p className="text-sm text-muted-foreground">
         既にアカウントをお持ちですか？
       </p>
-      <Button 
-        variant="link" 
-        onClick={() => onSwitchToSignIn ? onSwitchToSignIn() : router.push('/auth/signin')}
+      <Button
+        variant="link"
+        onClick={() => onSwitchToSignIn ? onSwitchToSignIn() : router.push(authRoutes.signin())}
         className="p-0 h-auto"
         disabled={isLoading}
       >
@@ -197,7 +198,7 @@ export function SignUpForm({ onSwitchToSignIn }: SignUpFormProps) {
         password: data.password
       });
       // 成功時はサインインページへリダイレクト
-      router.push('/auth/signin');
+      router.push(authRoutes.signin());
     } catch (error) {
       // APIエラーの場合、該当フィールドにエラーを設定
       if (error instanceof Error && error.message.includes('メールアドレス')) {

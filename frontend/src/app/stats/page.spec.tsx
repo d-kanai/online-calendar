@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import StatsPage from './page';
 import { statsApi } from './apis/stats.api';
 import { resetAllMocks } from '@/test/setup-mocks';
+import { calendarRoutes, statsRoutes } from '@/lib/routes';
 
 // TestCルール: 3つのみモック
 // 1. APIレイヤー
@@ -26,7 +27,7 @@ jest.mock('next/navigation', () => ({
   useSearchParams: () => ({
     get: jest.fn(),
   }),
-  usePathname: () => '/stats',
+  usePathname: () => statsRoutes.root(),
 }));
 
 // 3. ErrorBoundary
@@ -163,7 +164,7 @@ describe('StatsPage - 統計ページの振る舞いテスト', () => {
       await user.click(screen.getByRole('button', { name: '戻る' }));
 
       // Then - ルーティングが発生
-      expect(mockPush).toHaveBeenCalledWith('/calendar');
+      expect(mockPush).toHaveBeenCalledWith(calendarRoutes.root());
     });
   });
 

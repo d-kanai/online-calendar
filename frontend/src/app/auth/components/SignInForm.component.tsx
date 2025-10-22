@@ -11,6 +11,8 @@ import { Label } from '@/lib/ui/label';
 import { Alert, AlertDescription } from '@/lib/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { AlertCircle, Mail, Lock } from 'lucide-react';
+import { authRoutes } from '@/app/auth/routes';
+import { calendarRoutes } from '@/app/calendar/routes';
 
 // Zodスキーマ定義
 const SignInSchema = z.object({
@@ -108,9 +110,9 @@ function SignUpLink({ onSwitchToSignUp, isLoading }: { onSwitchToSignUp?: () => 
       <p className="text-sm text-muted-foreground">
         アカウントをお持ちでないですか？
       </p>
-      <Button 
-        variant="link" 
-        onClick={() => onSwitchToSignUp ? onSwitchToSignUp() : router.push('/auth/signup')}
+      <Button
+        variant="link"
+        onClick={() => onSwitchToSignUp ? onSwitchToSignUp() : router.push(authRoutes.signup())}
         className="p-0 h-auto"
         disabled={isLoading}
       >
@@ -142,7 +144,7 @@ export function SignInForm({ onSwitchToSignUp }: SignInFormProps) {
     try {
       await signIn(data);
       // 成功時はカレンダーページへリダイレクト
-      router.push('/calendar');
+      router.push(calendarRoutes.root());
     } catch (error) {
       // APIエラーの場合、フォームエラーとして表示
       if (error instanceof Error) {

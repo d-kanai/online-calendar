@@ -4,6 +4,7 @@ import React, { useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { authRoutes, calendarRoutes } from '@/lib/routes';
 
 function HomeContent() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -13,9 +14,9 @@ function HomeContent() {
   useEffect(() => {
     if (!isLoading) {
       if (isAuthenticated) {
-        router.push('/calendar');
+        router.push(calendarRoutes.root());
       } else {
-        router.push('/auth/signin');
+        router.push(authRoutes.signin());
       }
     }
   }, [isAuthenticated, isLoading, router]);
